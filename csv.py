@@ -9,19 +9,29 @@ directory with the first two rows of data (which are text) discarded.
 
 import csv
 from os import listdir, mkdir, getcwd
-from os.path import isfile, join
+from os.path import isfile, join, isdir
 import numpy as np
 
-mypath = "D:\\"
-copypath = getcwd()+ "\\copies"
-#mkdir(copypath)
-onlyfiles = [f for f in listdir(mypath) if isfile(join(mypath, f))]
+'''
+mypath is the directory with .csv files.
+copypath is the directory at which we want to create the new csv files.
+
+if the target directory already contains .csv files of the same name(s),
+this script will overwrite them.
+'''
+mypath = "C:\\Users\\dionysius\\Desktop\\PURE\\may24\\FOC"
+copypath = mypath+ "\\clean"
+
+if not isdir(copypath):
+     mkdir(copypath)
+     
+onlyfiles = [f for f in listdir(mypath) if isfile(join(mypath, f)) and f[-4:] == '.csv']
 N = len(onlyfiles)
 scopedict = {}
 print(listdir())
 for i in range(N):
      arr = []
-     with open(mypath + onlyfiles[i], newline='') as f:
+     with open(mypath + "\\"+ onlyfiles[i], newline='') as f:
           
           reader = csv.reader(f)
           skip = 0

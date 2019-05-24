@@ -5,20 +5,18 @@ Created on Thu May 23 14:04:23 2019
 @author: dionysius
 """
 
-import scipy as sc
 import numpy as np
 import matplotlib.pyplot as plt
 from os import listdir, mkdir, getcwd
 from os.path import isfile, join
-from time import sleep
-
+from angle import angle_change
 # get names of files in target directory
-mypath = "D:\\"
+mypath = "C:\\Users\\dionysius\\Desktop\\PURE\\may24\\FLAT\\clean"
 fnames = [f for f in listdir(mypath) if isfile(join(mypath, f)) and f[-4:] == '.csv']
 
 signal_data = []
 for name in fnames:
-     signal_data.append(np.loadtxt(open(name, "rb"), delimiter=",", skiprows=0))
+     signal_data.append(np.loadtxt(open(mypath+"\\"+name, "rb"), delimiter=",", skiprows=0))
      
 
 """
@@ -31,8 +29,8 @@ def peaks(x):
      V = abs(x[:,1])  # absolute values of voltages
      peak_ind_list = []
      peak_val_list = []
-     peak_width = 50  # in units of indices
-     peak_threshold = 1.4  # volts
+     peak_width = 20  # in units of indices
+     peak_threshold = .15  # volts
      Lcount = 0
      count = 1
      while count <= len(x[:,:])-1:
@@ -56,7 +54,13 @@ def peak_average(sdata):
           ind, lst = peaks(sdata[i])
           peak_averages.append(np.mean(lst))
      return peak_averages
-          
+
+def add_peaks(sdata):
+     peak_totals = []
+     for i in range(len(sdata)):
+          ind, lst = peaks(sdata[i])
+          peak_totals.append(np.sum(lst[1:]))  # ADD ALL? OR JUST FIRST TWO: lst[0:2]
+     return peak_totals
      
 def display_animation(sdata):
      for i in range(len(sdata)):
@@ -67,4 +71,12 @@ def display_animation(sdata):
           plt.clf()
 
           
-pks = peak_average(signal_data)
+pks = add_peaks(signal_data)
+deg = np.array([0,2,4,6,8,10,12,14,15], float)
+
+def plot_sdata():
+     for i in range(len(signal_data)):
+          plt.figure()
+          plt.plot(signal_data[i][:,0], signal_data[i][:,1])
+
+
