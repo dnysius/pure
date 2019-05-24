@@ -20,6 +20,8 @@ class Transducer:
           self.name = name
           self.fnames = [f for f in listdir(mypath) if isfile(join(mypath, f)) and f[-4:] == '.csv']
           self.signal_data = []
+          self.deg = np.array([0,2,4,6,8,10,12,14,15], float)
+          self.pk_dst = []
           for name in self.fnames:
                self.signal_data.append(np.loadtxt(open(mypath+"\\"+name, "rb"), delimiter=",", skiprows=0))
      
@@ -32,8 +34,8 @@ class Transducer:
           V = abs(x[:,1])  # absolute values of voltages
           peak_ind_list = []
           peak_val_list = []
-          peak_width = 2000  # in units of indices
-          peak_threshold = .5 # volts
+          peak_width = 2500  # in units of indices
+          peak_threshold = .1 # volts
           Lcount = 0
           count = 1
           while count <= len(x[:,:])-1:
@@ -55,7 +57,6 @@ class Transducer:
           '''
           Takes a single signal waveform, output the mean of the peak values
           '''
-
           peak_averages = []
           for i in range(len(self.signal_data)):
                ind, lst = self.peaks(self.signal_data[i])
@@ -81,9 +82,9 @@ class Transducer:
           '''
           for i in range(len(self.signal_data)):
                ind, lst = self.peaks(self.signal_data[i])
-               plt.figure()
-               plt.plot(self.signal_data[i][:, 0], abs(self.signal_data[i][:,1]),c='grey')
-               plt.scatter(self.signal_data[i][ind,0],abs(self.signal_data[i][ind, 1]), s=10, c='goldenrod')
+               plt.figure(figsize=[8,6])
+               plt.plot(self.signal_data[i][:, 0], abs(self.signal_data[i][:,1]),c='grey', alpha=.6)
+               plt.scatter(self.signal_data[i][ind,0],abs(self.signal_data[i][ind, 1]), s=20, c='goldenrod')
                plt.xlabel('time (s)')
                plt.ylabel('voltage (V)')
                
@@ -93,9 +94,8 @@ class Transducer:
           Plots the average peak values as a function of angle 
           '''
           pks = self.peak_average()
-          deg = np.array([0,2,4,6,8,10,12,14,15], float)
           plt.figure(figsize=[8,6])
-          plt.plot(deg, pks, c='grey')
+          plt.plot(self.deg, pks, c='grey')
           plt.title(self.name)
           plt.xlabel('angle (degree)')
           plt.ylabel('average peak voltage (V)')
@@ -106,20 +106,53 @@ class Transducer:
           Plots the total peak values as a function of angle
           '''
           pks = self.add_peaks()
-          deg = np.array([0,2,4,6,8,10,12,14,15], float)
           plt.figure(figsize=[8,6])
-          plt.plot(deg, pks, c='goldenrod')
+          plt.plot(self.deg, pks, c='goldenrod')
           plt.title(self.name)
           plt.xlabel('angle (degree)')
           plt.ylabel('total peak voltage (V)')
-
-
+          
+          
+     def peak_dist(self):
+          '''
+          Calculates the distance between the second and third peaks
+          (want to get actual dist units)
+          '''
+          v_metal = 3000
+          for i in range(len(self.signal_data)):
+               ind, lst = self.peaks(self.signal_data[i])
+               self.pk_dst.append(v_metal*(self.signal_data[i][ind[1],0] - self.signal_data[i][ind[0],0])/2)
+#               print(self.signal_data[i][ind[2],0], self.signal_data[i][ind[1],0])
+          print(self.pk_dst)
+#          plt.figure(figsize=[10,8])
+#          plt.scatter(self.deg, self.pk_dst, c='goldenrod', s=20)
+#          plt.ylabel('')
+#          plt.show()
+          
+     
+     def zoom_peak(self, i, n, width):
+          '''
+          i: index of angle (which array)
+          n: index of peak
+          width: zoom index width
+          '''
+          plt.figure(figsize=[8,6])
+          ind, lst = self.peaks(self.signal_data[i])
+          Lind = ind[n]-width
+          Rind = ind[n]+width
+          plt.plot(self.signal_data[i][Lind:Rind,0], self.signal_data[i][Lind:Rind,1], c='goldenrod')
+          plt.show()
+                    
 if __name__ == "__main__":
      path = "C:\\Users\\dionysius\\Desktop\\PURE\\may24\\FLAT\\clean"
      path1 = "C:\\Users\\dionysius\\Desktop\\PURE\\may24\\FOC\\clean"
      flat = Transducer(path, "Flat Transducer")
      focused = Transducer(path1, "Focused Transducer")
-     flat.pk_tot()
-     focused.pk_tot()
-     flat.pk_avg()
-     focused.pk_avg()
+#     flat.pk_tot()
+#     focused.pk_tot()
+#     flat.peak_dist()
+#     focused.peak_dist()
+#     focused.display_animation()
+#     flat.display_animation()
+#     flat.pk_avg()
+#     focused.pk_avg()
