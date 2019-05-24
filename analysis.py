@@ -29,8 +29,8 @@ def peaks(x):
      V = abs(x[:,1])  # absolute values of voltages
      peak_ind_list = []
      peak_val_list = []
-     peak_width = 20  # in units of indices
-     peak_threshold = .15  # volts
+     peak_width = 2000  # in units of indices
+     peak_threshold = .5 # volts
      Lcount = 0
      count = 1
      while count <= len(x[:,:])-1:
@@ -59,24 +59,35 @@ def add_peaks(sdata):
      peak_totals = []
      for i in range(len(sdata)):
           ind, lst = peaks(sdata[i])
-          peak_totals.append(np.sum(lst[1:]))  # ADD ALL? OR JUST FIRST TWO: lst[0:2]
+          peak_totals.append(np.sum(lst))  # ADD ALL? OR JUST FIRST TWO: lst[0:2]
      return peak_totals
      
-def display_animation(sdata):
-     for i in range(len(sdata)):
-          ind, lst = peaks(sdata[i])
-          plt.plot(sdata[i][:, 0], abs(sdata[i][:,1]))
-          plt.scatter(sdata[i][ind,0],abs(sdata[i][ind, 1]), s=10)
+def display_animation(signal_data):
+     for i in range(len(signal_data)):
+          ind, lst = peaks(signal_data[i])
+          plt.plot(signal_data[i][:, 0], abs(signal_data[i][:,1]))
+          plt.scatter(signal_data[i][ind,0],abs(signal_data[i][ind, 1]), s=10, c='goldenrod')
           plt.pause(.5)
           plt.clf()
 
           
-pks = add_peaks(signal_data)
-deg = np.array([0,2,4,6,8,10,12,14,15], float)
 
+def pk_avg():
+     pks = peak_average(signal_data)
+     deg = np.array([0,2,4,6,8,10,12,14,15], float)
+     plt.plot(deg, pks)
+
+     
+def pk_tot():
+     pks = add_peaks(signal_data)
+     deg = np.array([0,2,4,6,8,10,12,14,15], float)
+     plt.plot(deg, pks)
+     
+     
 def plot_sdata():
      for i in range(len(signal_data)):
           plt.figure()
           plt.plot(signal_data[i][:,0], signal_data[i][:,1])
 
-
+#pk_tot()  # check the total added peak values against angle
+display_animation()  # check if peaks are correctly identified
