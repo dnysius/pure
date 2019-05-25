@@ -21,10 +21,10 @@ class Micrometer:
           '''
           self.mic = mic
           self.ang = ang
-          self.popt, self.pcov = sc.curve_fit(self.d, self.mic, self.ang, (1,1))
+          self.popt, self.pcov = sc.curve_fit(self.__d, self.mic, self.ang, (1,1))
 
 
-     def d(self, x, a, b):
+     def __d(self, x, a, b):
           '''
           Model linear function
           '''
@@ -35,10 +35,11 @@ class Micrometer:
           '''
           Displays the calibration data points and curve fit
           '''
-          plt.scatter(self.mic, self.ang)
-          plt.plot(self.mic, self.d(self.mic,*self.popt))
-          plt.xlabel('micrometer reading')
-          plt.ylabel('degree')
+          plt.figure(figsize=[8,6])
+          plt.scatter(self.mic, self.ang, c='grey')
+          plt.plot(self.mic, self.__d(self.mic,*self.popt), c='goldenrod')
+          plt.xlabel('micrometer reading (mm)')
+          plt.ylabel('angle (degree)')
           plt.title('micrometer calibration curve')
           plt.show()
      
