@@ -3,6 +3,8 @@
 Created on Thu May 23 14:04:23 2019
 
 @author: dionysius
+
+Creates object that contains signal data and methods to analyze it.
 """
 
 import numpy as np
@@ -30,11 +32,12 @@ class Transducer:
           '''
           find the peaks, output indices and the values of the points
           x - signal as numpy array
+          return - list, list
           '''
           V = abs(x[:,1])  # absolute values of voltages
           peak_ind_list = []
           peak_val_list = []
-          peak_width = 2500  # in units of indices
+          peak_width = 1500  # in units of indices
           peak_threshold = .1 # volts
           Lcount = 0
           count = 1
@@ -56,6 +59,7 @@ class Transducer:
      def peak_average(self):
           '''
           Takes a single signal waveform, output the mean of the peak values
+          return - list
           '''
           peak_averages = []
           for i in range(len(self.signal_data)):
@@ -67,6 +71,7 @@ class Transducer:
      def add_peaks(self):
           '''
           Takes a single signal waveform, and adds together all the peak values
+          return - list
           '''
           peak_totals = []
           for i in range(len(self.signal_data)):
@@ -91,7 +96,7 @@ class Transducer:
                
      def pk_avg(self):
           '''
-          Plots the average peak values as a function of angle 
+          Plots the average peak values as a function of angle
           '''
           pks = self.peak_average()
           plt.figure(figsize=[8,6])
@@ -118,16 +123,17 @@ class Transducer:
           Calculates the distance between the second and third peaks
           (want to get actual dist units)
           '''
-          v_metal = 3000
+          v_water = 1498  # m/s
           for i in range(len(self.signal_data)):
                ind, lst = self.peaks(self.signal_data[i])
-               self.pk_dst.append(v_metal*(self.signal_data[i][ind[1],0] - self.signal_data[i][ind[0],0])/2)
-#               print(self.signal_data[i][ind[2],0], self.signal_data[i][ind[1],0])
-          print(self.pk_dst)
-#          plt.figure(figsize=[10,8])
-#          plt.scatter(self.deg, self.pk_dst, c='goldenrod', s=20)
-#          plt.ylabel('')
-#          plt.show()
+               self.pk_dst.append(v_water*(self.signal_data[i][ind[2],0] - self.signal_data[i][ind[1],0])/2)
+
+          plt.figure(figsize=[8,4])
+          plt.title('Distance from transducer to sample surface')
+          plt.scatter(self.deg, self.pk_dst, c='grey', s=20)
+          plt.xlabel('angle (degree)')
+          plt.ylabel('distance (m)')
+          plt.show()
           
      
      def zoom_peak(self, i, n, width):
@@ -155,19 +161,20 @@ class Transducer:
           Lind = ind[n]-width
           Rind = ind[n]+width
           return self.signal_data[i][Lind:Rind,:]
+     
+     def display_signal(self, i):
+          plt.figure(figsize=[10,8])
+          plt.plot(self.signal_data[i][:,0],self.signal_data[i][:,1], c='goldenrod')
+          plt.xlabel('time (s)')
+          plt.ylabel('voltage (V)')
+          plt.title(self.fnames[i])
+          plt.show()
           
 if __name__ == "__main__":
      path = "C:\\Users\\dionysius\\Desktop\\PURE\\may24\\FLAT\\clean"
      path1 = "C:\\Users\\dionysius\\Desktop\\PURE\\may24\\FOC\\clean"
      flat = Transducer(path, "Flat Transducer")
      focused = Transducer(path1, "Focused Transducer")
-#     focused.zoom_peak(0,1,2000)
-#     flat.zoom_peak(0,1,1000)
-#     flat.pk_tot()
-#     focused.pk_tot()
-#     flat.peak_dist()
-#     focused.peak_dist()
-#     focused.display_animation()
-#     flat.display_animation()
-#     flat.pk_avg()
-#     focused.pk_avg()
+     flat.display_animation()
+     flat.zoom_peak(0,1,500)
+     flat.get_peak(0,1,500)
