@@ -13,6 +13,69 @@ from os import listdir
 from os.path import isfile, join
 
 
+class Signal:
+     
+     def __init__(self, xy):
+          '''
+          xy: numpy array
+          '''
+          self.xy = np.copy(xy)  # will be changed by class methods
+          self.__xy = np.copy(xy)  # will be constant
+          self.peak_ind = []  # indices of x values where peaks are located
+          self.peak_val = []  # y values of each peak
+          self.name = ''
+     
+     def zoom_peak(self, n, threshold, width):
+          '''
+          displays a scaled up plot of a peak waveform
+          i: index of angle (which array)
+          n: index of peak
+          width: zoom index width
+          '''
+          ind, lst = self.peaks_list(threshold, width)
+          Lind = ind[n]-width
+          Rind = ind[n]+width
+          self.xy = self.xy[Lind:Rind, :]
+          
+          
+     def reset_view(self):
+          self.xy = np.copy(self.__xy)
+          
+          
+     def peaks_list(self, threshold, width):
+          '''
+          threshold: minimum voltage to detect
+          width: domain over which to take the max voltage value
+          '''
+          V = np.abs(self.xy[:,1])  # absolute values of voltages
+          count = 0
+          while count <= len(self.xy[:,:])-1:
+               if V[count] >= threshold and (count-width) >= 0:     
+                    if V[count] == max(V[(count-width): (count+width)]):
+                         self.peak_ind.append(count)
+                         self.peak_val.append(V[count])
+                         Lcount = count + width
+                         count = Lcount + 1
+                    else:
+                         count += 1
+               else:
+                    count += 1
+          
+          return self.peak_ind, self.peak_val
+     
+     
+     def display(self):
+          '''
+          Display the current signal
+          '''
+          plt.figure(figsize=[10,8])
+          plt.plot(self.xy[:,0], self.xy[:,1], c='goldenrod')
+          plt.xlabel('time (s)')
+          plt.ylabel('voltage (V)')
+          plt.title(self.name)
+          plt.show()
+     
+     
 class Transducer:
      '''
      fnames: name of csv files in working directory
@@ -25,7 +88,9 @@ class Transducer:
           self.deg = np.array([0,2,4,6,8,10,12,14,15], float)
           self.pk_dst = []
           for name in self.fnames:
-               self.signal_data.append(np.loadtxt(open(mypath+"\\"+name, "rb"), delimiter=",", skiprows=0))
+               xy = np.loadtxt(open(mypath+"\\"+name, "rb"), delimiter=",", skiprows=0)
+               sig = Signal(xy)
+               self.signal_data.append(sig)
      
      
      def peaks(self, x):
@@ -65,6 +130,8 @@ class Transducer:
           for i in range(len(self.signal_data)):
                ind, lst = self.peaks(self.signal_data[i])
                peak_averages.append(np.mean(lst))
+          for sig in self.signal_data:
+               peak_averages.append(np.mean(sig.peaks_list(.1, 2000)[1]))
           return peak_averages
      
      
@@ -170,11 +237,13 @@ class Transducer:
           plt.title(self.fnames[i])
           plt.show()
           
+     
+          
 if __name__ == "__main__":
      path = "C:\\Users\\dionysius\\Desktop\\PURE\\may24\\FLAT\\clean"
      path1 = "C:\\Users\\dionysius\\Desktop\\PURE\\may24\\FOC\\clean"
      flat = Transducer(path, "Flat Transducer")
      focused = Transducer(path1, "Focused Transducer")
-     flat.display_animation()
-     flat.zoom_peak(0,1,500)
-     flat.get_peak(0,1,500)
+     flat.display_signal(0)
+#     flat.zoom_peak(0,1,500)
+#     flat.get_peak(0,1,500)
