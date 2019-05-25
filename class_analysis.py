@@ -132,6 +132,7 @@ class Transducer:
      
      def zoom_peak(self, i, n, width):
           '''
+          displays a scaled up plot of a peak waveform
           i: index of angle (which array)
           n: index of peak
           width: zoom index width
@@ -142,12 +143,26 @@ class Transducer:
           Rind = ind[n]+width
           plt.plot(self.signal_data[i][Lind:Rind,0], self.signal_data[i][Lind:Rind,1], c='goldenrod')
           plt.show()
-                    
+          
+     def get_peak(self, i, n, width):
+          '''
+          Returns a numpy array that is a scaled up peak waveform
+          i: index of angle (which array)
+          n: index of peak
+          width: zoom index width
+          '''
+          ind, lst = self.peaks(self.signal_data[i])
+          Lind = ind[n]-width
+          Rind = ind[n]+width
+          return self.signal_data[i][Lind:Rind,:]
+          
 if __name__ == "__main__":
      path = "C:\\Users\\dionysius\\Desktop\\PURE\\may24\\FLAT\\clean"
      path1 = "C:\\Users\\dionysius\\Desktop\\PURE\\may24\\FOC\\clean"
      flat = Transducer(path, "Flat Transducer")
      focused = Transducer(path1, "Focused Transducer")
+#     focused.zoom_peak(0,1,2000)
+#     flat.zoom_peak(0,1,1000)
 #     flat.pk_tot()
 #     focused.pk_tot()
 #     flat.peak_dist()
