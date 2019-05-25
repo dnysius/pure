@@ -3,6 +3,9 @@
 Created on Fri May 24 14:28:41 2019
 
 @author: dionysius
+
+Creates a calibration model object for the micrometer used
+in the angle dependent sample setup.
 """
 import scipy.optimize as sc
 import matplotlib.pyplot as plt
@@ -10,23 +13,26 @@ import numpy as np
 
 class Micrometer:
      '''
-     Creates a calibration model object for the micrometer used
-     in the angle dependent sample setup.
+     self.mic: micrometer readings
+     self.ang: angle readings
      '''
      
      def __init__(self, mic, ang):
           '''
-          self.mic: micrometer readings
-          self.ang: angle readings
+          mic: micrometer readings
+          ang: angle readings
           '''
           self.mic = mic
-          self.ang = ang
-          self.popt, self.pcov = sc.curve_fit(self.__d, self.mic, self.ang, (1,1))
+          self.angle = ang
+          self.popt, self.pcov = sc.curve_fit(self.__d, self.mic, self.angle, (1,1))
 
 
      def __d(self, x, a, b):
           '''
           Model linear function
+          x: micrometer readings
+          a, b: curve fit parameters
+          return: float
           '''
           return a*x+ b
 
@@ -36,7 +42,7 @@ class Micrometer:
           Displays the calibration data points and curve fit
           '''
           plt.figure(figsize=[8,6])
-          plt.scatter(self.mic, self.ang, c='grey')
+          plt.scatter(self.mic, self.angle, c='grey')
           plt.plot(self.mic, self.__d(self.mic,*self.popt), c='goldenrod')
           plt.xlabel('micrometer reading (mm)')
           plt.ylabel('angle (degree)')
@@ -47,8 +53,11 @@ class Micrometer:
      def dtheta(self, x1, x2):
           '''
           Outputs the change in angle between two micrometer readings
+          x1, x2: micrometer readings
+          return: float
           '''
           return self.popt[0]*(x2-x1)
+     
      
      
 if __name__ == '__main__':

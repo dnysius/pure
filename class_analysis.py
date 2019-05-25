@@ -14,16 +14,18 @@ from os.path import isfile, join
 
 
 class Signal:
+     '''
+     Object for individual waveforms for a given transducer
+     '''
      
-     def __init__(self, xy):
+     def __init__(self, xy, threshold, width):
           '''
           xy: numpy array
           '''
           self.xy = np.copy(xy)  # will be changed by class methods
           self.__xy = np.copy(xy)  # will be constant
-          self.peak_ind = []  # indices of x values where peaks are located
-          self.peak_val = []  # y values of each peak
           self.name = ''
+          self.peak_ind, self.peak_val = self.peaks_list(threshold, width)
      
      def zoom_peak(self, n, threshold, width):
           '''
@@ -38,7 +40,7 @@ class Signal:
           self.xy = self.xy[Lind:Rind, :]
           
           
-     def reset_view(self):
+     def reset(self):
           self.xy = np.copy(self.__xy)
           
           
@@ -47,6 +49,8 @@ class Signal:
           threshold: minimum voltage to detect
           width: domain over which to take the max voltage value
           '''
+          self.peak_ind = []  # indices of x values where peaks are located
+          self.peak_val = []  # y values of each peak
           V = np.abs(self.xy[:,1])  # absolute values of voltages
           count = 0
           while count <= len(self.xy[:,:])-1:
@@ -69,11 +73,13 @@ class Signal:
           Display the current signal
           '''
           plt.figure(figsize=[10,8])
-          plt.plot(self.xy[:,0], self.xy[:,1], c='goldenrod')
+          plt.plot(self.xy[:,0], self.xy[:,1], c='grey')
+          plt.scatter(self.xy[self.peak_ind, 0], self.xy[self.peak_ind, 1], c='goldenrod')
           plt.xlabel('time (s)')
           plt.ylabel('voltage (V)')
           plt.title(self.name)
           plt.show()
+     
      
      
 class Transducer:
@@ -86,53 +92,30 @@ class Transducer:
           self.fnames = [f for f in listdir(mypath) if isfile(join(mypath, f)) and f[-4:] == '.csv']
           self.signal_data = []
           self.deg = np.array([0,2,4,6,8,10,12,14,15], float)
+          self.threshold = .5
+          self.width = 1500
           self.pk_dst = []
           for name in self.fnames:
                xy = np.loadtxt(open(mypath+"\\"+name, "rb"), delimiter=",", skiprows=0)
-               sig = Signal(xy)
+               sig = Signal(xy, self.threshold, self.width)
                self.signal_data.append(sig)
-     
-     
-     def peaks(self, x):
-          '''
-          find the peaks, output indices and the values of the points
-          x - signal as numpy array
-          return - list, list
-          '''
-          V = abs(x[:,1])  # absolute values of voltages
-          peak_ind_list = []
-          peak_val_list = []
-          peak_width = 1500  # in units of indices
-          peak_threshold = .1 # volts
-          Lcount = 0
-          count = 1
-          while count <= len(x[:,:])-1:
-               if V[count] >= peak_threshold:     
-                    if V[count] == max(V[Lcount: (count+peak_width)]):
-                         peak_ind_list.append(count)
-                         peak_val_list.append(V[count])
-                         Lcount = count + peak_width
-                         count = Lcount + 1
-                    else:
-                         count += 1
-               else:
-                    count += 1
-     
-          return peak_ind_list, peak_val_list
-     
+          # initiating methods to find values for totals, averages, and to display totals
+          self.peak_totals = self.add_peaks()
+          self.peak_averages = self.peak_average()
+          self.display_total()
+          
      
      def peak_average(self):
           '''
           Takes a single signal waveform, output the mean of the peak values
           return - list
           '''
-          peak_averages = []
-          for i in range(len(self.signal_data)):
-               ind, lst = self.peaks(self.signal_data[i])
-               peak_averages.append(np.mean(lst))
+          self.peak_averages = []
           for sig in self.signal_data:
-               peak_averages.append(np.mean(sig.peaks_list(.1, 2000)[1]))
-          return peak_averages
+               lst = sig.peak_val
+               self.peak_averages.append(np.mean(lst))
+               
+          return self.peak_averages
      
      
      def add_peaks(self):
@@ -140,11 +123,12 @@ class Transducer:
           Takes a single signal waveform, and adds together all the peak values
           return - list
           '''
-          peak_totals = []
-          for i in range(len(self.signal_data)):
-               ind, lst = self.peaks(self.signal_data[i])
-               peak_totals.append(np.sum(lst))  # ADD ALL? OR JUST FIRST TWO: lst[0:2]
-          return peak_totals
+          self.peak_totals = []
+          for sig in self.signal_data:
+               lst = sig.peak_val
+               self.peak_totals.append(np.sum(lst))
+               
+          return self.peak_totals
      
           
      def display_animation(self):
@@ -155,55 +139,53 @@ class Transducer:
           for i in range(len(self.signal_data)):
                ind, lst = self.peaks(self.signal_data[i])
                plt.figure(figsize=[8,6])
-               plt.plot(self.signal_data[i][:, 0], abs(self.signal_data[i][:,1]),c='grey', alpha=.6)
-               plt.scatter(self.signal_data[i][ind,0],abs(self.signal_data[i][ind, 1]), s=20, c='goldenrod')
+               plt.plot(self.signal_data[i].xy[:, 0], np.abs(self.signal_data[i].xy[:,1]),c='grey', alpha=.6)
+               plt.scatter(self.signal_data[i].xy[ind,0],np.abs(self.signal_data[i].xy[ind, 1]), s=20, c='goldenrod')
                plt.xlabel('time (s)')
                plt.ylabel('voltage (V)')
                
                
-     def pk_avg(self):
+     def display_average(self):
           '''
           Plots the average peak values as a function of angle
           '''
-          pks = self.peak_average()
           plt.figure(figsize=[8,6])
-          plt.plot(self.deg, pks, c='grey')
+          plt.scatter(self.deg, self.peak_averages, c='grey')
           plt.title(self.name)
           plt.xlabel('angle (degree)')
           plt.ylabel('average peak voltage (V)')
           
           
-     def pk_tot(self):
+     def display_total(self):
           '''
           Plots the total peak values as a function of angle
           '''
-          pks = self.add_peaks()
           plt.figure(figsize=[8,6])
-          plt.plot(self.deg, pks, c='goldenrod')
+          plt.scatter(self.deg, self.peak_totals, c='goldenrod')
           plt.title(self.name)
           plt.xlabel('angle (degree)')
           plt.ylabel('total peak voltage (V)')
           
           
-     def peak_dist(self):
-          '''
-          Calculates the distance between the second and third peaks
-          (want to get actual dist units)
-          '''
-          v_water = 1498  # m/s
-          for i in range(len(self.signal_data)):
-               ind, lst = self.peaks(self.signal_data[i])
-               self.pk_dst.append(v_water*(self.signal_data[i][ind[2],0] - self.signal_data[i][ind[1],0])/2)
-
-          plt.figure(figsize=[8,4])
-          plt.title('Distance from transducer to sample surface')
-          plt.scatter(self.deg, self.pk_dst, c='grey', s=20)
-          plt.xlabel('angle (degree)')
-          plt.ylabel('distance (m)')
-          plt.show()
+#     def peak_dist(self):
+#          '''
+#          Calculates the distance between the second and third peaks
+#          (want to get actual dist units)
+#          '''
+#          v_water = 1498  # m/s
+#          for i in range(len(self.signal_data)):
+#               ind = self.signal_data[i].peak_ind
+#               self.pk_dst.append(v_water*(self.signal_data[i].xy[ind[2],0] - self.signal_data[i].xy[ind[1],0])/2)
+#
+#          plt.figure(figsize=[8,4])
+#          plt.title('Distance from transducer to sample surface')
+#          plt.scatter(self.deg, self.pk_dst, c='grey', s=20)
+#          plt.xlabel('angle (degree)')
+#          plt.ylabel('distance (m)')
+#          plt.show()
           
      
-     def zoom_peak(self, i, n, width):
+     def zoom_peak(self, i, n, threshold, width):
           '''
           displays a scaled up plot of a peak waveform
           i: index of angle (which array)
@@ -211,11 +193,10 @@ class Transducer:
           width: zoom index width
           '''
           plt.figure(figsize=[8,6])
-          ind, lst = self.peaks(self.signal_data[i])
-          Lind = ind[n]-width
-          Rind = ind[n]+width
-          plt.plot(self.signal_data[i][Lind:Rind,0], self.signal_data[i][Lind:Rind,1], c='goldenrod')
-          plt.show()
+          self.signal_data[i].zoom_peak(n, threshold, width)
+          self.signal_data[i].display()
+          self.signal_data[i].reset()
+          
           
      def get_peak(self, i, n, width):
           '''
@@ -223,27 +204,22 @@ class Transducer:
           i: index of angle (which array)
           n: index of peak
           width: zoom index width
+          return: scaled array
           '''
-          ind, lst = self.peaks(self.signal_data[i])
+          ind = self.signal_data[i].peak_ind
           Lind = ind[n]-width
           Rind = ind[n]+width
-          return self.signal_data[i][Lind:Rind,:]
+          return self.signal_data[i].xy[Lind:Rind,:]
+     
      
      def display_signal(self, i):
-          plt.figure(figsize=[10,8])
-          plt.plot(self.signal_data[i][:,0],self.signal_data[i][:,1], c='goldenrod')
-          plt.xlabel('time (s)')
-          plt.ylabel('voltage (V)')
-          plt.title(self.fnames[i])
-          plt.show()
+          self.signal_data[i].name = self.fnames[i]
+          self.signal_data[i].display()
+
           
      
-          
 if __name__ == "__main__":
      path = "C:\\Users\\dionysius\\Desktop\\PURE\\may24\\FLAT\\clean"
      path1 = "C:\\Users\\dionysius\\Desktop\\PURE\\may24\\FOC\\clean"
      flat = Transducer(path, "Flat Transducer")
      focused = Transducer(path1, "Focused Transducer")
-     flat.display_signal(0)
-#     flat.zoom_peak(0,1,500)
-#     flat.get_peak(0,1,500)
