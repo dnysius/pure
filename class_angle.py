@@ -35,6 +35,12 @@ class Micrometer:
           return: float
           '''
           return a*x+ b
+     
+     def fit(self, mic, ang):
+          '''
+          Overwrites curve fit parameters found with new data
+          '''
+          self.popt, self.pcov = sc.curve_fit(self.__d, mic, ang, (1,1))
 
      
      def calibration_curve(self):
@@ -59,8 +65,16 @@ class Micrometer:
           return self.popt[0]*(x2-x1)
      
      
+     def d(self, x):
+          '''
+          x: numpy array corresponding to new micrometer readings
+          outputs numpy array for corresponding angle values
+          '''
+          return self.popt[0]*x + self.popt[1]
      
-if __name__ == '__main__':
+     
+     
+if __name__ != '__main__':
      mc = np.array([24.15,20.65,18.53,14.12,10.36,7,3.48,0.56,0], float)
      deg = np.array([0,2,4,6,8,10,12,14,15], float)
-     may22 = Micrometer(mc, deg)
+     Micro = Micrometer(mc, deg)

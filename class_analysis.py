@@ -9,9 +9,9 @@ Creates object that contains signal data and methods to analyze it.
 
 import numpy as np
 import matplotlib.pyplot as plt
-from os import listdir
-from os.path import isfile, join
-
+from os import listdir, mkdir
+from os.path import isfile, isdir, join
+from class_angle import Micro
 
 class Signal:
      '''
@@ -27,17 +27,17 @@ class Signal:
           self.name = ''
           self.peak_ind, self.peak_val = self.peaks_list(threshold, width)
      
-     def zoom_peak(self, n, threshold, width):
-          '''
-          displays a scaled up plot of a peak waveform
-          i: index of angle (which array)
-          n: index of peak
-          width: zoom index width
-          '''
-          ind, lst = self.peaks_list(threshold, width)
-          Lind = ind[n]-width
-          Rind = ind[n]+width
-          self.xy = self.xy[Lind:Rind, :]
+#     def zoom_peak(self, n, threshold, width):
+#          '''
+#          displays a scaled up plot of a peak waveform
+#          i: index of angle (which array)
+#          n: index of peak
+#          width: zoom index width
+#          '''
+#          ind, lst = self.peaks_list(threshold, width)
+#          Lind = ind[n]-width
+#          Rind = ind[n]+width
+#          self.xy = self.xy[Lind:Rind, :]
           
           
      def reset(self):
@@ -81,6 +81,11 @@ class Signal:
           plt.show()
      
      
+     def fft(self):
+          y = self.xy[:, 1]
+          return np.fft.fft(y)
+          
+     
      
 class Transducer:
      '''
@@ -88,21 +93,26 @@ class Transducer:
      signal_data: python list consisting of csv files as numpy arrays
      '''
      def __init__(self, mypath, name):
+          self.mypath = mypath
           self.name = name
           self.fnames = [f for f in listdir(mypath) if isfile(join(mypath, f)) and f[-4:] == '.csv']
           self.signal_data = []
-          self.deg = np.array([0,2,4,6,8,10,12,14,15], float)
+          self.deg = Micro.angle
           self.threshold = .5
           self.width = 1500
           self.pk_dst = []
-          for name in self.fnames:
-               xy = np.loadtxt(open(mypath+"\\"+name, "rb"), delimiter=",", skiprows=0)
+          for i in range(len(self.fnames)):
+               xy = np.loadtxt(open(mypath+"\\"+self.fnames[i], "rb"), delimiter=",", skiprows=0)
                sig = Signal(xy, self.threshold, self.width)
+               sig.name = "{0}_Transducer_{1}_degrees".format(self.name, self.deg[i])
                self.signal_data.append(sig)
           # initiating methods to find values for totals, averages, and to display totals
           self.peak_totals = self.add_peaks()
           self.peak_averages = self.peak_average()
           self.display_total()
+          self.display_average()
+          self.display_fft()
+          self.display_signal()
           
      
      def peak_average(self):
@@ -148,23 +158,42 @@ class Transducer:
      def display_average(self):
           '''
           Plots the average peak values as a function of angle
-          '''
-          plt.figure(figsize=[8,6])
+          '''        
+          plt.ioff()
+          folder = self.mypath + "\\profile"
+          if not isdir(folder):
+               mkdir(folder)
+               
+          fig = plt.figure(figsize=[10,8])
           plt.scatter(self.deg, self.peak_averages, c='grey')
           plt.title(self.name)
           plt.xlabel('angle (degree)')
           plt.ylabel('average peak voltage (V)')
+          plt.savefig(folder + "\\AVG_" +self.name+".png", dpi=300)
+          plt.close(fig)
+               
+          plt.ion()
           
           
      def display_total(self):
           '''
           Plots the total peak values as a function of angle
           '''
-          plt.figure(figsize=[8,6])
+          plt.ioff()
+          folder = self.mypath + "\\profile"
+          if not isdir(folder):
+               mkdir(folder)
+               
+          fig = plt.figure(figsize=[10,8])
           plt.scatter(self.deg, self.peak_totals, c='goldenrod')
           plt.title(self.name)
           plt.xlabel('angle (degree)')
           plt.ylabel('total peak voltage (V)')
+          plt.savefig(folder + "\\TOT_" +self.name+".png", dpi=300)
+          plt.close(fig)
+               
+          plt.ion()
+          
           
           
 #     def peak_dist(self):
@@ -212,14 +241,46 @@ class Transducer:
           return self.signal_data[i].xy[Lind:Rind,:]
      
      
-     def display_signal(self, i):
-          self.signal_data[i].name = self.fnames[i]
-          self.signal_data[i].display()
+     def display_signal(self):
+          plt.ioff()
+          folder = self.mypath + "\\signals"
+          if not isdir(folder):
+               mkdir(folder)
+               
+          for sig in self.signal_data:
+               fig = plt.figure(figsize=[10,8])
+               plt.plot(sig.xy[:, 0], sig.xy[:, 1], c='grey')
+               plt.scatter(sig.xy[sig.peak_ind, 0], sig.xy[sig.peak_ind, 1], c='goldenrod', s=25)
+               plt.xlabel('time (s)')
+               plt.ylabel('voltage (V)')
+               plt.title(self.name)
+               plt.savefig(folder + "\\SIG_" +sig.name+".png", dpi=300)
+               plt.close(fig)
+               
+          plt.ion()
+       
 
-          
-     
+     def display_fft(self):
+          plt.ioff()
+          folder = self.mypath + "\\fft"
+          if not isdir(folder):
+               mkdir(folder)
+               
+          for sig in self.signal_data:
+               c = sig.fft()
+               fig = plt.figure(figsize=[10,8])
+               plt.plot(abs(c))
+               plt.title(self.name)
+               plt.savefig(folder + "\\FFT_" +sig.name+".png", dpi=300)
+               plt.close(fig)
+               
+          plt.ion()
+               
+               
 if __name__ == "__main__":
      path = "C:\\Users\\dionysius\\Desktop\\PURE\\may24\\FLAT\\clean"
      path1 = "C:\\Users\\dionysius\\Desktop\\PURE\\may24\\FOC\\clean"
      flat = Transducer(path, "Flat Transducer")
-     focused = Transducer(path1, "Focused Transducer")
+     flat.display_fft()
+     flat.display_signal()
+#     focused = Transducer(path1, "Focused Transducer")
