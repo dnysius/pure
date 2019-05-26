@@ -1,5 +1,5 @@
 # pure
-A collaborative project between Ryerson University and pure technologies.
+A collaborative project with pure technologies.
 
 ### angle dependence
 `class_analysis.py` contains two classes, Signal and Transducer. `Signal` is a class that represents a single waveform produced by a given transducer. `Transducer` is a class that contains the data and results for the angle-dependence experiment for a given Transducer.
