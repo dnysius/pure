@@ -281,6 +281,4 @@ if __name__ == "__main__":
      path = "C:\\Users\\dionysius\\Desktop\\PURE\\may24\\FLAT\\clean"
      path1 = "C:\\Users\\dionysius\\Desktop\\PURE\\may24\\FOC\\clean"
      flat = Transducer(path, "Flat Transducer")
-     flat.display_fft()
-     flat.display_signal()
-#     focused = Transducer(path1, "Focused Transducer")
+     focused = Transducer(path1, "Focused Transducer")
