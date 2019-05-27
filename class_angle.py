@@ -17,15 +17,17 @@ class Micrometer:
      self.ang: angle readings
      '''
      
-     def __init__(self, mic, ang):
+     def __init__(self, zero, step_size):
           '''
           mic: micrometer readings
           ang: angle readings
           '''
-          self.mic = mic
-          self.angle = ang
+          self.mic = np.array([24.15,20.65,18.53,14.12,10.36,7,3.48,0.56,0], float)
+          self.angle = np.array([0,2,4,6,8,10,12,14,15], float)
           self.popt, self.pcov = sc.curve_fit(self.__d, self.mic, self.angle, (1,1))
-
+          self.popt1, self.pcov1 = sc.curve_fit(self.__d, self.angle, self.mic, (1, 1))
+          deg = np.arange(0,16, step_size)
+          self.vals = self.a(zero, deg)
 
      def __d(self, x, a, b):
           '''
@@ -43,7 +45,7 @@ class Micrometer:
           self.popt, self.pcov = sc.curve_fit(self.__d, mic, ang, (1,1))
 
      
-     def calibration_curve(self):
+     def __calibration_curve(self):
           '''
           Displays the calibration data points and curve fit
           '''
@@ -52,6 +54,18 @@ class Micrometer:
           plt.plot(self.mic, self.__d(self.mic,*self.popt), c='goldenrod')
           plt.xlabel('micrometer reading (mm)')
           plt.ylabel('angle (degree)')
+          plt.title('micrometer calibration curve')
+          plt.show()
+          
+     def calibration_curve(self):
+          '''
+          Displays the calibration data points and curve fit
+          '''
+          plt.figure(figsize=[8,6])
+          plt.scatter(self.angle, self.mic, c='grey')
+          plt.plot(self.angle, self.__d(self.angle,*self.popt1), c='goldenrod')
+          plt.ylabel('micrometer reading (mm)')
+          plt.xlabel('angle (degree)')
           plt.title('micrometer calibration curve')
           plt.show()
      
@@ -72,9 +86,27 @@ class Micrometer:
           '''
           return self.popt[0]*x + self.popt[1]
      
+     def a(self, zero, deg):
+          '''
+          Outputs micrometer readings for the desired angle values
+          '''
+          a = (np.transpose(np.array([deg])), np.transpose(np.array([self.popt1[0]*deg + zero])))
+          return np.hstack(a)
      
+     def graph_vals(self):
+          plt.figure(figsize=[8,6])
+          plt.scatter(self.vals[:, 0], self.vals[:, 1], c='grey')
+          plt.plot(self.vals[:,0], self.__d(self.vals[:,0],self.popt1[0], self.vals[0,1]), c='goldenrod')
+          plt.ylabel('micrometer reading (mm)')
+          plt.xlabel('angle (degree)')
+          plt.title('new micrometer readings')
+          plt.show()
+
+
+Micro = Micrometer(24.20, 1)
+
+if __name__ == '__main__':  
+     print(Micro.vals)
      
-if __name__ != '__main__':
-     mc = np.array([24.15,20.65,18.53,14.12,10.36,7,3.48,0.56,0], float)
-     deg = np.array([0,2,4,6,8,10,12,14,15], float)
-     Micro = Micrometer(mc, deg)
+else:
+     pass

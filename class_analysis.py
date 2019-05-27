@@ -4,7 +4,6 @@ Created on Thu May 23 14:04:23 2019
 
 @author: dionysius
 
-Creates object that contains signal data and methods to analyze it.
 """
 
 import numpy as np
@@ -16,6 +15,10 @@ from class_angle import Micro
 class Signal:
      '''
      Object for individual waveforms for a given transducer
+     self.xy: signal as numpy array
+     self.__xy: original copy of self.xy
+     self.name: name of current signal waveform
+     self.peak_ind: 
      '''
      
      def __init__(self, xy, threshold, width):
@@ -89,6 +92,7 @@ class Signal:
      
 class Transducer:
      '''
+     Creates object that contains signal data and methods to analyze it.
      fnames: name of csv files in working directory
      signal_data: python list consisting of csv files as numpy arrays
      '''
@@ -282,3 +286,4 @@ if __name__ == "__main__":
      path1 = "C:\\Users\\dionysius\\Desktop\\PURE\\may24\\FOC\\clean"
      flat = Transducer(path, "Flat Transducer")
      focused = Transducer(path1, "Focused Transducer")
+     
