@@ -5,12 +5,114 @@ Created on Thu May 23 14:04:23 2019
 @author: dionysius
 
 """
-
+import scipy.optimize as sc
 import numpy as np
 import matplotlib.pyplot as plt
-from os import listdir, mkdir
+from os import listdir, mkdir, getcwd
 from os.path import isfile, isdir, join
-from class_angle import Micro
+import re
+
+# sorting file names, taken from stackoverflow.com/questions/19366517/
+_nsre = re.compile('([0-9]+)')
+
+def natural_sort_key(s):
+    return [int(text) if text.isdigit() else text.lower()
+            for text in re.split(_nsre, s)]  
+    
+    
+class Micrometer:
+     '''
+     self.mic: micrometer readings
+     self.ang: angle readings
+     '''
+     
+     def __init__(self, zero, step_size):
+          '''
+          mic: micrometer readings
+          ang: angle readings
+          '''
+          self.mic = np.array([24.15,20.65,18.53,14.12,10.36,7,3.48,0.56,0], float)
+          self.angle = np.array([0,2,4,6,8,10,12,14,15], float)
+          self.popt, self.pcov = sc.curve_fit(self.__d, self.mic, self.angle, (1,1))
+          self.popt1, self.pcov1 = sc.curve_fit(self.__d, self.angle, self.mic, (1, 1))
+          deg = np.arange(0,16, step_size)
+          self.angle = deg
+          self.vals = self.a(zero, deg)
+          self.mic = self.vals[:, 1]
+
+     def __d(self, x, a, b):
+          '''
+          Model linear function
+          x: micrometer readings
+          a, b: curve fit parameters
+          return: float
+          '''
+          return a*x+ b
+     
+     def fit(self, mic, ang):
+          '''
+          Overwrites curve fit parameters found with new data
+          '''
+          self.popt, self.pcov = sc.curve_fit(self.__d, mic, ang, (1,1))
+
+     
+     def __calibration_curve(self):
+          '''
+          Displays the calibration data points and curve fit
+          '''
+          plt.figure(figsize=[8,6])
+          plt.scatter(self.mic, self.angle, c='grey')
+          plt.plot(self.mic, self.__d(self.mic,*self.popt), c='goldenrod')
+          plt.xlabel('micrometer reading (mm)')
+          plt.ylabel('angle (degree)')
+          plt.title('micrometer calibration curve')
+          plt.show()
+          
+     def calibration_curve(self):
+          '''
+          Displays the calibration data points and curve fit
+          '''
+          plt.figure(figsize=[8,6])
+          plt.scatter(self.angle, self.mic, c='grey')
+          plt.plot(self.angle, self.__d(self.angle,*self.popt1), c='goldenrod')
+          plt.ylabel('micrometer reading (mm)')
+          plt.xlabel('angle (degree)')
+          plt.title('micrometer calibration curve')
+          plt.show()
+     
+     
+     def dtheta(self, x1, x2):
+          '''
+          Outputs the change in angle between two micrometer readings
+          x1, x2: micrometer readings
+          return: float
+          '''
+          return self.popt[0]*(x2-x1)
+     
+     
+     def d(self, x):
+          '''
+          x: numpy array corresponding to new micrometer readings
+          outputs numpy array for corresponding angle values
+          '''
+          return self.popt[0]*x + self.popt[1]
+     
+     def a(self, zero, deg):
+          '''
+          Outputs micrometer readings for the desired angle values
+          '''
+          a = (np.transpose(np.array([deg])), np.transpose(np.array([self.popt1[0]*deg + zero])))
+          return np.hstack(a)
+     
+     def graph_vals(self):
+          plt.figure(figsize=[8,6])
+          plt.scatter(self.vals[:, 0], self.vals[:, 1], c='grey')
+          plt.plot(self.vals[:,0], self.__d(self.vals[:,0],self.popt1[0], self.vals[0,1]), c='goldenrod')
+          plt.ylabel('micrometer reading (mm)')
+          plt.xlabel('angle (degree)')
+          plt.title('new micrometer readings')
+          plt.show()
+
 
 class Signal:
      '''
@@ -29,18 +131,6 @@ class Signal:
           self.__xy = np.copy(xy)  # will be constant
           self.name = ''
           self.peak_ind, self.peak_val = self.peaks_list(threshold, width)
-     
-#     def zoom_peak(self, n, threshold, width):
-#          '''
-#          displays a scaled up plot of a peak waveform
-#          i: index of angle (which array)
-#          n: index of peak
-#          width: zoom index width
-#          '''
-#          ind, lst = self.peaks_list(threshold, width)
-#          Lind = ind[n]-width
-#          Rind = ind[n]+width
-#          self.xy = self.xy[Lind:Rind, :]
           
           
      def reset(self):
@@ -101,36 +191,26 @@ class Transducer:
           self.name = name
           self.fnames = [f for f in listdir(mypath) if isfile(join(mypath, f)) and f[-4:] == '.csv']
           self.signal_data = []
+          Micro = Micrometer(24.20, 1)
           self.deg = Micro.angle
-          self.threshold = .5
+          self.threshold = .2
           self.width = 1500
           self.pk_dst = []
+          self.fnames.sort(key=natural_sort_key)
           for i in range(len(self.fnames)):
                xy = np.loadtxt(open(mypath+"\\"+self.fnames[i], "rb"), delimiter=",", skiprows=0)
                sig = Signal(xy, self.threshold, self.width)
                sig.name = "{0}_Transducer_{1}_degrees".format(self.name, self.deg[i])
                self.signal_data.append(sig)
+               
           # initiating methods to find values for totals, averages, and to display totals
           self.peak_totals = self.add_peaks()
           self.peak_averages = self.peak_average()
           self.display_total()
-          self.display_average()
           self.display_fft()
           self.display_signal()
-          
-     
-     def peak_average(self):
-          '''
-          Takes a single signal waveform, output the mean of the peak values
-          return - list
-          '''
-          self.peak_averages = []
-          for sig in self.signal_data:
-               lst = sig.peak_val
-               self.peak_averages.append(np.mean(lst))
-               
-          return self.peak_averages
-     
+
+   
      
      def add_peaks(self):
           '''
@@ -140,43 +220,10 @@ class Transducer:
           self.peak_totals = []
           for sig in self.signal_data:
                lst = sig.peak_val
-               self.peak_totals.append(np.sum(lst))
+               self.peak_totals.append(np.sum(lst[1:]))
                
           return self.peak_totals
      
-          
-     def display_animation(self):
-          '''
-          Displays the plots of each waveform stored in signal_data, along
-          with the identified peaks.
-          '''
-          for i in range(len(self.signal_data)):
-               ind, lst = self.peaks(self.signal_data[i])
-               plt.figure(figsize=[8,6])
-               plt.plot(self.signal_data[i].xy[:, 0], np.abs(self.signal_data[i].xy[:,1]),c='grey', alpha=.6)
-               plt.scatter(self.signal_data[i].xy[ind,0],np.abs(self.signal_data[i].xy[ind, 1]), s=20, c='goldenrod')
-               plt.xlabel('time (s)')
-               plt.ylabel('voltage (V)')
-               
-               
-     def display_average(self):
-          '''
-          Plots the average peak values as a function of angle
-          '''        
-          plt.ioff()
-          folder = self.mypath + "\\profile"
-          if not isdir(folder):
-               mkdir(folder)
-               
-          fig = plt.figure(figsize=[10,8])
-          plt.scatter(self.deg, self.peak_averages, c='grey')
-          plt.title(self.name)
-          plt.xlabel('angle (degree)')
-          plt.ylabel('average peak voltage (V)')
-          plt.savefig(folder + "\\AVG_" +self.name+".png", dpi=300)
-          plt.close(fig)
-               
-          plt.ion()
           
           
      def display_total(self):
@@ -198,52 +245,7 @@ class Transducer:
                
           plt.ion()
           
-          
-          
-#     def peak_dist(self):
-#          '''
-#          Calculates the distance between the second and third peaks
-#          (want to get actual dist units)
-#          '''
-#          v_water = 1498  # m/s
-#          for i in range(len(self.signal_data)):
-#               ind = self.signal_data[i].peak_ind
-#               self.pk_dst.append(v_water*(self.signal_data[i].xy[ind[2],0] - self.signal_data[i].xy[ind[1],0])/2)
-#
-#          plt.figure(figsize=[8,4])
-#          plt.title('Distance from transducer to sample surface')
-#          plt.scatter(self.deg, self.pk_dst, c='grey', s=20)
-#          plt.xlabel('angle (degree)')
-#          plt.ylabel('distance (m)')
-#          plt.show()
-          
-     
-     def zoom_peak(self, i, n, threshold, width):
-          '''
-          displays a scaled up plot of a peak waveform
-          i: index of angle (which array)
-          n: index of peak
-          width: zoom index width
-          '''
-          plt.figure(figsize=[8,6])
-          self.signal_data[i].zoom_peak(n, threshold, width)
-          self.signal_data[i].display()
-          self.signal_data[i].reset()
-          
-          
-     def get_peak(self, i, n, width):
-          '''
-          Returns a numpy array that is a scaled up peak waveform
-          i: index of angle (which array)
-          n: index of peak
-          width: zoom index width
-          return: scaled array
-          '''
-          ind = self.signal_data[i].peak_ind
-          Lind = ind[n]-width
-          Rind = ind[n]+width
-          return self.signal_data[i].xy[Lind:Rind,:]
-     
+
      
      def display_signal(self):
           plt.ioff()
@@ -279,11 +281,8 @@ class Transducer:
                plt.close(fig)
                
           plt.ion()
-               
-               
+                         
+
+
 if __name__ == "__main__":
-     path = "C:\\Users\\dionysius\\Desktop\\PURE\\may24\\FLAT\\clean"
-     path1 = "C:\\Users\\dionysius\\Desktop\\PURE\\may24\\FOC\\clean"
-     flat = Transducer(path, "Flat Transducer")
-     focused = Transducer(path1, "Focused Transducer")
-     
+     flat = Transducer(getcwd(), "Flat Transducer")
