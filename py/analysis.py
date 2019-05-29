@@ -189,8 +189,6 @@ class Transducer:
      signal_data: python list consisting of csv files as numpy arrays
      '''
      def __init__(self, mypath, name):
-          self.DISPLAY = True
-          self.SAVE_TO_FILE = False
           self.name = name
           self.mypath = mypath
           self.fnames = [f for f in listdir(mypath) if isfile(join(mypath, f)) and f[-4:] == '.csv']
@@ -206,13 +204,22 @@ class Transducer:
                sig.name = "{0}_Transducer_{1}_degrees".format(self.name, self.deg[i])
                self.signal_data.append(sig)
                
-          self.peak_totals = self.display_total()  # first reflected wave peak value graph (vs angle)        
-#          self.display_fft()  # fourier transforms        
-#          self.display_signal()  # raw signals with peaks shown
-#          self.display_h()  # Hilbert transform
+          self.peak_totals = []
+          self.display_total(SAVE=False, DISPLAY=False)  # first reflected wave peak value graph      
           
+     def write_all(self, SAVE=True, DISPLAY=False):
+          self.display_fft(SAVE, DISPLAY)  # fourier transforms        
+          self.display_signal(SAVE, DISPLAY)  # raw signals with peaks shown
+          self.display_h(SAVE, DISPLAY)  # Hilbert transform
+          self.display_total(SAVE, DISPLAY)
                
-     def display_h(self):
+     def display_all(self, SAVE=False, DISPLAY=True):
+          self.display_fft(SAVE, DISPLAY)  # fourier transforms        
+          self.display_signal(SAVE, DISPLAY)  # raw signals with peaks shown
+          self.display_h(SAVE, DISPLAY)  # Hilbert transform
+          self.display_total(SAVE, DISPLAY)
+          
+     def display_h(self, SAVE=False, DISPLAY=True):
           lw = 100
           rw = 100
           plt.ioff()
@@ -230,24 +237,24 @@ class Transducer:
                plt.ylabel('voltage (V)')
                plt.title(sig.name)
                plt.legend()
-               if self.SAVE_TO_FILE is True:
+               if SAVE is True:
                     plt.savefig(folder + "\\HIL_" +sig.name+".png", dpi=300)
-               if self.DISPLAY is True:
+               if DISPLAY is True:
                     plt.show(fig)
-               elif self.DISPLAY is False:
+               elif DISPLAY is False:
                     plt.close(fig)
      
                  
-     def display_total(self):
+     def display_total(self, SAVE=False, DISPLAY=True):
           '''
           Plots the total peak values as a function of angle
           '''
+          plt.ioff()
           self.peak_totals = []
           for sig in self.signal_data:
                lst = sig.peak_val
                self.peak_totals.append(lst[1])  #can append np.sum(lst[1:])     
                
-          
           folder = self.mypath + "\\profile"
           if not isdir(folder):
                mkdir(folder)
@@ -257,42 +264,63 @@ class Transducer:
           plt.title(self.name)
           plt.xlabel('angle (degree)')
           plt.ylabel('peak voltage (V)')
-          if self.SAVE_TO_FILE is True:
+          if SAVE is True:
                plt.savefig(folder + "\\TOT_" +self.name+".png", dpi=300)
-          if self.DISPLAY is True:
-               pass
-          plt.show(fig)
-          elif self.DISPLAY is False:
-               plt.ioff()
+          if DISPLAY is True:
+               plt.show(fig)
+          elif DISPLAY is False:
                plt.close(fig)
-          
-          return self.peak_totals
-          
-
+                        
      
-     def display_signal(self):
+     def display_signal(self,i='all', SAVE=False, DISPLAY=True):
           plt.ioff()
           folder = self.mypath + "\\signals"
           if not isdir(folder):
                mkdir(folder)
-               
-          for sig in self.signal_data:
+          
+          if i=='all':
+               for sig in self.signal_data:
+                    fig = plt.figure(figsize=[10,8])
+                    plt.plot(sig.xy[:, 0], sig.xy[:, 1], c='grey')
+                    plt.scatter(sig.xy[sig.peak_ind, 0], sig.xy[sig.peak_ind, 1], c='goldenrod', s=25)
+                    plt.xlabel('time (s)')
+                    plt.ylabel('voltage (V)')
+                    plt.title(self.name)
+                    if SAVE is True:
+                         plt.savefig(folder + "\\SIG_" +sig.name+".png", dpi=300)
+                    if DISPLAY is True:
+                         plt.show(fig)
+                    elif DISPLAY is False:
+                         plt.close(fig)
+                         
+          elif isinstance(i, int) and (0 <= i < len(self.signal_data)):
+               sig = self.signal_data[i]
                fig = plt.figure(figsize=[10,8])
                plt.plot(sig.xy[:, 0], sig.xy[:, 1], c='grey')
                plt.scatter(sig.xy[sig.peak_ind, 0], sig.xy[sig.peak_ind, 1], c='goldenrod', s=25)
                plt.xlabel('time (s)')
                plt.ylabel('voltage (V)')
-               plt.title(self.name)
-               if self.SAVE_TO_FILE is True:
-                    plt.savefig(folder + "\\SIG_" +sig.name+".png", dpi=300)
-               if self.DISPLAY is True:
-                    plt.show(fig)
-               elif self.DISPLAY is False:
-                    plt.close(fig)
-               plt.close(fig)
-                      
+               plt.title(sig.name)
+               plt.show(fig)
+               
+          elif isinstance(i, list):
+               try:
+                    for k in i:
+                         sig = self.signal_data[k]
+                         fig = plt.figure(figsize=[10,8])
+                         plt.plot(sig.xy[:, 0], sig.xy[:, 1], c='grey')
+                         plt.scatter(sig.xy[sig.peak_ind, 0], sig.xy[sig.peak_ind, 1], c='goldenrod', s=25)
+                         plt.xlabel('time (s)')
+                         plt.ylabel('voltage (V)')
+                         plt.title(sig.name)
+                         plt.show(fig)
+                         
+               except TypeError:
+                   print('index list may be out of bounds')
+                    
+               
 
-     def display_fft(self):
+     def display_fft(self, SAVE=False, DISPLAY=True):
           plt.ioff()
           folder = self.mypath + "\\fft"
           if not isdir(folder):
@@ -303,11 +331,11 @@ class Transducer:
                fig = plt.figure(figsize=[10,8])
                plt.plot(abs(c))
                plt.title(self.name)
-               if self.SAVE_TO_FILE is True:
+               if SAVE is True:
                     plt.savefig(folder + "\\FFT_" +sig.name+".png", dpi=300)
-               if self.DISPLAY is True:
+               if DISPLAY is True:
                     plt.show(fig)
-               elif self.DISPLAY is False:
+               elif DISPLAY is False:
                     plt.close(fig)
                
                          
@@ -316,22 +344,24 @@ if __name__ == "__main__":
      start = clock()
      flat_path = 'C:\\Users\\dionysius\\Desktop\\PURE\\may28\\FLAT\\clean'
      foc_path = 'C:\\Users\\dionysius\\Desktop\\PURE\\may28\\FOC\\clean'
-     flat = Transducer(flat_path, "FLAT_15cm", True)
-     foc = Transducer(foc_path, "FOC_15cm", False)
-     
-     folder = 'C:\\Users\\dionysius\\Desktop\\PURE\\may28'
-     if not isdir(folder):
-          mkdir(folder)
-          
-     plt.ioff()
-     fig = plt.figure(figsize=[10,8])
-     plt.scatter(flat.deg, flat.peak_totals, c='grey', alpha=.6, label='flat')
-     plt.scatter(foc.deg, foc.peak_totals, c='goldenrod', alpha=.6,label='focused')
-     plt.title('First reflected wave peak voltage: 15 CM')
-     plt.xlabel('angle (degree)')
-     plt.ylabel('voltage (V)')
-     plt.legend()
-     plt.savefig(folder + "\\TOT.png", dpi=300)
-     plt.close(fig)
+     flat = Transducer(flat_path, "FLAT_15cm")
+     foc = Transducer(foc_path, "FOC_15cm")
+     flat.display_signal(i=0)
+#     flat.write_all()
+#     foc.write_all()
+#     folder = 'C:\\Users\\dionysius\\Desktop\\PURE\\may28'
+#     if not isdir(folder):
+#          mkdir(folder)
+#          
+#     plt.ioff()
+#     fig = plt.figure(figsize=[10,8])
+#     plt.scatter(flat.deg, flat.peak_totals, c='grey', alpha=.6, label='flat')
+#     plt.scatter(foc.deg, foc.peak_totals, c='goldenrod', alpha=.6,label='focused')
+#     plt.title('First reflected wave peak voltage: 15 CM')
+#     plt.xlabel('angle (degree)')
+#     plt.ylabel('voltage (V)')
+#     plt.legend()
+#     plt.savefig(folder + "\\TOT.png", dpi=300)
+#     plt.close(fig)
 
      print("Writing completed, {} s!".format(clock()-start))
