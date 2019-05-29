@@ -219,16 +219,36 @@ class Transducer:
           self.display_h(SAVE, DISPLAY)  # Hilbert transform
           self.display_total(SAVE, DISPLAY)
           
-     def display_h(self, SAVE=False, DISPLAY=True):
+     def display_h(self,i='all', SAVE=False, DISPLAY=True):
           lw = 100
           rw = 100
           plt.ioff()
           folder = self.mypath + "\\hilbert"
           if not isdir(folder):
                mkdir(folder)
-          for sig in self.signal_data:
-               i = sig.peak_ind[1]
-               wave = sig.xy[i-lw:i+rw, :]
+          if i=='all':
+               for sig in self.signal_data:
+                    ind = sig.peak_ind[1]  # index of first reflected wave peak
+                    wave = sig.xy[ind-lw:ind+rw, :]
+                    c = hilbert(wave[:, 1])
+                    fig = plt.figure(figsize=[10,8])
+                    plt.plot(wave[:,0], wave[:,1],c='grey', label='signal')
+                    plt.plot(wave[:,0], np.abs(c),c='goldenrod', label='hilbert envelope')
+                    plt.xlabel('time (s)')
+                    plt.ylabel('voltage (V)')
+                    plt.title(sig.name)
+                    plt.legend()
+                    if SAVE is True:
+                         plt.savefig(folder + "\\HIL_" +sig.name+".png", dpi=300)
+                    if DISPLAY is True:
+                         plt.show(fig)
+                    elif DISPLAY is False:
+                         plt.close(fig)
+                         
+          elif isinstance(i, int) and (0 <= i < len(self.signal_data)):
+               sig = self.signal_peak[i]
+               ind = sig.peak_ind[1]
+               wave = sig.xy[ind-lw:ind+rw, :]
                c = hilbert(wave[:, 1])
                fig = plt.figure(figsize=[10,8])
                plt.plot(wave[:,0], wave[:,1],c='grey', label='signal')
@@ -237,40 +257,24 @@ class Transducer:
                plt.ylabel('voltage (V)')
                plt.title(sig.name)
                plt.legend()
-               if SAVE is True:
-                    plt.savefig(folder + "\\HIL_" +sig.name+".png", dpi=300)
-               if DISPLAY is True:
-                    plt.show(fig)
-               elif DISPLAY is False:
-                    plt.close(fig)
-     
-                 
-     def display_total(self, SAVE=False, DISPLAY=True):
-          '''
-          Plots the total peak values as a function of angle
-          '''
-          plt.ioff()
-          self.peak_totals = []
-          for sig in self.signal_data:
-               lst = sig.peak_val
-               self.peak_totals.append(lst[1])  #can append np.sum(lst[1:])     
                
-          folder = self.mypath + "\\profile"
-          if not isdir(folder):
-               mkdir(folder)
-               
-          fig = plt.figure(figsize=[10,8])
-          plt.scatter(self.deg, self.peak_totals, c='goldenrod')
-          plt.title(self.name)
-          plt.xlabel('angle (degree)')
-          plt.ylabel('peak voltage (V)')
-          if SAVE is True:
-               plt.savefig(folder + "\\TOT_" +self.name+".png", dpi=300)
-          if DISPLAY is True:
-               plt.show(fig)
-          elif DISPLAY is False:
-               plt.close(fig)
-                        
+          elif isinstance(i, list):
+               try:
+                    for k in i:
+                         sig = self.signal_peak[k]
+                         ind = sig.peak_ind[1]
+                         wave = sig.xy[ind-lw:ind+rw, :]
+                         c = hilbert(wave[:, 1])
+                         fig = plt.figure(figsize=[10,8])
+                         plt.plot(wave[:,0], wave[:,1],c='grey', label='signal')
+                         plt.plot(wave[:,0], np.abs(c),c='goldenrod', label='hilbert envelope')
+                         plt.xlabel('time (s)')
+                         plt.ylabel('voltage (V)')
+                         plt.title(sig.name)
+                         plt.legend()
+               except TypeError:
+                   print('display_h: index list may be out of bounds')
+                    
      
      def display_signal(self,i='all', SAVE=False, DISPLAY=True):
           plt.ioff()
@@ -316,29 +320,75 @@ class Transducer:
                          plt.show(fig)
                          
                except TypeError:
-                   print('index list may be out of bounds')
+                   print('display_signal: index list may be out of bounds')
                     
+              
                
 
-     def display_fft(self, SAVE=False, DISPLAY=True):
+     def display_fft(self,i='all', SAVE=False, DISPLAY=True):
           plt.ioff()
           folder = self.mypath + "\\fft"
           if not isdir(folder):
                mkdir(folder)
-               
-          for sig in self.signal_data:
+          if i=='all':
+               for sig in self.signal_data:
+                    c = sig.fft()
+                    fig = plt.figure(figsize=[10,8])
+                    plt.plot(abs(c))
+                    plt.title(self.name)
+                    if SAVE is True:
+                         plt.savefig(folder + "\\FFT_" +sig.name+".png", dpi=300)
+                    if DISPLAY is True:
+                         plt.show(fig)
+                    elif DISPLAY is False:
+                         plt.close(fig)
+          elif isinstance(i,int) and (0 <= i < len(self.signal_data)):
+               sig = self.signal_data[i]
                c = sig.fft()
                fig = plt.figure(figsize=[10,8])
                plt.plot(abs(c))
                plt.title(self.name)
-               if SAVE is True:
-                    plt.savefig(folder + "\\FFT_" +sig.name+".png", dpi=300)
-               if DISPLAY is True:
-                    plt.show(fig)
-               elif DISPLAY is False:
-                    plt.close(fig)
-               
+               plt.show(fig)
+          elif isinstance(i, list):
+               try:
+                    for k in i:
+                         sig = self.signal_data[k]
+                         c = sig.fft()
+                         fig = plt.figure(figsize=[10,8])
+                         plt.plot(abs(c))
+                         plt.title(self.name)
+                         plt.show(fig)
                          
+               except TypeError:
+                   print('display_fft: index list may be out of bounds')
+                    
+          
+     def display_total(self, SAVE=False, DISPLAY=True):
+          '''
+          Plots the total peak values as a function of angle
+          '''
+          plt.ioff()
+          self.peak_totals = []
+          for sig in self.signal_data:
+               lst = sig.peak_val
+               self.peak_totals.append(lst[1])  #can append np.sum(lst[1:])     
+               
+          folder = self.mypath + "\\profile"
+          if not isdir(folder):
+               mkdir(folder)
+
+          fig = plt.figure(figsize=[10,8])
+          plt.scatter(self.deg, self.peak_totals, c='goldenrod')
+          plt.title(self.name)
+          plt.xlabel('angle (degree)')
+          plt.ylabel('peak voltage (V)')
+          if SAVE is True:
+               plt.savefig(folder + "\\TOT_" +self.name+".png", dpi=300)
+          if DISPLAY is True:
+               plt.show(fig)
+          elif DISPLAY is False:
+               plt.close(fig)
+               
                     
 if __name__ == "__main__":
      start = clock()
@@ -346,7 +396,6 @@ if __name__ == "__main__":
      foc_path = 'C:\\Users\\dionysius\\Desktop\\PURE\\may28\\FOC\\clean'
      flat = Transducer(flat_path, "FLAT_15cm")
      foc = Transducer(foc_path, "FOC_15cm")
-     flat.display_signal(i=0)
 #     flat.write_all()
 #     foc.write_all()
 #     folder = 'C:\\Users\\dionysius\\Desktop\\PURE\\may28'

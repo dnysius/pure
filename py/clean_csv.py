@@ -20,7 +20,7 @@ if the target directory already contains .csv files of the same name(s),
 this script will overwrite them.
 '''
 
-def clean(mypath, skip):
+def clean(mypath, skip=2):
      '''
      skip: how many rows to skip
      '''
@@ -29,7 +29,7 @@ def clean(mypath, skip):
           mkdir(copypath)
           
      onlyfiles = [f for f in listdir(mypath) if isfile(join(mypath, f)) and f[-4:] == '.csv']
-     print(listdir())
+#     print(listdir(mypath))
      for i in range(len(onlyfiles)):
           arr = []
           with open(mypath + "\\"+ onlyfiles[i], newline='') as f:
