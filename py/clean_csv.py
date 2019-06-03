@@ -44,7 +44,8 @@ def clean(mypath, skip=2):
                          skipped += 1
                     
                a = np.array(arr)
-               np.savetxt(copypath + "\\" + onlyfiles[i], a, delimiter=",")
+#               np.savetxt(copypath + "\\" + onlyfiles[i], a, delimiter=",")
+               np.save(copypath + "\\" + onlyfiles[i][0:-3]+'npy', a)
                
      print('Cleaning done --> ', copypath)
 
