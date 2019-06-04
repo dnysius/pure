@@ -38,9 +38,15 @@ import struct
 import numpy as np
 import scipy as sp
 import matplotlib.pyplot as plt
-from os import mkdir, getcwd
-from os.path import isdir, isfile
+from os import mkdir, getcwd, listdir
+from os.path import isdir, isfile, join
+import re
+from tqdm import tqdm # progress bar reporting
+_nsre = re.compile('([0-9]+)')
 
+def natural_sort_key(s):
+    return [int(text) if text.isdigit() else text.lower()
+            for text in re.split(_nsre, s)] 
 ## INSTRUCTIONS:
 ## Edit in the VISA address of the oscilloscope
 ## Edit in the file save locations ## IMPORTANT NOTE:  This script WILL overwrite previously saved files!
@@ -72,7 +78,8 @@ class Scope:
           ## Save Locations
           self.BASE_FILE_NAME = "classscope"
           self.BASE_DIRECTORY = "C:\\Users\\dionysius\\pyVISA\\"
-          
+          self.fnames = [f for f in listdir(self.BASE_DIRECTORY) if isfile(join(self.BASE_DIRECTORY, f)) and (f[-3:] == 'npy')]
+          self.fnames.sort(key=natural_sort_key)
               ## IMPORTANT NOTE:  This script WILL overwrite previously saved files!
           
           ##############################################################################################################################################################################
@@ -359,11 +366,12 @@ class Scope:
           if self.TOTAL_BYTES_TO_XFER >= 400000:
               self.KsInfiniiVisionX.chunk_size = self.TOTAL_BYTES_TO_XFER
           
-     def grab(self, i=''):
+     def grab(self):
           #####################################################
           #####################################################
           ## Pull waveform data, scale it
-          
+          self.fnames = [f for f in listdir(self.BASE_DIRECTORY) if isfile(join(self.BASE_DIRECTORY, f)) and (f[-3:] == 'npy')]
+          self.fnames.sort(key=natural_sort_key)
           now = time.clock() # Only to show how long it takes to transfer and scale the data.
           i  = 0 # index of Wav_data, recall that python indices start at 0, so ch1 is index 0
           for channel_number in self.CHS_ON:
@@ -410,10 +418,7 @@ class Scope:
           
           del i, channel_number
 #          print("\n\nIt took " + str(time.clock() - now) + " seconds to transfer and scale " + str(self.NUMBER_CHANNELS_ON) + " channel(s). Each channel had " + str(self.NUMBER_OF_POINTS_TO_ACTUALLY_RETRIEVE) + " points.\n")
-          del now
-          
-                   
-          
+          del now         
           ################################################################################################
           ################################################################################################
           ## Save waveform data -  really, there are MANY ways to do this, of course
@@ -426,7 +431,20 @@ class Scope:
           ## As a NUMPY BINARY file - fast and small, but really only good for python - can't use header
           ########################################################
           now = time.clock() # Only to show how long it takes to save
+          if len(self.fnames) >= 1:
+               recent = self.fnames[-1]
+               pre = len(self.BASE_FILE_NAME)
+               suf = -4
+               try:
+                    i = int(recent[pre:suf]) + 1
+               except:
+                    raise TypeError
+          else:
+               i = 0
+          
+          
           filename = self.BASE_DIRECTORY + self.BASE_FILE_NAME +"{0}".format(i)+ ".npy"
+               
           with open(filename, 'wb') as filehandle: # wb means open for writing in binary; can overwrite
               np.save(filehandle, np.insert(self.Wav_Data,0,self.DataTime,axis=1))
 #          print("It took " + str(time.clock() - now) + " seconds to save " + str(self.NUMBER_CHANNELS_ON) + " channels and the time axis in binary format. Each channel had " + str(self.NUMBER_OF_POINTS_TO_ACTUALLY_RETRIEVE) + " points.\n")
@@ -436,7 +454,7 @@ class Scope:
           with open(filename, 'rb') as filehandle: # rb means open for reading binary
               recalled_NPY_data = np.load(filehandle)
               
-          del filename, filehandle
+          del filename, filehandle, i
 
 
      def close(self):
@@ -450,4 +468,8 @@ class Scope:
           
 o = Scope()
 if __name__=='__main__':
-     pass
+     pbar = tqdm(range(20))
+     for i in pbar:
+          o.grab()
+          pbar.set_description("Processing {0}".format(i))
+          
