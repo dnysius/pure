@@ -38,7 +38,8 @@ import struct
 import numpy as np
 import scipy as sp
 import matplotlib.pyplot as plt
-
+from os import mkdir, getcwd
+from os.path import isdir, isfile
 ##############################################################################################################################################################################
 ##############################################################################################################################################################################
 ## Intro, general comments, and instructions
@@ -99,6 +100,7 @@ GLOBAL_TOUT =  10000 # IO time out in milliseconds
 ## Save Locations
 BASE_FILE_NAME = "scope"
 BASE_DIRECTORY = "C:\\Users\\dionysius\\pyVISA\\"
+
     ## IMPORTANT NOTE:  This script WILL overwrite previously saved files!
 
 ##############################################################################################################################################################################
@@ -128,6 +130,7 @@ try:
 except Exception:
     print("Unable to connect to oscilloscope at " + str(SCOPE_VISA_ADDRESS) + ". Aborting script.\n")
     sys.exit()
+    
 
 ## Set Global Timeout
 ## This can be used wherever, but local timeouts are used for Arming, Triggering, and Finishing the acquisition... Thus it mostly handles IO timeouts
@@ -172,7 +175,6 @@ else:
     CHS_LIST = [0,0,0,0]
 NUMBER_CHANNELS_ON = 0
 ## After the CHS_LIST array is filled it could, for example look like: if chs 1,3 and 4 were on, CHS_LIST = [1,0,1,1]
-
 ###############################################
 ## Pre-allocate holders for the vertical Pre-ambles and Channel units
 
@@ -329,46 +331,6 @@ KsInfiniiVisionX.write(":WAVeform:POINts " + str(USER_REQUESTED_POINTS))
 
 ## Then ask how many points it will actually give you, as it may not give you exactly what you want.
 NUMBER_OF_POINTS_TO_ACTUALLY_RETRIEVE = int(KsInfiniiVisionX.query(":WAVeform:POINts?"))
-## Warn user if points will be less than requested, if desired...
-## Note that if less than the max is set, it will stay at that value (or whatever is closest) until it is changed again, even if the time base is changed.
-## What does the scope return if less than MAX_CURRENTLY_AVAILABLE_POINTS is returned?
-    ## It depends on the :WAVeform:POINts:MODE
-    ## If :WAVeform:POINts:MODE is RAW
-        ## The scope decimates the data, only returning every Nth point.
-        ## The points are NOT re-mapped; the values of the points, both vertical and horizontal, are preserved.
-        ## Aliasing, lost pulses and transitions, are very possible when this is done.
-    ## If :WAVeform:POINts:MODE is NORMal
-        ## The scope re-maps this "measurement record" down to the number of points requested to give the best representation of the waveform for the requested number of points.
-        ## This changes both the vertical and horizontal values.
-        ## Aliasing, lost pulses and transitions, are definitely possible, though less likely for well displayed waveforms in many, but not all, cases.
-
-## This above method always works w/o errors.  In summary, after an acquisition is complete:
-        ## Set POINts to MAX
-        ## Set :POINts:MODE as desired/needed
-        ## Ask for the number of points available.  This is the MOST the scope can give for current settings/timescale/Acq. Type
-        ## Set a different number of points if desired and if less than above
-        ## Ask how many points it will actually return, use that
-
-## What about :ACQUIRE:POINTS?
-## The Programmers's Guide says:
-    ## The :ACQuire:POINts? query returns the number of data points that the
-    ## hardware will acquire from the input signal. The number of points
-    ## acquired is not directly controllable. To set the number of points to be
-    ## transferred from the oscilloscope, use the command :WAVeform:POINts. The
-    ## :WAVeform:POINts? query will return the number of points available to be
-    ## transferred from the oscilloscope.
-
-## It is not a terribly useful query. It basically only gives the max amount of points available for transfer if:
-        ## The scope is stopped AND has acquired data the way you want to use it and the waveform is entirely on screen
-            ## In other words, if you do a :SINGle, THEN turn on, say digital chs, this will give the wrong answer for digital chs on for the next acquisition.
-        ## :POINts:MODE is RAW or MAX - thus it DOES NOT work for Average or High Res. Acq. Types, which need NORMal!
-        ## and RUN/STOP vs SINGle vs :DIG makes a difference!
-        ## and Acq. Type makes a difference! (it can be misleading for Average or High Res. Acq. Types)
-        ## and all of the data is on screen!
-        ## Thus it is not too useful here.
-## What it is good for is:
-    ## 1. determining if there is off screen data, for Normal or Peak Detect Acq. Types, after an acquisition is complete, for the current settings (compare this result with MAX_CURRENTLY_AVAILABLE_POINTS).
-    ## 2. finding the max possible points that could possibly be available for Normal or Peak Detect Acq. Types, after an acquisition is complete, for the current settings, if all of the data is on-screen.
 
 #####################################################################################################################################
 #####################################################################################################################################
@@ -433,20 +395,6 @@ TOTAL_BYTES_TO_XFER = POINTS_MULTIPLIER * NUMBER_OF_POINTS_TO_ACTUALLY_RETRIEVE 
     ## More info @ http://pyvisa.readthedocs.io/en/stable/resources.html
 if TOTAL_BYTES_TO_XFER >= 400000:
     KsInfiniiVisionX.chunk_size = TOTAL_BYTES_TO_XFER
-## else:
-    ## use default size, which is 20480
-
-## Any given user may want to tweak this for best throughput, if desired.  The 400,000 was chosen after testing various chunk sizes over various transfer sizes, over USB,
-    ## and determined to be the best, or at least simplest, cutoff.  When the transfers are smaller, the intrinsic "latencies" seem to dominate, and the default chunk size works fine.
-
-## How does the default chuck size work?
-    ## It just pulls the data repeatedly and sequentially (in series) until the termination character is found...
-
-## Do I need to adjust the timeout for a larger chunk sizes, where it will pull up to an entire 8,000,000 sample record in a single IO transaction?
-    ## If you use a 10s timeout (10,000 ms in PyVisa), that will be good enough for USB and LAN.
-    ## If you are using GPIB, which is slower than LAN or USB, quite possibly, yes.
-    ## If you don't want to deal with this, don't set the chunk size, and use a 10 second timeout, and everything will be fine in Python.
-        ## When you use the default chunk size, there are repeated IO transactions to pull the total waveform.  It is each individual IO transaction that needs to complete within the timeout.
 
 #####################################################
 #####################################################
@@ -499,6 +447,11 @@ if TOTAL_BYTES_TO_XFER >= 400000:
 del i, channel_number
 print("\n\nIt took " + str(time.clock() - now) + " seconds to transfer and scale " + str(NUMBER_CHANNELS_ON) + " channel(s). Each channel had " + str(NUMBER_OF_POINTS_TO_ACTUALLY_RETRIEVE) + " points.\n")
 del now
+
+#if TimeScale > 20 and TimePosition < 500*(TimePositionPercent-1.0):
+#    KsInfiniiVisionX.write(":TIMebase:SCALe " + str(TimeScale) + ";POSition " + str(TimePosition))
+#else:
+#    KsInfiniiVisionX.write(":TIMebase:SCALe " + str(TimeScale))
 
 ###################################################################
 ###################################################################
@@ -558,8 +511,7 @@ del now
 ## Read the NUMPY BINARY data back into python with:
 with open(filename, 'rb') as filehandle: # rb means open for reading binary
     recalled_NPY_data = np.load(filehandle)
-    ## NOTE, if one were to not use "with open() as filehandle:", just do np.save like this:
-            ## np.save(filename, np.vstack((DataTime,Data_Ch1)).T)
-            ## this method automatically appends a .npy to the file name...
-#del filename, filehandle
+    
+del filename, filehandle
 print('Binary data has been recalled into "recalled_NPY_data".\n')
+
