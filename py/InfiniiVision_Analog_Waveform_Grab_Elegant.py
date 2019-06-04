@@ -38,7 +38,8 @@ import struct
 import numpy as np
 import scipy as sp
 import matplotlib.pyplot as plt
-
+from os import mkdir, getcwd
+from os.path import isdir, isfile
 ##############################################################################################################################################################################
 ##############################################################################################################################################################################
 ## Intro, general comments, and instructions
@@ -99,6 +100,7 @@ GLOBAL_TOUT =  10000 # IO time out in milliseconds
 ## Save Locations
 BASE_FILE_NAME = "scope"
 BASE_DIRECTORY = "C:\\Users\\dionysius\\pyVISA\\"
+
     ## IMPORTANT NOTE:  This script WILL overwrite previously saved files!
 
 ##############################################################################################################################################################################
@@ -561,5 +563,5 @@ with open(filename, 'rb') as filehandle: # rb means open for reading binary
     ## NOTE, if one were to not use "with open() as filehandle:", just do np.save like this:
             ## np.save(filename, np.vstack((DataTime,Data_Ch1)).T)
             ## this method automatically appends a .npy to the file name...
-#del filename, filehandle
+del filename, filehandle
 print('Binary data has been recalled into "recalled_NPY_data".\n')
