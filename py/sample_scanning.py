@@ -1,13 +1,8 @@
 # -*- coding: utf-8 -*-
-"""
-Created on Mon Jun  3 16:43:45 2019
-
-@author: dionysius
-"""
+## Dionysius Indraatmadja
+## Started June 5 2019
 
 import numpy as np
-from tqdm import trange, tqdm
-from time import sleep
 
 class Scan():
      #####################################################################################
@@ -19,8 +14,7 @@ class Scan():
      def __init__(self):
           #####################################################################################
           ## Define constants
-          self.X_STEP_SIZE = 100
-          self.Y_STEP_SIZE = 50
+          #####################################################################################
           self.TOP_LEFT = (0, 0)
           self.TOP_RIGHT = (0, -1)
           self.BOTTOM_LEFT = (-1, 0)
@@ -31,23 +25,20 @@ class Scan():
           self.down = -999
           self.STEP_DICT = {self.left: "-x", self.right: "x",self.up:"+y", self.down:"-y"}
           self.arr = np.array([])
-          self.SAMPLE_DIMENSIONS= (5,5)  ## (rows, columns)...  EDIT THIS
-          self.START_POS = self.TOP_RIGHT  ## EDIT THIS
-          self.STEP_PARAM()  # INITIALIZE SETUP
-          
-          #for y in range(SAMPLE_DIMENSIONS[0]):
-          #     pbar = tqdm(range(SAMPLE_DIMENSIONS[1]))
-          #     for x in pbar:
-          #          sleep(.2)
-          #          pbar.set_description("Row: {0} Column: {1}".format(y, x))
+          #####################################################################################
+          ## EDIT THESE PARAMETERS
+          self.SAMPLE_DIMENSIONS= (5,5)  ## (rows, columns)
+          self.START_POS = self.TOP_RIGHT  ## starting position of transducer
+          self.X_STEP_SIZE = 100  ## step along a row
+          self.Y_STEP_SIZE = 50  ## step along a column
+          #####################################################################################
+          self.STEP_PARAM()
     
+     
      def STEP_PARAM(self):
-          ## If starting from top, then we want all zeros except for the END POSITION to signal to go down
-          ## If starting from top... signal to go up
           #####################################################################################
           ## Determine start and end positions
           #####################################################################################
-          
           SAMPLE_DIMENSIONS = self.SAMPLE_DIMENSIONS
           if self.START_POS == self.TOP_LEFT:
                self.VERTICAL_STEP = -999
@@ -107,7 +98,6 @@ class Scan():
                          ## even
                          arr[y, 1:] = (-1)**(y + PHASE)
                          arr[y, 0] = self.VERTICAL_STEP
-               #     for x in range(SAMPLE_DIMENSIONS[1]):
                arr[self.END_POS] = 0
           
           elif self.START_POS == self.BOTTOM_LEFT:
@@ -118,13 +108,39 @@ class Scan():
           self.arr = np.copy(arr)
           del arr, PHASE
      
+     
+     def STEP(self, DIRECTION='+x'):
+          #####################################################################################
+          ## Command arduino to move motor, work on this
+          #####################################################################################
+          try:
+               if DIRECTION == 'x' or DIRECTION == 'X' or DIRECTION == '+x' or DIRECTION == '+X':
+                    ## move "right"
+                    print('right')
+                    
+               elif DIRECTION == 'x' or DIRECTION == 'X' or DIRECTION == '-x' or DIRECTION == '-X':
+                    ## move "left"
+                    print('left')
+                    
+               elif DIRECTION == 'y' or DIRECTION == 'Y' or DIRECTION == '+y' or DIRECTION == '+Y':
+                    ## move "up"
+                    print("up")
+                    
+               elif DIRECTION == 'y' or DIRECTION == 'Y' or DIRECTION == '-y' or DIRECTION == '-Y':
+                    ## move "down"
+                    print("down")
+                    
+          except:
+               raise ValueError("DIRECTION is not type str")
+                    
      def start(self):
-          ## Walk through array and call on STEP_DICT functions to move motor
+          #####################################################################################
+          ## Walk through array and call on STEP_DICT functions to move motor, work on this
+          #####################################################################################
           pos = self.START_POS
           while self.arr[pos] != 0:
                V = self.arr[pos]
                ## take measurement
-               print('.')
                self.STEP(self.STEP_DICT[V])  ## Tell arduino to move the step motor
                if V == self.left:
                     pos = (pos[0], pos[1] - 1)
@@ -136,30 +152,12 @@ class Scan():
                     pos = (pos[0] + 1, pos[1])
                if self.arr[pos] == 0:
                     ## take one last measurement if at final position
-                    print('.')
-                    print('done')
-                                   
+                    print('final measurement')
+
           del pos, V
           
-          
-     def STEP(self, DIRECTION='+x'):
-               ## Command arduino to move motor
-               try:
-                    if DIRECTION == 'x' or DIRECTION == 'X' or DIRECTION == '+x' or DIRECTION == '+X':
-                         ## move "right"
-                         print('right')
-                         
-                    elif DIRECTION == 'x' or DIRECTION == 'X' or DIRECTION == '-x' or DIRECTION == '-X':
-                         ## move "left"
-                         print('left')
-                         
-                    elif DIRECTION == 'y' or DIRECTION == 'Y' or DIRECTION == '+y' or DIRECTION == '+Y':
-                         ## move "up"
-                         print("up")
-                         
-                    elif DIRECTION == 'y' or DIRECTION == 'Y' or DIRECTION == '-y' or DIRECTION == '-Y':
-                         ## move "down"
-                         print("down")
-                         
-               except:
-                    raise ValueError("DIRECTION is not type str")
+
+                    
+if __name__ == '__main__':
+     trial = Scan()
+     trial.start()
