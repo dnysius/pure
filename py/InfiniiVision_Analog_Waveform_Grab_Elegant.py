@@ -1,19 +1,4 @@
 # -*- coding: utf-8 -*-
-
-## DO NOT CHANGE ABOVE LINE
-
-# Python for Test and Measurement
-#
-# Requires VISA installed on Control PC
-# 'keysight.com/find/iosuite'
-# Requires PyVisa to use VISA in Python
-# 'http://PyVisa.sourceforge.net/PyVisa/'
-
-## Keysight IO Libraries 17.1.19xxx
-## Anaconda Python 2.7.7 64 bit
-## PyVisa 1.8
-## Windows 7 Enterprise, 64 bit
-
 ##"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 ## Copyright © 2015 Keysight Technologies Inc. All rights reserved.
 ##
@@ -24,13 +9,6 @@
 ##
 ##"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
 
-##############################################################################################################################################################################
-##############################################################################################################################################################################
-## Import Python modules
-##############################################################################################################################################################################
-##############################################################################################################################################################################
-
-## Import python modules - Not all of these are used in this program; provided for reference
 import sys
 import visa # PyVisa info @ http://PyVisa.readthedocs.io/en/stable/
 import time
@@ -51,17 +29,11 @@ def natural_sort_key(s):
 ## Edit in the VISA address of the oscilloscope
 ## Edit in the file save locations ## IMPORTANT NOTE:  This script WILL overwrite previously saved files!
 ## Manually (or write more code) acquire data on the oscilloscope.  Ensure that it finished (Run/Stop button is red).
-
-##############################################################################################################################################################################
-##############################################################################################################################################################################
-## DEFINE CONSTANTS
-##############################################################################################################################################################################
-##############################################################################################################################################################################
 class Scope:
      
      def __init__(self):
           ## Number of Points to request
-          self.USER_REQUESTED_POINTS = 40000
+          self.USER_REQUESTED_POINTS = 8000000
               ## None of these scopes offer more than 8,000,000 points
               ## Setting this to 8000000 or more will ensure that the maximum number of available points is retrieved, though often less will come back.
               ## Average and High Resolution acquisition types have shallow memory depth, and thus acquiring waveforms in Normal acq. type and post processing for High Res. or repeated acqs. for Average is suggested if more points are desired.
@@ -69,27 +41,41 @@ class Scope:
           
           ## Initialization constants
           self.SCOPE_VISA_ADDRESS = 'USB0::0x0957::0x1799::MY52102738::INSTR' # Get this from Keysight IO Libraries Connection Expert
-              ## Note: sockets are not supported in this revision of the script (though it is possible), and PyVisa 1.8 does not support HiSlip, nor do these scopes.
-              ## Note: USB transfers are generally fastest.
-              ## Video: Connecting to Instruments Over LAN, USB, and GPIB in Keysight Connection Expert: https://youtu.be/sZz8bNHX5u4
-          
           self.GLOBAL_TOUT =  10000 # IO time out in milliseconds
           
           ## Save Locations
-          self.BASE_FILE_NAME = "classscope"
-          self.BASE_DIRECTORY = "C:\\Users\\dionysius\\pyVISA\\"
-          self.fnames = [f for f in listdir(self.BASE_DIRECTORY) if isfile(join(self.BASE_DIRECTORY, f)) and (f[-3:] == 'npy')]
-          self.fnames.sort(key=natural_sort_key)
-              ## IMPORTANT NOTE:  This script WILL overwrite previously saved files!
+          self.BASE_FILE_NAME = "scope_"
+          self.BASE_DIRECTORY = "C:\\Users\\dionysius\\Desktop\\PURE\\jun5\\1_5inFOC\\9cm\\clean\\"
           
+          if not isdir(self.BASE_DIRECTORY):
+               mkdir(self.BASE_DIRECTORY)
+          ############################################################################
+          ## Optional automatic subfolder naming, replace BASE_DIRECTORY with SUBFOLDER
+          ############################################################################
+#          self.dnames = [d for d in listdir(self.BASE_DIRECTORY) if isdir(join(self.BASE_DIRECTORY, d))]
+#          self.dnames.sort(key=natural_sort_key)
+#          if len(self.dnames) > 0:
+#               
+#               try:
+#                    i = int(self.dnames[-1][len(self.BASE_SUBDIR):]) + 1
+#                    
+#               except:
+#                    i = 0
+#                    raise TypeError
+#          else:
+#               i = 0
+#                         
+#          self.SUBFOLDER = self.BASE_DIRECTORY+self.BASE_SUBDIR+"{0}\\".format(i) 
+#          if not isdir(self.SUBFOLDER):
+#               mkdir(self.SUBFOLDER)
+          self.fnames = [f for f in listdir(self.BASE_DIRECTORY) if isfile(join(self.BASE_DIRECTORY, f)) and f[-3:] == 'npy']
+          self.fnames.sort(key=natural_sort_key)
           ##############################################################################################################################################################################
           ##############################################################################################################################################################################
           ## Main code
           ##############################################################################################################################################################################
-          ##############################################################################################################################################################################
-          
+          ##############################################################################################################################################################################       
           sys.stdout.write("Script is running.  This may take a while...")
-          
           ##############################################################################################################################################################################
           ##############################################################################################################################################################################
           ## Connect and initialize scope
@@ -97,11 +83,7 @@ class Scope:
           ##############################################################################################################################################################################
           
           ## Define VISA Resource Manager & Install directory
-          ## This directory will need to be changed if VISA was installed somewhere else.
           self.rm = visa.ResourceManager('C:\\Windows\\System32\\visa32.dll') # this uses PyVisa
-          ## This is more or less ok too: rm = visa.ResourceManager('C:\\Program Files (x86)\\IVI Foundation\\VISA\\WinNT\\agvisa\\agbin\\visa32.dll')
-          ## In fact, it is generally not needed to call it explicitly: rm = visa.ResourceManager()
-          
           ## Open Connection
           ## Define & open the scope by the VISA address ; # This uses PyVisa
           try:
@@ -121,19 +103,7 @@ class Scope:
           ## DO NOT RESET THE SCOPE! - since that would wipe out data...
           
           ## Data should already be acquired and scope should be STOPPED (Run/Stop button is red).
-          
-          ##############################################################################################################################################################################
-          ##############################################################################################################################################################################
-          ##############################################################################################################################################################################
-          ##############################################################################################################################################################################
-          ##
-          ## Elegant method
-          ##
-          ##############################################################################################################################################################################
-          ##############################################################################################################################################################################
-          ##############################################################################################################################################################################
-          ##############################################################################################################################################################################
-          
+
           ##########################################################
           ##########################################################
           ## Determine Which channels are on AND have acquired data - Scope should have already acquired data and be in a stopped state (Run/Stop button is red).
@@ -379,32 +349,6 @@ class Scope:
               ## The below method uses an IEEE488.2 compliant definite length binary block transfer invoked by :WAVeform:DATA?.
                   ## ASCII transfers are also possible, but MUCH slower.
                   self.Wav_Data[:,i] = np.array(self.KsInfiniiVisionX.query_binary_values(':WAVeform:SOURce CHANnel' + str(channel_number) + ';DATA?', "h", False)) # See also: https://PyVisa.readthedocs.io/en/stable/rvalues.html#reading-binary-values
-                  ## Here, WORD format, LSBF, and signed integers are used (these are the scope settings in this script).  The query_binary_values function must be setup the same (https://docs.python.org/2/library/struct.html#format-characters):
-                      ## For BYTE format and unsigned, use "b" instead of "h"; b is a signed char; see link from above line
-                      ## For BYTE format and signed,   use "B" instead of "h"; B is an unsigned char
-                      ## For WORD format and unsigned, use "h"; h is a short
-                      ## For WORD format and signed,   use "H" instead of "h"; H is an unsigned short
-                      ## For MSBFirst use True (Don't use MSBFirst unless that is the computer architecture - most common WinTel are LSBF - see sys.byteorder @ https://docs.python.org/2/library/sys.html)
-          
-                   ## WORD is more accurate, but slower for long records, say over 100 kPts.
-                   ## WORD strongly suggested for Average and High Res. Acquisition Types.
-          
-                  ## query_binary_values() is a PyVisa specific IEEE 488.2 binary block reader.  Most languages have a similar function.
-                      ## The InfiniiVision and InfiniiVision-X scopes always return a definite length binary block in response to the :WAVeform:DATA? querry
-                      ## query_binary_values() does also read the termination character, but this is not always the case in other languages (MATLAB, for example)
-                          ## In that case, another read is needed to read the termination character (or a device clear).
-                      ## In the case of Keysight VISA (IO Libraries), the default termination character is '\n' but this can be changed, depending on the interface....
-                          ## For more on termination characters: https://PyVisa.readthedocs.io/en/stable/resources.html#termination-characters
-          
-                  ## Notice that the waveform source is specified, and the actual data query is concatenated into one line with a semi-colon (;) essentially like this:
-                      ## :WAVeform:SOURce CHANnel1;DATA?
-                      ## This makes it "go" a little faster.
-          
-                  ## When the data is being exported w/ :WAVeform:DATA?, the oscilloscope front panel knobs don't work; they are blocked like :DIGitize, and the actions take effect AFTER the data transfer is complete.
-                  ## The :WAVeform:DATA? query can be interrupted without an error by doing a device clear: self.KsInfiniiVisionX.clear()
-          
-                  ## Scales the waveform
-                  ## One could just save off the preamble factors and post process this later.
                   self.Wav_Data[:,i] = ((self.Wav_Data[:,i]-self.ANALOGVERTPRES[channel_number+7])*self.ANALOGVERTPRES[channel_number-1])+self.ANALOGVERTPRES[channel_number+3]
                       ## For clarity: Scaled_waveform_Data[*] = [(Unscaled_Waveform_Data[*] - Y_reference) * Y_increment] + Y_origin
           
@@ -468,8 +412,8 @@ class Scope:
           
 o = Scope()
 if __name__=='__main__':
-     pbar = tqdm(range(20))
-     for i in pbar:
-          o.grab()
-          pbar.set_description("Processing {0}".format(i))
+#     pbar = tqdm(range(20))
+#     for i in pbar:
+     o.grab()
+#          pbar.set_description("Processing {0}".format(i))
           
