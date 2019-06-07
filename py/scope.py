@@ -13,8 +13,6 @@ import sys
 import visa # PyVisa info @ http://PyVisa.readthedocs.io/en/stable/
 import time
 import numpy as np
-import scipy as sp
-import matplotlib.pyplot as plt
 from os import mkdir, listdir
 from os.path import isdir, isfile, join
 import re
@@ -30,7 +28,7 @@ def natural_sort_key(s):
 ## Manually (or write more code) acquire data on the oscilloscope.  Ensure that it finished (Run/Stop button is red).
 class Scope:
      
-     def __init__(self):
+     def __init__(self, directory, filename="scope"):
           ## Number of Points to request
           self.USER_REQUESTED_POINTS = 8000000
               ## None of these scopes offer more than 8,000,000 points
@@ -43,8 +41,8 @@ class Scope:
           self.GLOBAL_TOUT =  10000 # IO time out in milliseconds
           
           ## Save Locations
-          self.BASE_FILE_NAME = "scope_"
-          self.BASE_DIRECTORY = "C:\\Users\\dionysius\\Desktop\\PURE\\jun5\\1_5inFOC\\9cm\\clean\\"
+          self.BASE_FILE_NAME = filename + "_"  # want format to be NAME_[ROW]_[COLUMN].npy
+          self.BASE_DIRECTORY = directory
           
           if not isdir(self.BASE_DIRECTORY):
                mkdir(self.BASE_DIRECTORY)
@@ -335,6 +333,7 @@ class Scope:
           if self.TOTAL_BYTES_TO_XFER >= 400000:
               self.KsInfiniiVisionX.chunk_size = self.TOTAL_BYTES_TO_XFER
           
+          
      def grab(self):
           #####################################################
           #####################################################
@@ -394,8 +393,8 @@ class Scope:
           del now
           
           ## Read the NUMPY BINARY data back into python with:
-          with open(filename, 'rb') as filehandle: # rb means open for reading binary
-              recalled_NPY_data = np.load(filehandle)
+#          with open(filename, 'rb') as filehandle: # rb means open for reading binary
+#              recalled_NPY_data = np.load(filehandle)
               
           del filename, filehandle, i
 
@@ -410,6 +409,7 @@ class Scope:
           del self.KsInfiniiVisionX
           
 if __name__=='__main__':
+     
 #     pbar = tqdm(range(20))
 #     for i in pbar:
 #     oscilloscope.grab()

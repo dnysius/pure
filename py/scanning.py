@@ -6,11 +6,11 @@ import numpy as np
 #####################################################################################
 ## Define global constants
 #####################################################################################
+global TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT
 TOP_LEFT = (0, 0)
 TOP_RIGHT = (0, -1)
 BOTTOM_LEFT = (-1, 0)
 BOTTOM_RIGHT = (-1, -1)
-
 class Scan():
      #####################################################################################
      ## Calculate dimensions by (floor) dividing the total length & width by the step size

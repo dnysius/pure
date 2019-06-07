@@ -31,7 +31,9 @@ from time import clock
 import matplotlib.pyplot as plt
 import matplotlib.cm as cm
 import numpy as np
-from scope import Scope
+from scope import Scope  # Scope(save path)
+import serial
+from scanning import Scan  # DIMENSIONS as tuple (rows, cols), START_POS= "top left"
 
 global obj_folder
 global BSCAN_folder
