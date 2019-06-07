@@ -171,6 +171,5 @@ class Scan():
           return np.array2string(self.arr)
                     
 if __name__ == '__main__':
-     trial = Scan(DIMENSIONS=(100, 100),START_POS="top left")
-     trial.start()
-     a = trial
+     trial = Scan(DIMENSIONS=(200, 100), START_POS="top left")
+     

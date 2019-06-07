@@ -12,11 +12,10 @@
 import sys
 import visa # PyVisa info @ http://PyVisa.readthedocs.io/en/stable/
 import time
-import struct
 import numpy as np
 import scipy as sp
 import matplotlib.pyplot as plt
-from os import mkdir, getcwd, listdir
+from os import mkdir, listdir
 from os.path import isdir, isfile, join
 import re
 from tqdm import tqdm # progress bar reporting
@@ -410,10 +409,10 @@ class Scope:
           self.KsInfiniiVisionX.close()
           del self.KsInfiniiVisionX
           
-o = Scope()
 if __name__=='__main__':
 #     pbar = tqdm(range(20))
 #     for i in pbar:
-     o.grab()
+#     oscilloscope.grab()
 #          pbar.set_description("Processing {0}".format(i))
+     pass
           

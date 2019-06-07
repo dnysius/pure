@@ -13,16 +13,13 @@ import matplotlib.pyplot as plt
 from os import listdir, mkdir
 from os.path import isfile, isdir, join
 import re
-from time import clock
-from clean_csv import clean
+
 # sorting file names for .csv files, (stackoverflow.com/questions/19366517/)
 _nsre = re.compile('([0-9]+)')
-
 def natural_sort_key(s):
     return [int(text) if text.isdigit() else text.lower()
             for text in re.split(_nsre, s)]  
-    
-    
+
 class Micrometer:
      '''
      Calibrates angle versus micrometer reading
@@ -144,9 +141,8 @@ class Micrometer:
           plt.xlabel('angle (degree)')
           plt.title('new micrometer readings')
           plt.show()
-
-
-
+          
+          
 class Signal:
      '''
      Object for individual waveforms for a given transducer
@@ -218,7 +214,6 @@ class Signal:
           '''
           y = self.xy[:, 1]
           return np.fft.fft(y)
-          
      
      
 class Transducer:
@@ -232,7 +227,7 @@ class Transducer:
      self.graph_fft
      self.graph_total
      '''
-     def __init__(self, mypath, name):
+     def __init__(self, mypath, name, param=(.5, 1500), ftype='.npy'):
           '''
           mypath: path leading to \\clean directory
           name: name of this setup
@@ -246,30 +241,36 @@ class Transducer:
           self.width: domain over which to take the max voltage value
           self.peak_totals: total peak voltage of first reflected wave for each angle  
           '''
-          self.mypath = mypath + "\\clean" # # clean path
+          self.GLOBAL_DPI = 100
           self.name = name
-          self.fnames = [f for f in listdir(self.mypath) if isfile(join(self.mypath, f)) and f[-4:] == '.npy']
+          self.mypath = mypath
+          self.fnames = [f for f in listdir(self.mypath) if isfile(join(self.mypath, f)) and (f[-3:] == ftype or f[-4:]== ftype)]
           self.signal_data = []
           Micro = Micrometer(24.2, 1)
           self.deg = Micro.angle
-          self.threshold = .2
-          self.width = 1500
+          self.threshold = param[0]
+          self.width = param[1]
           self.fnames.sort(key=natural_sort_key)
           for i in range(len(self.fnames)):
-               xy = np.array(np.load(open(self.mypath+"\\"+self.fnames[i], "rb")))
+               if ftype=='.csv' or ftype=='csv':
+                    xy = np.loadtxt(open(self.mypath+"\\"+self.fnames[i], "rb"), delimiter=',', skiprows=0)
+               else:
+                    xy = np.load(open(self.mypath+"\\"+self.fnames[i], "rb"))
+               if ftype=='.npz' or ftype=='npz':
+                    xy = xy[xy.files[0]]
                sig = Signal(xy, self.threshold, self.width)
                sig.name = "{0}_Transducer_{1}_degrees".format(self.name, self.deg[i])
                self.signal_data.append(sig)
                
           self.peak_totals = []
-          self.graph_total(SAVE=False, DISPLAY=False)     
+          self.graph_total(SAVE=False, DISPLAY=False)
           
           
      def write_all(self):
           '''
           Saves all figures
           '''
-          self.graph_fft(SAVE=True, DISPLAY=False)      
+#          self.graph_fft(SAVE=True, DISPLAY=False)      
           self.graph_signal(SAVE=True, DISPLAY=False)
           self.graph_h(SAVE=True, DISPLAY=False)
           self.graph_total(SAVE=True, DISPLAY=False)
@@ -292,8 +293,8 @@ class Transducer:
           SAVE: bool, saves to file if True
           DISPLAY: bool, outputs to screen if True
           '''
-          lw = 100
-          rw = 100
+          lw = 4000
+          rw = 4000
           plt.ioff()
           folder = self.mypath + "\\hilbert"
           if not isdir(folder):
@@ -311,7 +312,7 @@ class Transducer:
                     plt.title(sig.name)
                     plt.legend()
                     if SAVE is True:
-                         plt.savefig(folder + "\\HIL_" +sig.name+".png", dpi=300)
+                         plt.savefig(folder + "\\HIL_" +sig.name+".png", dpi=self.GLOBAL_DPI)
                          
                     if DISPLAY is True:
                          plt.show(fig)
@@ -373,7 +374,7 @@ class Transducer:
                     plt.ylabel('voltage (V)')
                     plt.title(self.name)
                     if SAVE is True:
-                         plt.savefig(folder + "\\SIG_" +sig.name+".png", dpi=300)
+                         plt.savefig(folder + "\\SIG_" +sig.name+".png", dpi=self.GLOBAL_DPI)
                     if DISPLAY is True:
                          plt.show(fig)
                     elif DISPLAY is False:
@@ -424,7 +425,7 @@ class Transducer:
                     plt.plot(abs(c))
                     plt.title(self.name)
                     if SAVE is True:
-                         plt.savefig(folder + "\\FFT_" +sig.name+".png", dpi=300)
+                         plt.savefig(folder + "\\FFT_" +sig.name+".png", dpi=self.GLOBAL_DPI)
                          
                     if DISPLAY is True:
                          plt.show(fig)
@@ -465,7 +466,7 @@ class Transducer:
           self.peak_totals = []
           for sig in self.signal_data:
                lst = sig.peak_val
-               self.peak_totals.append(lst[1])   
+               self.peak_totals.append(sum(lst[:]))   
           folder = self.mypath + "\\profile"
           if not isdir(folder):
                mkdir(folder)
@@ -476,24 +477,17 @@ class Transducer:
           plt.xlabel('angle (degree)')
           plt.ylabel('peak voltage (V)')
           if SAVE is True:
-               plt.savefig(folder + "\\TOT_" +self.name+".png", dpi=300)
+               plt.savefig(folder + "\\TOT_" +self.name+".png", dpi=self.GLOBAL_DPI)
                
           if DISPLAY is True:
                plt.show(fig)
                
           elif DISPLAY is False:
                plt.close(fig)
-               
-                   
-               
+         
+          
+
 if __name__ == "__main__":
-     start = clock()
-     flat_path = 'C:\\Users\\dionysius\\Desktop\\PURE\\may28\\FLAT'
-     foc_path = 'C:\\Users\\dionysius\\Desktop\\PURE\\may28\\FOC'
-#     clean(flat_path)
-#     clean(foc_path)
-     flat = Transducer(flat_path, "FLAT_15cm")
-     foc = Transducer(foc_path, "FOC_15cm")
-     foc.write_all()
-     flat.write_all()
-     print("Writing completed, {} s!".format(clock()-start))
+     fpath9 = 'C:\\Users\\dionysius\\Desktop\\PURE\\jun5\\1_5inFOC\\9cm\\clean'
+     foc9 = Transducer(fpath9,"1_5FOC_9cm", param=(4,200))
+
