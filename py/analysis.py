@@ -152,7 +152,7 @@ class Signal:
      self.fft
      '''
      
-     def __init__(self, xy, threshold, width):
+     def __init__(self, xy, threshold, width, START=0, END=-1):
           '''
           xy: numpy array
           threshold: minimum voltage for a peak to be identified
@@ -165,10 +165,10 @@ class Signal:
           '''
           self.xy = np.copy(xy)  # will be changed by class methods
           self.name = ''
-          self.peak_ind, self.peak_val = self.peaks_list(threshold, width)
+          self.peak_ind, self.peak_val = self.peaks_list(threshold, width, START=START, END=END)
           
          
-     def peaks_list(self, threshold, width):
+     def peaks_list(self, threshold, width, START=0, END=-1):
           '''
           Find the peaks in the signal
           threshold: minimum voltage to detect
@@ -178,9 +178,13 @@ class Signal:
           self.peak_ind = []  # indices of x values where peaks are located
           self.peak_val = []  # y values of each peak
           V = np.abs(self.xy[:,1])  # absolute values of voltages
-          count = 0
-          while count <= len(self.xy[:,:])-1:
-               if V[count] >= threshold and (count-width) >= 0:     
+          count = START
+          if END == -1:
+               m = len(self.xy[:,0])-1
+          else:
+               m = END
+          while count <= m:
+               if V[count] >= threshold: ## and (count-(width+width//2)) >= 0:     
                     if V[count] == max(V[(count-width): (count+width)]):
                          self.peak_ind.append(count)
                          self.peak_val.append(V[count])
@@ -190,7 +194,6 @@ class Signal:
                          count += 1
                else:
                     count += 1
-          
           return self.peak_ind, self.peak_val
      
      
@@ -214,6 +217,7 @@ class Signal:
           '''
           y = self.xy[:, 1]
           return np.fft.fft(y)
+          
      
      
 class Transducer:
@@ -227,7 +231,7 @@ class Transducer:
      self.graph_fft
      self.graph_total
      '''
-     def __init__(self, mypath, name, param=(.5, 1500), ftype='.npy'):
+     def __init__(self, mypath, name, param=[.5, 1500, 0, -1], ftype='.npy'):
           '''
           mypath: path leading to \\clean directory
           name: name of this setup
@@ -250,6 +254,8 @@ class Transducer:
           self.deg = Micro.angle
           self.threshold = param[0]
           self.width = param[1]
+          self.START = param[2]
+          self.END = param[3]
           self.fnames.sort(key=natural_sort_key)
           for i in range(len(self.fnames)):
                if ftype=='.csv' or ftype=='csv':
@@ -258,7 +264,7 @@ class Transducer:
                     xy = np.load(open(self.mypath+"\\"+self.fnames[i], "rb"))
                if ftype=='.npz' or ftype=='npz':
                     xy = xy[xy.files[0]]
-               sig = Signal(xy, self.threshold, self.width)
+               sig = Signal(xy, self.threshold, self.width, START=self.START, END=self.END)
                sig.name = "{0}_Transducer_{1}_degrees".format(self.name, self.deg[i])
                self.signal_data.append(sig)
                
@@ -272,18 +278,18 @@ class Transducer:
           '''
 #          self.graph_fft(SAVE=True, DISPLAY=False)      
           self.graph_signal(SAVE=True, DISPLAY=False)
-          self.graph_h(SAVE=True, DISPLAY=False)
-          self.graph_total(SAVE=True, DISPLAY=False)
+#          self.graph_h(SAVE=True, DISPLAY=False)
+#          self.graph_total(SAVE=True, DISPLAY=False)
               
           
      def display_all(self):
           '''
           Displays all figures
           '''
-          self.graph_fft(SAVE=False, DISPLAY=True)        
+#          self.graph_fft(SAVE=False, DISPLAY=True)        
           self.graph_signal(SAVE=False, DISPLAY=True)
-          self.graph_h(SAVE=False, DISPLAY=True)
-          self.graph_total(SAVE=False, DISPLAY=True)
+#          self.graph_h(SAVE=False, DISPLAY=True)
+#          self.graph_total(SAVE=False, DISPLAY=True)
           
           
      def graph_h(self,i='all', SAVE=False, DISPLAY=True):
@@ -369,7 +375,7 @@ class Transducer:
                for sig in self.signal_data:
                     fig = plt.figure(figsize=[10,8])
                     plt.plot(sig.xy[:, 0], sig.xy[:, 1], c='grey')
-                    plt.scatter(sig.xy[sig.peak_ind, 0], sig.xy[sig.peak_ind, 1], c='goldenrod', s=25)
+                    plt.scatter(sig.xy[sig.peak_ind[0], 0], sig.xy[sig.peak_ind[0], 1], c='goldenrod', s=25)
                     plt.xlabel('time (s)')
                     plt.ylabel('voltage (V)')
                     plt.title(self.name)
@@ -385,7 +391,7 @@ class Transducer:
                sig = self.signal_data[i]
                fig = plt.figure(figsize=[10,8])
                plt.plot(sig.xy[:, 0], sig.xy[:, 1], c='grey')
-               plt.scatter(sig.xy[sig.peak_ind, 0], sig.xy[sig.peak_ind, 1], c='goldenrod', s=25)
+               plt.scatter(sig.xy[sig.peak_ind[0], 0], sig.xy[sig.peak_ind[0], 1], c='goldenrod', s=25)
                plt.xlabel('time (s)')
                plt.ylabel('voltage (V)')
                plt.title(sig.name)
@@ -397,7 +403,7 @@ class Transducer:
                          sig = self.signal_data[k]
                          fig = plt.figure(figsize=[10,8])
                          plt.plot(sig.xy[:, 0], sig.xy[:, 1], c='grey')
-                         plt.scatter(sig.xy[sig.peak_ind, 0], sig.xy[sig.peak_ind, 1], c='goldenrod', s=25)
+                         plt.scatter(sig.xy[sig.peak_ind[0], 0], sig.xy[sig.peak_ind[0], 1], c='goldenrod', s=25)
                          plt.xlabel('time (s)')
                          plt.ylabel('voltage (V)')
                          plt.title(sig.name)
@@ -466,7 +472,7 @@ class Transducer:
           self.peak_totals = []
           for sig in self.signal_data:
                lst = sig.peak_val
-               self.peak_totals.append(sum(lst[:]))   
+               self.peak_totals.append(lst[0])
           folder = self.mypath + "\\profile"
           if not isdir(folder):
                mkdir(folder)
@@ -487,7 +493,7 @@ class Transducer:
          
           
 
-if __name__ == "__main__":
-     fpath9 = 'C:\\Users\\dionysius\\Desktop\\PURE\\jun5\\1_5inFOC\\9cm\\clean'
-     foc9 = Transducer(fpath9,"1_5FOC_9cm", param=(4,200))
+#if __name__ == "__main__":
+#     fpath9 = 'C:\\Users\\dionysius\\Desktop\\PURE\\jun5\\1_5inFOC\\9cm\\clean'
+#     foc9 = Transducer(fpath9,"1_5FOC_9cm", param=(4,200))
 

@@ -1,7 +1,0 @@
-goal: perform experiment for 2f and 2.5f? focal depths for both transducers
-————————————-
-start with 2f - 6 inch or 15 +/- 1 cm
-zero angle reading is 24.20 on micrometer
-PRF 200, PULSER VOLTAGE 200, FREQ 2-2.5, GAIN 25 DB
-Transducer is not perpendicular to water surface / sample surface at zero degrees - because the holder screw tilts it!
-Scope settings: 160.0 microseconds/, 1.00 V/, save length 40000

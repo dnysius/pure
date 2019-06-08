@@ -52,9 +52,9 @@ def clean(mypath, skip=2, ext='.npy'):
                
      print('Cleaning done --> ', copypath)
      
-if __name__=='__main__':
-     path1 ="C:\\Users\\dionysius\\Desktop\\PURE\\may27\\FLAT"
-     path2 ="C:\\Users\\dionysius\\Desktop\\PURE\\may27\\FOC"
-     clean(path1)
-     clean(path2)
-     
+#if __name__=='__main__':
+#     path1 ="C:\\Users\\dionysius\\Desktop\\PURE\\may27\\FLAT"
+#     path2 ="C:\\Users\\dionysius\\Desktop\\PURE\\may27\\FOC"
+#     clean(path1)
+#     clean(path2)
+#     
