@@ -1,7 +1,0 @@
-2019/5/24
-PRF 200 HZ
-Pulser voltage 200
-Trans freq 2-2.5 Mhz
-Gain 30 +, T/R
-On the oscilloscope, change horizontal scale to 160.0 mu/s. Push to zero.
-save length is at 40000
