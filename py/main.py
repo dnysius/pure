@@ -23,7 +23,7 @@ angle | micrometer reading
 """
 ## need to load load_obj, Transducer, obj_folder, or import * for this to work --- why?
 ## this program doesn't understand the Transducer object when it's loaded from .pkl file?
-from analysis import Transducer, Micrometer, Signal
+from analysis import Transducer
 from os import listdir
 from os.path import join, isfile
 import pickle
@@ -37,48 +37,30 @@ from scanning import Scan  # DIMENSIONS as tuple (rows, cols), START_POS= "top l
 
 global obj_folder
 global BSCAN_folder
-obj_folder = "C:\\Users\\dionysius\\Desktop\\PURE\\pure\\obj\\"
-tot_folder = "C:\\Users\\dionysius\\Desktop\\PURE\\pure\\scans\\"
-BSCAN_folder = "C:\\Users\\dionysius\\Desktop\\PURE\\pure\\scans\\BSCAN\\"
+obj_folder = "C:\\Users\\dionysius\\Desktop\\PURE\\Transducer Objects\\"
+BSCAN_folder = "C:\\Users\\dionysius\\Desktop\\PURE\\BSCAN\\"
 
 def init():
-     t1 = clock()
-     flat15_path = 'C:\\Users\\dionysius\\Desktop\\PURE\\pure\\data\\FLAT15cm'
-     foc15_path = 'C:\\Users\\dionysius\\Desktop\\PURE\\pure\\data\\3FOC15cm'
-     flat9_path = 'C:\\Users\\dionysius\\Desktop\\PURE\\pure\\data\\FLAT9cm'
-     foc9_path = 'C:\\Users\\dionysius\\Desktop\\PURE\\pure\\data\\3FOC9cm'
-     fpath15 = 'C:\\Users\\dionysius\\Desktop\\PURE\\pure\\data\\1-5FOC15cm'
-     fpath9 = 'C:\\Users\\dionysius\\Desktop\\PURE\\pure\\data\\1-5FOC9cm'
-     ##################################################################################
-     #     plt.figure(figsize=[10,8])
-     #     start = 23000
-     #     end =-1
-     #
-     #     plt.plot(flat.signal_data[0].xy[start:end,0], flat.signal_data[0].xy[start:end,1])
-     #     plt.show()
-     ##################################################################################
-     flat = Transducer(flat15_path, "FLAT_15cm", ftype='npz', param=[.2, 1500, 23000, -1])
-     foc = Transducer(foc15_path, "3FOC_15cm", ftype='npz', param=[.1, 1000, 24000, 27000])
-     foc2 = Transducer(foc9_path, "3FOC_9cm", ftype='npy', param=[.1, 1000, 22500,25000])
-     flat2 = Transducer(flat9_path, "FLAT_9cm", ftype='npy', param=[.15, 1000, 22500, -1])
-     foc15 = Transducer(fpath15,"1_5FOC_15cm", param=[3,500, 30000, -1])
-     foc9 = Transducer(fpath9,"1_5FOC_9cm", param=[3,700, 27500, -1])
-     ##################################################################################
-#     flat.write_all()
-#     foc.write_all()
-#     foc2.write_all()
-#     flat2.write_all()
-#     foc15.write_all()
-#     foc9.write_all()
-     ##################################################################################
+     start = clock()
+     flat15_path = 'C:\\Users\\dionysius\\Desktop\\PURE\\may28\\FLAT\\clean'
+     foc15_path = 'C:\\Users\\dionysius\\Desktop\\PURE\\may28\\FOC\\clean'
+     flat9_path = 'C:\\Users\\dionysius\\Desktop\\PURE\\may27\\FLAT\\clean'
+     foc9_path = 'C:\\Users\\dionysius\\Desktop\\PURE\\may27\\FOC\\clean'
+     fpath15 = 'C:\\Users\\dionysius\\Desktop\\PURE\\jun5\\1_5inFOC\\15cm\\clean'
+     fpath9 = 'C:\\Users\\dionysius\\Desktop\\PURE\\jun5\\1_5inFOC\\9cm\\clean'
+     flat = Transducer(flat15_path, "FLAT_15cm", ftype='npz')
      save_obj(flat)
+     foc = Transducer(foc15_path, "3FOC_15cm", ftype='npz')
      save_obj(foc)
+     foc2 = Transducer(foc9_path, "3FOC_9cm", ftype='npy')
      save_obj(foc2)
+     flat2 = Transducer(flat9_path, "FLAT_9cm", ftype='npy')
      save_obj(flat2)
+     foc15 = Transducer(fpath15,"1_5FOC_15cm", param=(4,200))
      save_obj(foc15)
+     foc9 = Transducer(fpath9,"1_5FOC_9cm", param=(4,200))
      save_obj(foc9)
-     ##################################################################################
-     print("Writing completed, {} s!".format(clock()-t1))
+     print("Writing completed, {} s!".format(clock()-start))
 
 
 def BSCAN(signal_data, title='B-Scan', domain=(0, -1), DISPLAY=True, SAVE=False):
@@ -95,7 +77,7 @@ def BSCAN(signal_data, title='B-Scan', domain=(0, -1), DISPLAY=True, SAVE=False)
      plt.ioff()
      fig = plt.figure(figsize=[12,10])
      plt.title(title)
-     plt.imshow(bscan, cmap='gray',origin='upper', aspect='auto', alpha=.9)
+     plt.imshow(bscan, cmap='gray',origin='upper', aspect='auto', alpha=.8)
      plt.xlabel('angle (degrees)')
      if SAVE == True:
           plt.savefig(BSCAN_folder+title+'.png')
@@ -142,7 +124,7 @@ def graph_totals(title="Angle Dependence", SAVE=False, DISPLAY=True):
           
      plt.legend()
      if SAVE==True:
-          plt.savefig(tot_folder+title+".png", dpi=200)
+          plt.savefig(obj_folder+title+".png", dpi=200)
      if DISPLAY==False:
           plt.close(fig)
      elif DISPLAY==True:
@@ -151,6 +133,6 @@ def graph_totals(title="Angle Dependence", SAVE=False, DISPLAY=True):
      
 if __name__ == '__main__':
      init()
-     graph_totals(SAVE=True)
-     BSCAN(load_obj("3FOC_15cm.pkl").signal_data, title="3 in Focused 15 cm depth", domain=(24600, 25200), SAVE=True)
+     graph_totals()
+     BSCAN(load_obj("3FOC_15cm.pkl").signal_data, title="3 in Focused 15 cm depth", domain=(24600, 25200))
      
