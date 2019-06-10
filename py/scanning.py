@@ -3,15 +3,18 @@
 ## Started June 5 2019
 
 import numpy as np
+import serial
+from scope import Scope
 #####################################################################################
 ## Define global constants
 #####################################################################################
-global TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT
+global TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT, SCAN_FOLDER
 TOP_LEFT = (0, 0)
 TOP_RIGHT = (0, -1)
 BOTTOM_LEFT = (-1, 0)
 BOTTOM_RIGHT = (-1, -1)
-class Scan():
+SCAN_FOLDER = "C:\\Users\\dionysius\\Desktop\\PURE\\pure\\scans\\sample1"
+class Scan2D():
      #####################################################################################
      ## Calculate dimensions by (floor) dividing the total length & width by the step size
      ## the motor moves. The step size in x may be different from that in y.
@@ -40,7 +43,7 @@ class Scan():
           self.START_POS = POS_DICT[START_POS]  ## starting position of transducer
           self.X_STEP_SIZE = 100  ## step along a row
           self.Y_STEP_SIZE = 50  ## step along a column
-          
+#          self.scope = Scope(SCAN_FOLDER)
     
      def STEP_PARAM(self):
           #####################################################################################
@@ -99,20 +102,44 @@ class Scan():
                PHASE = 0
                for y in range(SAMPLE_DIMENSIONS[0]):
                     if (y % 2) == 0:
-                         ## odd
+                         ## even
                          arr[y, 0:-1] = (-1)**(y + PHASE)
                          arr[y, -1] = self.VERTICAL_STEP
                     else:
-                         ## even
+                         ## odd
                          arr[y, 1:] = (-1)**(y + PHASE)
                          arr[y, 0] = self.VERTICAL_STEP
                arr[self.END_POS] = 0
                del PHASE
                
           elif self.START_POS == self.BOTTOM_LEFT:
-               pass  ## work on this
+               PHASE = 0
+               for y in range(SAMPLE_DIMENSIONS[0]):
+                    if (y%2) == 0:
+                         ## even
+                         arr[y, 0:-1] = (-1)**(y+PHASE)
+                         arr[y, -1] = self.VERTICAL_STEP
+                    else:
+                         ## odd
+                         arr[y, 1:] = (-1)**(y+PHASE)
+                         arr[y, 0] = self.VERTICAL_STEP
+               arr[self.END_POS] = 0
+               del PHASE
+               
           elif self.START_POS == self.BOTTOM_RIGHT:
-               pass  ## work on this
+               PHASE = 1
+               for y in range(SAMPLE_DIMENSIONS[0]):
+                    if (y%2) == 0:
+                         ## even
+                         arr[y, 1:] = (-1)**(y+PHASE)
+                         arr[y, 0] = self.VERTICAL_STEP
+                         
+                    else:
+                         ## odd
+                         arr[y, 0:-1] = (-1)**(y+PHASE)
+                         arr[y, -1] = self.VERTICAL_STEP
+               arr[self.END_POS] = 0
+               del PHASE
                
           self.arr = np.copy(arr)
           del arr
@@ -142,15 +169,18 @@ class Scan():
           except:
                raise ValueError("DIRECTION is not type str")
                     
-     def start(self):
+     def run(self):
           #####################################################################################
           ## Walk through array and call on STEP_DICT functions to move motor, work on this
+          ## each measurement should save to files in SCAN_FOLDER
           #####################################################################################
           self.STEP_PARAM()
           pos = self.START_POS
           while self.arr[pos] != 0:
                V = self.arr[pos]
                ## take measurement
+               print("measure")
+#               self.scope.grab()
                self.STEP(self.STEP_DICT[V])  ## Tell arduino to move the step motor
                if V == self.left:
                     pos = (pos[0], pos[1] - 1)
@@ -162,14 +192,67 @@ class Scan():
                     pos = (pos[0] + 1, pos[1])
                if self.arr[pos] == 0:
                     ## take one last measurement if at final position
-                    print('final measurement')
+#                    self.scope.grab()
+                    print('measure')
 
           del pos, V
           
      def __repr__(self):
           ## String representation of the sample area
           return np.array2string(self.arr)
+     
+
+class Scan1D:
+     
+     def __init__(self, LENGTH, START_POS=0):
+          left_str = ["left", "l", "L", "start", "first", 0]
+          right_str = ["right", "r", "R", "end", "last", -1]
+          self.arr = np.ones(LENGTH, dtype=int)
+          if START_POS in left_str:
+               self.arr[-1] = 0
+               START_POS = 0
+          elif START_POS in right_str:
+               self.arr *= -1
+               self.arr[0] = 0
+               START_POS = len(self.arr) -1 
+#          self.scope = Scope(SCAN_FOLDER)
+          self.START_POS = START_POS
+          self.STEP_DICT = {-1: "-x", 1: "x", 0:"0"}
+
+     def STEP(self, DIRECTION='+x'):
+          #####################################################################################
+          ## Command arduino to move motor, work on this
+          #####################################################################################
+          try:
+               if DIRECTION == 'x' or DIRECTION == 'X' or DIRECTION == '+x' or DIRECTION == '+X':
+                    ## move "right"
+                    print('right')
+                    
+               elif DIRECTION == 'x' or DIRECTION == 'X' or DIRECTION == '-x' or DIRECTION == '-X':
+                    ## move "left"
+                    print('left')
+               elif DIRECTION == "0":
+                    ## do nothing
+                    pass
+                    
+          except:
+               raise ValueError("DIRECTION is not type str")
+               
+     def run(self):
+          pos = self.START_POS
+          while self.arr[pos] != 0:
+               V = self.arr[pos]
+               ## grab measurement
+               self.STEP(self.STEP_DICT[V])  ## Tell arduino to MOVE the step motor
+               pos += V
+#          self.scope.grab()  ## grab one last measurement at final position
+                    
                     
 if __name__ == '__main__':
-     trial = Scan(DIMENSIONS=(200, 100), START_POS="top left")
+#     pass
+#     trial = Scan2D(DIMENSIONS=(2, 2), START_POS="bottom left")
+#     trial.run()
+     one = Scan1D(LENGTH=1000, START_POS=0)
+     one.run()
+     print(one.arr)
      

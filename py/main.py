@@ -33,7 +33,7 @@ import matplotlib.cm as cm
 import numpy as np
 from scope import Scope  # Scope(save path)
 import serial
-from scanning import Scan  # DIMENSIONS as tuple (rows, cols), START_POS= "top left"
+from scanning import Scan2D  # DIMENSIONS as tuple (rows, cols), START_POS= "top left"
 
 global obj_folder
 global BSCAN_folder
@@ -150,7 +150,9 @@ def graph_totals(title="Angle Dependence", SAVE=False, DISPLAY=True):
 
      
 if __name__ == '__main__':
-     init()
-     graph_totals(SAVE=True)
-     BSCAN(load_obj("3FOC_15cm.pkl").signal_data, title="3 in Focused 15 cm depth", domain=(24600, 25200), SAVE=True)
+#     init()
+#     graph_totals(SAVE=True)
+     sample1 = Scan2D(DIMENSIONS=(4, 3), START_POS="top left")
+     sample1.run()
+#     BSCAN(load_obj("3FOC_15cm.pkl").signal_data, title="3 in Focused 15 cm depth", domain=(24600, 25200))
      
