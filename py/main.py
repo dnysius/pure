@@ -20,6 +20,8 @@ angle | micrometer reading
 13	2.39564723
 14	0.71838933
 15	-0.95886858
+
+TIMESTEP: 3.999999999997929e-08
 """
 ## need to load load_obj, Transducer, obj_folder, or import * for this to work --- why?
 ## this program doesn't understand the Transducer object when it's loaded from .pkl file?
@@ -71,12 +73,12 @@ def init():
 #     foc15.write_all()
 #     foc9.write_all()
      ##################################################################################
-     save_obj(flat)
-     save_obj(foc)
-     save_obj(foc2)
-     save_obj(flat2)
-     save_obj(foc15)
-     save_obj(foc9)
+#     save_obj(flat)
+#     save_obj(foc)
+#     save_obj(foc2)
+#     save_obj(flat2)
+#     save_obj(foc15)
+#     save_obj(foc9)
      ##################################################################################
      print("Writing completed, {} s!".format(clock()-t1))
 
@@ -152,7 +154,13 @@ def graph_totals(title="Angle Dependence", SAVE=False, DISPLAY=True):
 if __name__ == '__main__':
 #     init()
 #     graph_totals(SAVE=True)
-     sample1 = Scan2D(DIMENSIONS=(4, 3), START_POS="top left")
-     sample1.run()
+#     sample1 = Scan2D(DIMENSIONS=(4, 3), START_POS="top left")
+#     sample1.run()
 #     BSCAN(load_obj("3FOC_15cm.pkl").signal_data, title="3 in Focused 15 cm depth", domain=(24600, 25200))
+     
+     """
+     FIX IMSHOW SCALE
+     time step is 3.999999999997929e-08
+     
+     """
      
