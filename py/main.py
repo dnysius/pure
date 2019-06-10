@@ -39,9 +39,11 @@ from scanning import Scan2D  # DIMENSIONS as tuple (rows, cols), START_POS= "top
 
 global obj_folder
 global BSCAN_folder
+global timestep
 obj_folder = "C:\\Users\\dionysius\\Desktop\\PURE\\pure\\obj\\"
 tot_folder = "C:\\Users\\dionysius\\Desktop\\PURE\\pure\\scans\\"
 BSCAN_folder = "C:\\Users\\dionysius\\Desktop\\PURE\\pure\\scans\\BSCAN\\"
+timestep = 3.999999999997929e-08
 
 def init():
      t1 = clock()
@@ -89,16 +91,35 @@ def BSCAN(signal_data, title='B-Scan', domain=(0, -1), DISPLAY=True, SAVE=False)
      START = domain[0] ## offset the start of the signal; don't want to include transmitted part
      END = domain[1]
      arr = np.abs(signal_data[0].xy[START:END, 1])  ## take abs of first signal
+     max_val = 0
+     for sig in signal_data:
+          xy = sig.xy
+          print(xy[len(xy[:,0])//2])
+          ######
+          V = np.amax(sig.xy)
+          if V > max_val:
+               max_val = V
+
+     arr /= max_val
      for i in range(1, len(signal_data)):  ## start from second index
          next_arr = np.abs(signal_data[i].xy[START:END, 1])  ## abs of the next signal
+         next_arr /= max_val
          arr = np.vstack((arr, next_arr))  ## add to previous array
      
      bscan = np.transpose(arr)  ## take transpose, rename variable
      plt.ioff()
-     fig = plt.figure(figsize=[12,10])
-     plt.title(title)
-     plt.imshow(bscan, cmap='gray',origin='upper', aspect='auto', alpha=.9)
-     plt.xlabel('angle (degrees)')
+     fig = plt.figure(figsize=[15,15])
+     ax = fig.add_subplot(1, 1, 1)
+     major_ticks = np.arange(timestep*START, timestep*END, timestep*50)
+     minor_ticks = np.arange(timestep*START, timestep*END, timestep*10)
+     ax.set_title(title)
+     ax.imshow(bscan, cmap='gray',origin='upper', aspect='auto', alpha=.9, extent=[0, 16, timestep*END, timestep*START], vmin = 0, vmax = 1)
+     ax.set_xlabel('angle (degrees)')
+     ax.set_ylabel('time (s)')
+     ax.set_yticks(major_ticks)
+     ax.set_yticks(minor_ticks, minor=True)
+     ax.grid(True, axis='y', which="major", alpha=.8)
+     ax.grid(True, axis='y', which="minor", alpha=.4, linestyle="--")
      if SAVE == True:
           plt.savefig(BSCAN_folder+title+'.png')
      if DISPLAY == True:
@@ -110,7 +131,7 @@ def BSCAN(signal_data, title='B-Scan', domain=(0, -1), DISPLAY=True, SAVE=False)
 
 
 def save_obj(obj, output_folder = obj_folder):
-     name = obj.name+".pkl"
+     name = obj.name + ".pkl"
      output = join(output_folder, name)
 
      with open(output, 'wb') as wr:
@@ -156,11 +177,5 @@ if __name__ == '__main__':
 #     graph_totals(SAVE=True)
 #     sample1 = Scan2D(DIMENSIONS=(4, 3), START_POS="top left")
 #     sample1.run()
-#     BSCAN(load_obj("3FOC_15cm.pkl").signal_data, title="3 in Focused 15 cm depth", domain=(24600, 25200))
-     
-     """
-     FIX IMSHOW SCALE
-     time step is 3.999999999997929e-08
-     
-     """
+     BSCAN(load_obj("3FOC_15cm.pkl").signal_data, title="3 in Focused 15 cm depth", domain=(24600, 25200))
      
