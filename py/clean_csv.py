@@ -8,7 +8,7 @@ directory with the first two rows of data (which are text) discarded.
 """
 
 import csv
-from os import listdir, mkdir, getcwd
+from os import listdir, mkdir
 from os.path import isfile, join, isdir
 import numpy as np
 
@@ -20,7 +20,7 @@ if the target directory already contains .csv files of the same name(s),
 this script will overwrite them.
 '''
 
-def clean(mypath, skip=2):
+def clean(mypath, skip=2, ext='.npy'):
      '''
      skip: how many rows to skip
      '''
@@ -29,7 +29,6 @@ def clean(mypath, skip=2):
           mkdir(copypath)
           
      onlyfiles = [f for f in listdir(mypath) if isfile(join(mypath, f)) and f[-4:] == '.csv']
-#     print(listdir(mypath))
      for i in range(len(onlyfiles)):
           arr = []
           with open(mypath + "\\"+ onlyfiles[i], newline='') as f:
@@ -44,12 +43,18 @@ def clean(mypath, skip=2):
                          skipped += 1
                     
                a = np.array(arr)
-#               np.savetxt(copypath + "\\" + onlyfiles[i], a, delimiter=",")
-               np.save(copypath + "\\" + onlyfiles[i][0:-3]+'npy', a)
+               if ext[-3:]=='npy':
+                    np.save(copypath + "\\" + onlyfiles[i][0:-4]+'.npy', a)
+               elif ext[-3:]=='npz':
+                    np.savez_compressed(copypath + "\\" + onlyfiles[i][0:-4]+'.npz', a)
+               elif ext[-3:]=='csv':
+                    np.savetxt(copypath + "\\" + onlyfiles[i], a, delimiter=",")
                
      print('Cleaning done --> ', copypath)
-
-
-if __name__ == '__main__':
-     mypath = 'C:\\Users\\dionysius\\Desktop\\PURE\\may28\\FOC'
-     clean(mypath, 2)
+     
+#if __name__=='__main__':
+#     path1 ="C:\\Users\\dionysius\\Desktop\\PURE\\may27\\FLAT"
+#     path2 ="C:\\Users\\dionysius\\Desktop\\PURE\\may27\\FOC"
+#     clean(path1)
+#     clean(path2)
+#     
