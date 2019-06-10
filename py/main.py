@@ -36,6 +36,7 @@ import numpy as np
 from scope import Scope  # Scope(save path)
 import serial
 from scanning import Scan2D  # DIMENSIONS as tuple (rows, cols), START_POS= "top left"
+from tqdm import tqdm, trange
 
 global obj_folder
 global BSCAN_folder
@@ -68,34 +69,25 @@ def init():
      foc15 = Transducer(fpath15,"1_5FOC_15cm", param=[3,500, 30000, -1])
      foc9 = Transducer(fpath9,"1_5FOC_9cm", param=[3,700, 27500, -1])
      ##################################################################################
-#     flat.write_all()
-#     foc.write_all()
-#     foc2.write_all()
-#     flat2.write_all()
-#     foc15.write_all()
-#     foc9.write_all()
-     ##################################################################################
-#     save_obj(flat)
-#     save_obj(foc)
-#     save_obj(foc2)
-#     save_obj(flat2)
-#     save_obj(foc15)
-#     save_obj(foc9)
-     ##################################################################################
-     print("Writing completed, {} s!".format(clock()-t1))
+     obj_list = [flat, foc, foc2, flat2, foc15, foc9]
+#     pbar = tqdm(obj_list)
+     for obj in obj_list:
+          obj.write_all()
+          save_obj(obj)
+          
+
+     print("Initialization completed, {} s!".format(clock()-t1))
 
 
-def BSCAN(signal_data, title='B-Scan', domain=(0, -1), DISPLAY=True, SAVE=False):
+def BSCAN(signal_data, title='B-Scan', domain=(0, -1), DISPLAY=True, SAVE=False, vmin=0, vmax=1):
      ## signal_data is a list of Signal objects created in the Transducer class
      ## domain is a tuple with start and end points of the signal
      START = domain[0] ## offset the start of the signal; don't want to include transmitted part
+     t2 = clock()
      END = domain[1]
      arr = np.abs(signal_data[0].xy[START:END, 1])  ## take abs of first signal
      max_val = 0
      for sig in signal_data:
-          xy = sig.xy
-          print(xy[len(xy[:,0])//2])
-          ######
           V = np.amax(sig.xy)
           if V > max_val:
                max_val = V
@@ -110,16 +102,19 @@ def BSCAN(signal_data, title='B-Scan', domain=(0, -1), DISPLAY=True, SAVE=False)
      plt.ioff()
      fig = plt.figure(figsize=[15,15])
      ax = fig.add_subplot(1, 1, 1)
-     major_ticks = np.arange(timestep*START, timestep*END, timestep*50)
-     minor_ticks = np.arange(timestep*START, timestep*END, timestep*10)
+     major_ticks = np.arange(timestep*START, timestep*END, timestep*((END-START)//10))
+     minor_ticks = np.arange(timestep*START, timestep*END, timestep*((END-START)//50))
+     x_ticks = np.arange(0, 17, 1)
      ax.set_title(title)
-     ax.imshow(bscan, cmap='gray',origin='upper', aspect='auto', alpha=.9, extent=[0, 16, timestep*END, timestep*START], vmin = 0, vmax = 1)
+     ax.imshow(bscan, cmap='gray',origin='upper', aspect='auto', alpha=.9, extent=[0, 16, timestep*END, timestep*START], vmin = vmin, vmax = vmax)
      ax.set_xlabel('angle (degrees)')
      ax.set_ylabel('time (s)')
+     ax.set_xticks(x_ticks)
      ax.set_yticks(major_ticks)
      ax.set_yticks(minor_ticks, minor=True)
-     ax.grid(True, axis='y', which="major", alpha=.8)
-     ax.grid(True, axis='y', which="minor", alpha=.4, linestyle="--")
+     ax.grid(True, axis='y', which="major", alpha=.5)
+     ax.grid(True, axis='y', which="minor", alpha=.2, linestyle="--")
+     ax.grid(True, axis='x', which="major", alpha=.2, linestyle="--")
      if SAVE == True:
           plt.savefig(BSCAN_folder+title+'.png')
      if DISPLAY == True:
@@ -127,8 +122,9 @@ def BSCAN(signal_data, title='B-Scan', domain=(0, -1), DISPLAY=True, SAVE=False)
      elif DISPLAY == False:
           plt.close(fig)
      plt.ion()
-     del fig, arr, next_arr, bscan, title, domain
-
+     print("BSCAN completed, {0} s!".format(clock()-t2))
+     del fig, arr, next_arr, bscan, title, domain, t2
+     
 
 def save_obj(obj, output_folder = obj_folder):
      name = obj.name + ".pkl"
@@ -171,11 +167,15 @@ def graph_totals(title="Angle Dependence", SAVE=False, DISPLAY=True):
      elif DISPLAY==True:
           plt.show(fig)
 
-     
+
+def all_bscan():
+#     BSCAN(load_obj("3FOC_15cm.pkl").signal_data, title="3 in Focused 15 cm depth", domain=(24600, 25200))
+     BSCAN(load_obj("1_5FOC_9cm.pkl").signal_data, title="1.5 in Focused 9 cm depth", domain=(27500, 28100))     
+
 if __name__ == '__main__':
 #     init()
 #     graph_totals(SAVE=True)
-#     sample1 = Scan2D(DIMENSIONS=(4, 3), START_POS="top left")
+     sample1 = Scan2D(DIMENSIONS=(4, 3), START_POS="top left")
 #     sample1.run()
-     BSCAN(load_obj("3FOC_15cm.pkl").signal_data, title="3 in Focused 15 cm depth", domain=(24600, 25200))
+
      
