@@ -13,8 +13,8 @@ import sys
 import visa # PyVisa info @ http://PyVisa.readthedocs.io/en/stable/
 import time
 import numpy as np
-from os import mkdir, listdir
-from os.path import isdir, isfile, join
+from os import mkdir, listdir, makedirs
+from os.path import isdir, isfile, join, dirname, exists
 import re
 from tqdm import tqdm # progress bar reporting
 _nsre = re.compile('([0-9]+)')
@@ -44,7 +44,7 @@ class Scope:
           self.BASE_FILE_NAME = filename + "_"  # want format to be NAME_[ROW]_[COLUMN].npy
           self.BASE_DIRECTORY = directory
           
-          if not isdir(self.BASE_DIRECTORY):
+          if not exists(self.BASE_DIRECTORY):
                mkdir(self.BASE_DIRECTORY)
           ############################################################################
           ## Optional automatic subfolder naming, replace BASE_DIRECTORY with SUBFOLDER
@@ -72,7 +72,7 @@ class Scope:
           ## Main code
           ##############################################################################################################################################################################
           ##############################################################################################################################################################################       
-          sys.stdout.write("Script is running.  This may take a while...")
+#          sys.stdout.write("Script is running.  This may take a while...")
           ##############################################################################################################################################################################
           ##############################################################################################################################################################################
           ## Connect and initialize scope
@@ -385,7 +385,7 @@ class Scope:
                i = 0
           
           
-          filename = self.BASE_DIRECTORY + self.BASE_FILE_NAME +"{0}".format(i)+ ".npy"
+          filename = join(self.BASE_DIRECTORY, self.BASE_FILE_NAME +"{0}".format(i)+ ".npy")
                
           with open(filename, 'wb') as filehandle: # wb means open for writing in binary; can overwrite
               np.save(filehandle, np.insert(self.Wav_Data,0,self.DataTime,axis=1))

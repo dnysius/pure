@@ -259,9 +259,9 @@ class Transducer:
           self.fnames.sort(key=natural_sort_key)
           for i in range(len(self.fnames)):
                if ftype=='.csv' or ftype=='csv':
-                    xy = np.loadtxt(open(self.mypath+"\\"+self.fnames[i], "rb"), delimiter=',', skiprows=0)
+                    xy = np.loadtxt(open(join(self.mypath,self.fnames[i]), "rb"), delimiter=',', skiprows=0)
                else:
-                    xy = np.load(open(self.mypath+"\\"+self.fnames[i], "rb"))
+                    xy = np.load(open(join(self.mypath,self.fnames[i]), "rb"))
                if ftype=='.npz' or ftype=='npz':
                     xy = xy[xy.files[0]]
                sig = Signal(xy, self.threshold, self.width, START=self.START, END=self.END)
@@ -302,7 +302,7 @@ class Transducer:
           lw = 4000
           rw = 4000
           plt.ioff()
-          folder = self.mypath + "\\hilbert"
+          folder = join(self.mypath,"hilbert")
           if not isdir(folder):
                mkdir(folder)
           if i=='all':
@@ -318,7 +318,7 @@ class Transducer:
                     plt.title(sig.name)
                     plt.legend()
                     if SAVE is True:
-                         plt.savefig(folder + "\\HIL_" +sig.name+".png", dpi=self.GLOBAL_DPI)
+                         plt.savefig(join(folder, "HIL_" +sig.name+".png"), dpi=self.GLOBAL_DPI)
                          
                     if DISPLAY is True:
                          plt.show(fig)
@@ -367,7 +367,7 @@ class Transducer:
           DISPLAY: bool, outputs to screen if True
           '''
           plt.ioff()
-          folder = self.mypath + "\\signals"
+          folder = join(self.mypath,"signals")
           if not isdir(folder):
                mkdir(folder)
           
@@ -380,7 +380,7 @@ class Transducer:
                     plt.ylabel('voltage (V)')
                     plt.title(self.name)
                     if SAVE is True:
-                         plt.savefig(folder + "\\SIG_" +sig.name+".png", dpi=self.GLOBAL_DPI)
+                         plt.savefig(join(folder, "SIG_" +sig.name+".png"), dpi=self.GLOBAL_DPI)
                     if DISPLAY is True:
                          plt.show(fig)
                     elif DISPLAY is False:
@@ -421,7 +421,7 @@ class Transducer:
           DISPLAY: bool, outputs to screen if True
           '''
           plt.ioff()
-          folder = self.mypath + "\\fft"
+          folder = join(self.mypath, "fft")
           if not isdir(folder):
                mkdir(folder)
           if i=='all':
@@ -431,7 +431,7 @@ class Transducer:
                     plt.plot(abs(c))
                     plt.title(self.name)
                     if SAVE is True:
-                         plt.savefig(folder + "\\FFT_" +sig.name+".png", dpi=self.GLOBAL_DPI)
+                         plt.savefig(join(folder, "FFT_" +sig.name+".png"), dpi=self.GLOBAL_DPI)
                          
                     if DISPLAY is True:
                          plt.show(fig)
@@ -473,7 +473,7 @@ class Transducer:
           for sig in self.signal_data:
                lst = sig.peak_val
                self.peak_totals.append(lst[0])
-          folder = self.mypath + "\\profile"
+          folder = join(self.mypath, "profile")
           if not isdir(folder):
                mkdir(folder)
 
@@ -483,7 +483,7 @@ class Transducer:
           plt.xlabel('angle (degree)')
           plt.ylabel('peak voltage (V)')
           if SAVE is True:
-               plt.savefig(folder + "\\TOT_" +self.name+".png", dpi=self.GLOBAL_DPI)
+               plt.savefig(join(folder, "TOT_" +self.name+".png"), dpi=self.GLOBAL_DPI)
                
           if DISPLAY is True:
                plt.show(fig)

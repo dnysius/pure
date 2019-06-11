@@ -25,28 +25,45 @@ TIMESTEP: 3.999999999997929e-08
 """
 ## need to load load_obj, Transducer, obj_folder, or import * for this to work --- why?
 ## this program doesn't understand the Transducer object when it's loaded from .pkl file?
-from analysis import Transducer, Micrometer, Signal
-from os import listdir
-from os.path import join, isfile
-import pickle
-from time import clock
-import matplotlib.pyplot as plt
-import matplotlib.cm as cm
+from analysis import Transducer, Signal, Micrometer
+from os import listdir, getcwd, makedirs
+from os.path import join, isfile, dirname, exists
+import pickle  # saving mumpy binary data to files
+from time import clock  # timing functions
+import matplotlib.pyplot as plt  # plotting
+import matplotlib.cm as cm  # colormap
 import numpy as np
-from scope import Scope  # Scope(save path)
-import serial
-from scanning import Scan2D  # DIMENSIONS as tuple (rows, cols), START_POS= "top left"
-from tqdm import tqdm, trange
+#from scanning import Scan2D  # DIMENSIONS as tuple (rows, cols), START_POS= "top left"
+#from tqdm import tqdm, trange  # progress bar reporting
 
+
+
+#######################################################################################
+## Define constants
+global tot_folder
 global obj_folder
 global BSCAN_folder
 global timestep
-obj_folder = "C:\\Users\\dionysius\\Desktop\\PURE\\pure\\obj\\"
-tot_folder = "C:\\Users\\dionysius\\Desktop\\PURE\\pure\\scans\\"
-BSCAN_folder = "C:\\Users\\dionysius\\Desktop\\PURE\\pure\\scans\\BSCAN\\"
 timestep = 3.999999999997929e-08
+#obj_folder = "C:\\Users\\dionysius\\Desktop\\PURE\\pure\\obj\\"
+#tot_folder = "C:\\Users\\dionysius\\Desktop\\PURE\\pure\\scans\\"
+#BSCAN_folder = "C:\\Users\\dionysius\\Desktop\\PURE\\pure\\scans\\BSCAN\\"
+obj_folder = join(dirname(getcwd()), "obj")
+tot_folder = join(dirname(getcwd()), "scans")
+BSCAN_folder = join(dirname(getcwd()), "scans\\BSCAN")
 
+if not exists(BSCAN_folder):
+     makedirs(BSCAN_folder)
+
+if not exists(obj_folder):
+     makedirs(obj_folder)
+
+if not exists(tot_folder):
+     makedirs(tot_folder)
+
+## Define functions
 def init():
+     ## Initializes Transducer objects using signal data (npy, npz, or csv)
      t1 = clock()
      flat15_path = 'C:\\Users\\dionysius\\Desktop\\PURE\\pure\\data\\FLAT15cm'
      foc15_path = 'C:\\Users\\dionysius\\Desktop\\PURE\\pure\\data\\3FOC15cm'
@@ -74,14 +91,15 @@ def init():
      for obj in obj_list:
           obj.write_all()
           save_obj(obj)
-          
 
      print("Initialization completed, {} s!".format(clock()-t1))
 
 
 def BSCAN(signal_data, title='B-Scan', domain=(0, -1), DISPLAY=True, SAVE=False, vmin=0, vmax=1):
+     ## Performs B-scan for given set of measurements
      ## signal_data is a list of Signal objects created in the Transducer class
      ## domain is a tuple with start and end points of the signal
+     ## vmin/vmax is min/max of color range for imshow()
      START = domain[0] ## offset the start of the signal; don't want to include transmitted part
      t2 = clock()
      END = domain[1]
@@ -100,7 +118,7 @@ def BSCAN(signal_data, title='B-Scan', domain=(0, -1), DISPLAY=True, SAVE=False,
      
      bscan = np.transpose(arr)  ## take transpose, rename variable
      plt.ioff()
-     fig = plt.figure(figsize=[15,15])
+     fig = plt.figure(figsize=[14,8])
      ax = fig.add_subplot(1, 1, 1)
      major_ticks = np.arange(timestep*START, timestep*END, timestep*((END-START)//10))
      minor_ticks = np.arange(timestep*START, timestep*END, timestep*((END-START)//50))
@@ -116,7 +134,7 @@ def BSCAN(signal_data, title='B-Scan', domain=(0, -1), DISPLAY=True, SAVE=False,
      ax.grid(True, axis='y', which="minor", alpha=.2, linestyle="--")
      ax.grid(True, axis='x', which="major", alpha=.2, linestyle="--")
      if SAVE == True:
-          plt.savefig(BSCAN_folder+title+'.png')
+          plt.savefig(join(BSCAN_folder, title+'.png'))
      if DISPLAY == True:
           plt.show(fig)
      elif DISPLAY == False:
@@ -127,6 +145,7 @@ def BSCAN(signal_data, title='B-Scan', domain=(0, -1), DISPLAY=True, SAVE=False,
      
 
 def save_obj(obj, output_folder = obj_folder):
+     ## Save numpy binary to .pkl file
      name = obj.name + ".pkl"
      output = join(output_folder, name)
 
@@ -135,7 +154,9 @@ def save_obj(obj, output_folder = obj_folder):
           
      print("Done saving: {}".format(name))
      
+     
 def load_obj(obj_name, folder = obj_folder):
+     ## Load Transducer data saved in .pkl
      if obj_name[-4:] != '.pkl':
           obj_name = obj_name + '.pkl'
           
@@ -144,7 +165,9 @@ def load_obj(obj_name, folder = obj_folder):
           transducer = pickle.load(rd)
      return transducer
 
+
 def graph_totals(title="Angle Dependence", SAVE=False, DISPLAY=True):
+     ## Plot graph of peak values vs angle
      obj_list = [load_obj(f) for f in listdir(obj_folder) if isfile(obj_folder +f) and f[-3:]=="pkl"]
      fig = plt.figure(figsize=[15,14])
      plt.title(title)
@@ -156,26 +179,30 @@ def graph_totals(title="Angle Dependence", SAVE=False, DISPLAY=True):
           x = obj.peak_totals
           rescaled = x / max(x) ##(x-min(x))/(max(x)-min(x))
           c = 2 ## this changes the colors used, [1,3]
-          plt.scatter(obj.deg, rescaled, color=colors[c*i], alpha=.6, label=obj.name)
+          plt.scatter(obj.deg, rescaled, color = colors[c*i], alpha=.6, label = obj.name)
           plt.plot(obj.deg, rescaled, color=colors[c*i], ls=":", alpha=.6)
           
      plt.legend()
      if SAVE==True:
-          plt.savefig(tot_folder+title+".png", dpi=200)
+          plt.savefig(join(tot_folder, title+".png"), dpi=200)
      if DISPLAY==False:
           plt.close(fig)
      elif DISPLAY==True:
           plt.show(fig)
 
 
-def all_bscan():
-#     BSCAN(load_obj("3FOC_15cm.pkl").signal_data, title="3 in Focused 15 cm depth", domain=(24600, 25200))
-     BSCAN(load_obj("1_5FOC_9cm.pkl").signal_data, title="1.5 in Focused 9 cm depth", domain=(27500, 28100))     
-
+def save_bscans():
+     ## This function keeps all B-scan parameters for each dataset
+     BSCAN(load_obj("1_5FOC_9cm.pkl").signal_data, title="1.5 Focused 9 cm depth", domain=(28100,28800), vmax=.7, SAVE=True, DISPLAY=False)
+     BSCAN(load_obj("1_5FOC_15cm.pkl").signal_data, title="1.5 Focused 15 cm depth", domain=(30500,31200), vmax=.5, SAVE=True, DISPLAY=False)
+     BSCAN(load_obj("3FOC_9cm.pkl").signal_data, title="3 in Focused 9 cm depth", domain=(25700,26400), SAVE=True, DISPLAY=False)
+     BSCAN(load_obj("3FOC_15cm.pkl").signal_data, title="3 in Focused 15 cm depth", domain=(24600,25150), SAVE=True, DISPLAY=False)
+     BSCAN(load_obj("FLAT_9cm.pkl").signal_data, title="Flat 9 cm depth", domain=(20000, 30000), SAVE=True, DISPLAY=False)
+     BSCAN(load_obj("FLAT_9cm.pkl").signal_data, title="Flat 9 cm depth", domain=(25650, 26350), SAVE=True, DISPLAY=False)
+     BSCAN(load_obj("FLAT_15cm.pkl").signal_data, title="Flat 15 cm depth", domain=(24550, 25125), SAVE=True, DISPLAY=False)
+     
+     
 if __name__ == '__main__':
-#     init()
-#     graph_totals(SAVE=True)
-     sample1 = Scan2D(DIMENSIONS=(4, 3), START_POS="top left")
-#     sample1.run()
-
+     graph_totals()
+#     save_bscans()
      

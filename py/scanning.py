@@ -1,30 +1,47 @@
 # -*- coding: utf-8 -*-
 ## Dionysius Indraatmadja
 ## Started June 5 2019
+'''
+Need to write code that commands the arduino to move a step along an axis in Scan2D.STEP()
 
+'''
 import numpy as np
 import serial
-from scope import Scope
-#####################################################################################
+from scope import Scope  # Scope(save path), to initialize connection to oscilloscope. be sure to close()
+from time import sleep  # might need for giving time to save oscilloscope data, but probbably not
+from os import listdir, getcwd, makedirs
+from os.path import join, isfile, dirname, exists
+#######################################################################################
 ## Define global constants
-#####################################################################################
+try:
+     arduino = serial.Serial('/dev/cu.usbmodem14201', 9600) ## for Macintosh
+#     arduino = serial.Serial('COM6', 9600)  ## for Windows
+
+except:
+#     raise Exception("Can't connect to arduino serial port.")
+     print("Can't connect to arduino serial port.")
+
 global TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT, SCAN_FOLDER
 TOP_LEFT = (0, 0)
 TOP_RIGHT = (0, -1)
 BOTTOM_LEFT = (-1, 0)
 BOTTOM_RIGHT = (-1, -1)
-SCAN_FOLDER = "C:\\Users\\dionysius\\Desktop\\PURE\\pure\\scans\\sample1"
-class Scan2D():
+
+#######################################################################################
+SCAN_FOLDER = join(join(dirname(getcwd()), "data"), "MY_SCAN_FOLDER")  ## EDIT MY_SCAN_FOLDER
+#######################################################################################
+
+#######################################################################################
+## Define classes and methods
+class Scan2D:
      #####################################################################################
      ## Calculate dimensions by (floor) dividing the total length & width by the step size
      ## the motor moves. The step size in x may be different from that in y.
      ## This represents 2D scanning in a rectangular area.
-     ######################################################################################
      
      def __init__(self, DIMENSIONS=(3,3), START_POS=""):
           #####################################################################################
           ## Define class constants
-          #####################################################################################
           self.TOP_LEFT = (0, 0)
           self.TOP_RIGHT = (0, -1)
           self.BOTTOM_LEFT = (-1, 0)
@@ -43,12 +60,35 @@ class Scan2D():
           self.START_POS = POS_DICT[START_POS]  ## starting position of transducer
           self.X_STEP_SIZE = 100  ## step along a row
           self.Y_STEP_SIZE = 50  ## step along a column
-#          self.scope = Scope(SCAN_FOLDER)
+          self.scope = Scope(SCAN_FOLDER)
+          
+     def STEP(self, DIRECTION='+x'):
+          #####################################################################################
+          ## Command arduino to move motor, work on this
+          #####################################################################################
+          try:
+               if DIRECTION == 'x' or DIRECTION == 'X' or DIRECTION == '+x' or DIRECTION == '+X':
+                    ## move "right"  PUT ARDUINO CODE HERE
+                    print('right')
+                    
+               elif DIRECTION == 'x' or DIRECTION == 'X' or DIRECTION == '-x' or DIRECTION == '-X':
+                    ## move "left"  PUT ARDUINO CODE HERE
+                    print('left')
+                    
+               elif DIRECTION == 'y' or DIRECTION == 'Y' or DIRECTION == '+y' or DIRECTION == '+Y':
+                    ## move "up"  PUT ARDUINO CODE HERE
+                    print("up")
+                    
+               elif DIRECTION == 'y' or DIRECTION == 'Y' or DIRECTION == '-y' or DIRECTION == '-Y':
+                    ## move "down"  PUT ARDUINO CODE HERE
+                    print("down")
+                    
+          except:
+               raise ValueError("DIRECTION is not type str")
     
      def STEP_PARAM(self):
           #####################################################################################
           ## Determine start and end positions
-          #####################################################################################
           SAMPLE_DIMENSIONS = self.SAMPLE_DIMENSIONS
           if self.START_POS == self.TOP_LEFT:
                self.VERTICAL_STEP = -999
@@ -144,43 +184,17 @@ class Scan2D():
           self.arr = np.copy(arr)
           del arr
                
-     
-     def STEP(self, DIRECTION='+x'):
-          #####################################################################################
-          ## Command arduino to move motor, work on this
-          #####################################################################################
-          try:
-               if DIRECTION == 'x' or DIRECTION == 'X' or DIRECTION == '+x' or DIRECTION == '+X':
-                    ## move "right"
-                    print('right')
-                    
-               elif DIRECTION == 'x' or DIRECTION == 'X' or DIRECTION == '-x' or DIRECTION == '-X':
-                    ## move "left"
-                    print('left')
-                    
-               elif DIRECTION == 'y' or DIRECTION == 'Y' or DIRECTION == '+y' or DIRECTION == '+Y':
-                    ## move "up"
-                    print("up")
-                    
-               elif DIRECTION == 'y' or DIRECTION == 'Y' or DIRECTION == '-y' or DIRECTION == '-Y':
-                    ## move "down"
-                    print("down")
-                    
-          except:
-               raise ValueError("DIRECTION is not type str")
-                    
+                         
      def run(self):
           #####################################################################################
           ## Walk through array and call on STEP_DICT functions to move motor, work on this
           ## each measurement should save to files in SCAN_FOLDER
-          #####################################################################################
           self.STEP_PARAM()
           pos = self.START_POS
           while self.arr[pos] != 0:
                V = self.arr[pos]
                ## take measurement
-               print("measure")
-#               self.scope.grab()
+               self.scope.grab()
                self.STEP(self.STEP_DICT[V])  ## Tell arduino to move the step motor
                if V == self.left:
                     pos = (pos[0], pos[1] - 1)
@@ -192,8 +206,7 @@ class Scan2D():
                     pos = (pos[0] + 1, pos[1])
                if self.arr[pos] == 0:
                     ## take one last measurement if at final position
-#                    self.scope.grab()
-                    print('measure')
+                    self.scope.grab()
 
           del pos, V
           
@@ -215,14 +228,13 @@ class Scan1D:
                self.arr *= -1
                self.arr[0] = 0
                START_POS = len(self.arr) -1 
-#          self.scope = Scope(SCAN_FOLDER)
+          self.scope = Scope(SCAN_FOLDER)
           self.START_POS = START_POS
           self.STEP_DICT = {-1: "-x", 1: "x", 0:"0"}
 
      def STEP(self, DIRECTION='+x'):
           #####################################################################################
           ## Command arduino to move motor, work on this
-          #####################################################################################
           try:
                if DIRECTION == 'x' or DIRECTION == 'X' or DIRECTION == '+x' or DIRECTION == '+X':
                     ## move "right"
@@ -243,16 +255,14 @@ class Scan1D:
           while self.arr[pos] != 0:
                V = self.arr[pos]
                ## grab measurement
-               self.STEP(self.STEP_DICT[V])  ## Tell arduino to MOVE the step motor
+               self.scope.grab()
+               self.STEP(self.STEP_DICT[V])  ## Tell arduino to move a step in the right direction
                pos += V
-#          self.scope.grab()  ## grab one last measurement at final position
+          self.scope.grab()  ## grab one last measurement at final position
                     
-                    
+
+
 if __name__ == '__main__':
-#     pass
-#     trial = Scan2D(DIMENSIONS=(2, 2), START_POS="bottom left")
-#     trial.run()
-     one = Scan1D(LENGTH=1000, START_POS=0)
-     one.run()
-     print(one.arr)
+     two = Scan2D(LENGTH=10, START_POS=-1)
+     two.run()
      
