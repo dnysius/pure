@@ -9,8 +9,11 @@ import numpy as np
 import serial
 from scope import Scope  # Scope(save path), to initialize connection to oscilloscope. be sure to close()
 from time import sleep  # might need for giving time to save oscilloscope data, but probbably not
-from os import listdir, getcwd, makedirs
+from os import listdir, getcwd, makedirs, remove
 from os.path import join, isfile, dirname, exists
+import matplotlib.pyplot as plt
+from mpl_toolkits import mplot3d
+
 #######################################################################################
 ## Define global constants
 try:
@@ -21,7 +24,7 @@ except:
 #     raise Exception("Can't connect to arduino serial port.")
      print("Can't connect to arduino serial port.")
 
-global TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT, SCAN_FOLDER
+global TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT, SCAN_FOLDER, FILENAME
 TOP_LEFT = (0, 0)
 TOP_RIGHT = (0, -1)
 BOTTOM_LEFT = (-1, 0)
@@ -29,8 +32,13 @@ BOTTOM_RIGHT = (-1, -1)
 
 #######################################################################################
 SCAN_FOLDER = join(join(dirname(getcwd()), "data"), "MY_SCAN_FOLDER")  ## EDIT MY_SCAN_FOLDER
+for f in listdir(SCAN_FOLDER):
+     if f[-4:] == ".npy":
+          remove(join(SCAN_FOLDER,f))
+          
+FILENAME = "scope"
 #######################################################################################
-
+ 
 #######################################################################################
 ## Define classes and methods
 class Scan2D:
@@ -54,13 +62,14 @@ class Scan2D:
           POS_DICT = {"top left": TOP_LEFT, "top right": TOP_RIGHT, 
                       "bottom left": BOTTOM_LEFT, "bottom right": BOTTOM_RIGHT}                      
           self.arr = np.array([])
+          self.out_arr = np.array([], dtype=int)
           #####################################################################################
           ## EDIT THESE PARAMETERS
           self.SAMPLE_DIMENSIONS= DIMENSIONS  ## (rows, columns)
           self.START_POS = POS_DICT[START_POS]  ## starting position of transducer
           self.X_STEP_SIZE = 100  ## step along a row
           self.Y_STEP_SIZE = 50  ## step along a column
-          self.scope = Scope(SCAN_FOLDER)
+          self.scope = Scope(SCAN_FOLDER, filename = FILENAME)
           
      def STEP(self, DIRECTION='+x'):
           #####################################################################################
@@ -190,11 +199,14 @@ class Scan2D:
           ## Walk through array and call on STEP_DICT functions to move motor, work on this
           ## each measurement should save to files in SCAN_FOLDER
           self.STEP_PARAM()
+          out_arr = np.copy(self.arr)
           pos = self.START_POS
+          i = 0
           while self.arr[pos] != 0:
                V = self.arr[pos]
                ## take measurement
                self.scope.grab()
+               out_arr[pos] = i
                self.STEP(self.STEP_DICT[V])  ## Tell arduino to move the step motor
                if V == self.left:
                     pos = (pos[0], pos[1] - 1)
@@ -204,12 +216,28 @@ class Scan2D:
                     pos = (pos[0] - 1, pos[1])
                elif V == self.down:
                     pos = (pos[0] + 1, pos[1])
+               
+               i += 1
                if self.arr[pos] == 0:
                     ## take one last measurement if at final position
                     self.scope.grab()
+                    out_arr[pos] = i
 
           del pos, V
+          self.out_arr = out_arr
+          xy = self.sig2arr(self.out_arr)
+          return xy
+     
+     def sig2arr(self, out_arr):
+          xy = np.empty(self.SAMPLE_DIMENSIONS, dtype=object)  ## create empty array to store signals
+          for y in range(self.SAMPLE_DIMENSIONS[0]):
+               for x in range(self.SAMPLE_DIMENSIONS[1]):
+                    file = FILENAME + "_" + "{}".format(int(out_arr[y, x])) + ".npy"
+                    with open(join(SCAN_FOLDER, file), "rb") as npobj:
+                         xy[y, x] = np.load(npobj)
           
+          return xy
+     
      def __repr__(self):
           ## String representation of the sample area
           return np.array2string(self.arr)
@@ -260,9 +288,38 @@ class Scan1D:
                pos += V
           self.scope.grab()  ## grab one last measurement at final position
                     
-
+     
 
 if __name__ == '__main__':
-     two = Scan2D(LENGTH=10, START_POS=-1)
-     two.run()
+     two = Scan2D(DIMENSIONS=(3,3), START_POS="bottom left")
+     xy = two.run()
+     absxy = np.abs(xy)  # 3D
+     MX = 0
+     for row in absxy:
+          for vert in row:
+               new_max = np.amax(vert[:, 1])
+               if new_max > MX:
+                    MX = new_max
+     s = np.shape(xy)
+     xx = np.arange(0, s[1], 1)  # 1D
+     yy = np.arange(0, s[0], 1)  # 1D
+     
+     zz = np.empty(s, dtype=object)
+     zb = np.empty(s, dtype=object)
+     for y in range(s[0]):
+          for x in range(s[1]):
+               zz[y, x] = xy[y, x][:, 0]  ## access the Voltage axis of each array in xy grid
+               zb[y, x] = np.abs(xy[y, x][:, 1])/MX
+               
+     fig = plt.figure(figsize=[8,8])
+     ax = plt.axes(projection='3d')
+#     ax.scatter3D(xx[0], yy[0], zz[0, 0][0], alpha=zb[0,0][0])
+#     ax.scatter3D(xx[1], yy[1], zz[1, 1][0], alpha=zb[1,1][0])
+
+     for z in range(len(zz[0,0])):
+          for i in range(s[0]):
+               for j in range(s[1]):
+                    ax.scatter3D(xx[j], yy[i], zz[i, j][z], alpha=zb[i, j][z], c='k')
+     
+     plt.show()
      
