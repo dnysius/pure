@@ -320,10 +320,12 @@ if __name__ == '__main__':
                     zb[y, x] = np.abs(xy[y, x][h, 1])/MX
           
           zb[0,0] = 0
-          zb[2,2] =0
+          zb[2,2] = 0
+          zb[1,1] = 0
                     
           tarr.append(tarr)  ## list
           barr.append(zb)  ## list
+          del zb
           
      '''
      Plotting 3D scatter
