@@ -32,10 +32,12 @@ BOTTOM_RIGHT = (-1, -1)
 
 #######################################################################################
 SCAN_FOLDER = join(join(dirname(getcwd()), "data"), "MY_SCAN_FOLDER")  ## EDIT MY_SCAN_FOLDER
-for f in listdir(SCAN_FOLDER):
-     if f[-4:] == ".npy":
-          remove(join(SCAN_FOLDER,f))
-          
+
+def clear_scan_folder():
+     for f in listdir(SCAN_FOLDER):
+          if f[-4:] == ".npy":
+               remove(join(SCAN_FOLDER,f))
+               
 FILENAME = "scope"
 #######################################################################################
  
@@ -289,7 +291,7 @@ class Scan1D:
           self.scope.grab()  ## grab one last measurement at final position
                     
      
-
+clear_scan_folder()
 if __name__ == '__main__':
      two = Scan2D(DIMENSIONS=(3,3), START_POS="bottom left")
      xy = two.run()
@@ -297,29 +299,46 @@ if __name__ == '__main__':
      MX = 0
      for row in absxy:
           for vert in row:
-               new_max = np.amax(vert[:, 1])
+               new_max = np.max(vert[:, 1])
                if new_max > MX:
                     MX = new_max
+          
+     HEIGHT = len(xy[0,0][:,0])
      s = np.shape(xy)
      xx = np.arange(0, s[1], 1)  # 1D
      yy = np.arange(0, s[0], 1)  # 1D
      
-     zz = np.empty(s, dtype=object)
-     zb = np.empty(s, dtype=object)
-     for y in range(s[0]):
-          for x in range(s[1]):
-               zz[y, x] = xy[y, x][:, 0]  ## access the Voltage axis of each array in xy grid
-               zb[y, x] = np.abs(xy[y, x][:, 1])/MX
-               
-     fig = plt.figure(figsize=[8,8])
-     ax = plt.axes(projection='3d')
-#     ax.scatter3D(xx[0], yy[0], zz[0, 0][0], alpha=zb[0,0][0])
-#     ax.scatter3D(xx[1], yy[1], zz[1, 1][0], alpha=zb[1,1][0])
-
-     for z in range(len(zz[0,0])):
-          for i in range(s[0]):
-               for j in range(s[1]):
-                    ax.scatter3D(xx[j], yy[i], zz[i, j][z], alpha=zb[i, j][z], c='k')
+     tarr = [] # time
+     barr = []  # brightness
+     for h in range(3):
+          zz = np.empty(s)
+          zb = np.empty(s)
      
+          for y in range(s[0]):
+               for x in range(s[1]):
+                    zz[y, x] = xy[y, x][h, 0]  ## access the Voltage axis of each array in xy grid
+                    zb[y, x] = np.abs(xy[y, x][h, 1])/MX
+          
+          zb[0,0] = 0
+          zb[2,2] =0
+                    
+          tarr.append(tarr)  ## list
+          barr.append(zb)  ## list
+          
+     '''
+     Plotting 3D scatter
+     
+     '''
+#     fig = plt.figure()
+#     ax = plt.axes(projection='3d')
+#     for z in range(len(zz[0,0])):
+#     for h in range(3):
+#          ax.scatter3D(xx, yy, tarr[h], alpha=barr[h], c='k')
+#          
+#                         
+#     plt.show()
+     
+     ## imshow for each level
+     plt.figure()
+     plt.imshow(barr[0], aspect='auto', origin='upper', cmap='gray',alpha=.8, vmin=0, vmax=1)
      plt.show()
-     
