@@ -28,9 +28,12 @@ for y in range(S[0]):
           barr[:,y, x] = V
           tarr[:,y, x] = T
           
-fig = plt.figure(figsize=[8,8])
+fig = plt.figure(figsize=[S[0],S[1]])
 ax = plt.axes(projection='3d')
 for h in range(len(T)):
      for y in range(S[0]):
           for x in range(S[1]):
                ax.scatter3D(xx[y,x], yy[y,x], tarr[h,y, x], alpha=barr[h, y,x], c='k')
+               
+ax.set_xticks(X)
+ax.set_yticks(Y)
