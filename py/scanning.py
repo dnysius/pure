@@ -290,11 +290,12 @@ class Scan1D:
                pos += V
           self.scope.grab()  ## grab one last measurement at final position
                     
-     
-clear_scan_folder()
+
+#clear_scan_folder()
 if __name__ == '__main__':
-     two = Scan2D(DIMENSIONS=(3,3), START_POS="bottom left")
-     xy = two.run()
+#     two = Scan2D(DIMENSIONS=(3,3), START_POS="bottom left")
+#     xy = two.run()
+     
      absxy = np.abs(xy)  # 3D
      MX = 0
      for row in absxy:
@@ -305,6 +306,7 @@ if __name__ == '__main__':
           
      HEIGHT = len(xy[0,0][:,0])
      s = np.shape(xy)
+                         
      xx = np.arange(0, s[1], 1)  # 1D
      yy = np.arange(0, s[0], 1)  # 1D
      
@@ -318,14 +320,10 @@ if __name__ == '__main__':
                for x in range(s[1]):
                     zz[y, x] = xy[y, x][h, 0]  ## access the Voltage axis of each array in xy grid
                     zb[y, x] = np.abs(xy[y, x][h, 1])/MX
-          
-          zb[0,0] = 0
-          zb[2,2] = 0
-          zb[1,1] = 0
-                    
-          tarr.append(tarr)  ## list
+                              
+          tarr.append(zz)  ## list
           barr.append(zb)  ## list
-          del zb
+          del zb, zz
           
      '''
      Plotting 3D scatter
@@ -333,14 +331,13 @@ if __name__ == '__main__':
      '''
 #     fig = plt.figure()
 #     ax = plt.axes(projection='3d')
-#     for z in range(len(zz[0,0])):
 #     for h in range(3):
-#          ax.scatter3D(xx, yy, tarr[h], alpha=barr[h], c='k')
+#          ax.scatter3D(xx, yy, tarr[h], alpha=barr[h], c='k')  # will alpha=type<array> work?
 #          
-#                         
 #     plt.show()
      
      ## imshow for each level
      plt.figure()
-     plt.imshow(barr[0], aspect='auto', origin='upper', cmap='gray',alpha=.8, vmin=0, vmax=1)
+     for h in range(3):
+          plt.imshow(barr[h], aspect='auto', origin='upper', cmap='gray',alpha=.8, vmin=0, vmax=1)
      plt.show()
