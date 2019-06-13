@@ -385,10 +385,12 @@ def zbscan(i,folder = SCAN_FOLDER, figsize=[0,0]):
      plt.xlabel("x axis")
      plt.ylabel("y axis")
      plt.show(fig)
+     
 
-#clear_scan_folder()  ## deletes files in scan folder
-#Scan2D(DIMENSIONS=(2,14), START_POS="top right")  ## runs the scan
+clear_scan_folder()  ## deletes files in scan folder
+Scan2D(DIMENSIONS=(10,10), START_POS="top right")  ## runs the scan
 if __name__ == '__main__':
+     pass
 #     grid_test()
-     plot3d([0, 10000, 100])
+#     plot3d([0, 10000, 100])
 #     zbscan(100, figsize=[2,14])
