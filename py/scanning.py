@@ -13,6 +13,7 @@ from os.path import join, isfile, dirname, exists
 import matplotlib.pyplot as plt
 from mpl_toolkits import mplot3d
 import pickle
+from time import sleep
 
 #######################################################################################
 ## Define global constants
@@ -40,7 +41,19 @@ def clear_scan_folder():
                
 FILENAME = "scope"
 #######################################################################################
- 
+def step(command):
+     '''
+     command:
+     1: top motor forward -- black tape side Y axis
+     2: top motor backward
+     3: bottom motor backward
+     4: bottom motor forward -- black tape side X axis
+     '''
+     sleep(.75)
+     try:
+          arduino.write(str.encode("{}".format(command)))
+     except:
+          raise TypeError("Command is not 1-4")
 #######################################################################################
 ## Define classes and methods
 
@@ -127,20 +140,20 @@ class Scan2D:
           #####################################################################################
           try:
                if DIRECTION == 'x' or DIRECTION == 'X' or DIRECTION == '+x' or DIRECTION == '+X':
-                    ## move "right"  PUT ARDUINO CODE HERE
-                    print('right')
+                    ## move "right"  forward bottom motor
+                    step(4)
                     
-               elif DIRECTION == 'x' or DIRECTION == 'X' or DIRECTION == '-x' or DIRECTION == '-X':
-                    ## move "left"  PUT ARDUINO CODE HERE
-                    print('left')
+               elif DIRECTION == '-x' or DIRECTION == '-X':
+                    ## move "left"
+                    step(3)
                     
                elif DIRECTION == 'y' or DIRECTION == 'Y' or DIRECTION == '+y' or DIRECTION == '+Y':
                     ## move "up"  PUT ARDUINO CODE HERE
-                    print("up")
+                    step(1)
                     
-               elif DIRECTION == 'y' or DIRECTION == 'Y' or DIRECTION == '-y' or DIRECTION == '-Y':
+               elif DIRECTION == '-y' or DIRECTION == '-Y':
                     ## move "down"  PUT ARDUINO CODE HERE
-                    print("down")
+                    step(2)
                     
           except:
                raise ValueError("DIRECTION is not type str")
@@ -365,7 +378,9 @@ def plot3d(DOMAIN=[0,-1, 50],folder = SCAN_FOLDER, figsize=[0,0]):
      for h in range(START, END, EVERY): 
           for y in range(len(tarr[0,:,0])):
                for x in range(len(tarr[0,0,:])):
-                    ax.scatter3D(xx[y,x], yy[y,x], tarr[h, y, x], alpha=varr[h, y, x], c='k')
+                    ax.scatter3D(xx[y,x],yy[y,x], tarr[h, y,x], alpha=varr[h, y,x], c='k')
+#     plt.gca().invert_xaxis()
+#     plt.gca().invert_yaxis()
      plt.xlabel("x axis")
      plt.ylabel("y axis")
      plt.show(fig)
@@ -387,10 +402,22 @@ def zbscan(i,folder = SCAN_FOLDER, figsize=[0,0]):
      plt.show(fig)
      
 
-clear_scan_folder()  ## deletes files in scan folder
-Scan2D(DIMENSIONS=(10,10), START_POS="top right")  ## runs the scan
+#clear_scan_folder()  ## deletes files in scan folder
+#Scan2D(DIMENSIONS=(10,10), START_POS="top right")  ## runs the scan
 if __name__ == '__main__':
-     pass
-#     grid_test()
-#     plot3d([0, 10000, 100])
-#     zbscan(100, figsize=[2,14])
+#     Scan2D(DIMENSIONS=(4,4), START_POS="bottom right")
+     plot3d([0, 1000, 50])
+     
+#     x = 10
+#     y=10
+#     for i in range(x):
+#        for j in range(y):
+#            step(3)  ## MOVE FORWARD MOTOR 2
+#            #o = Scope()
+#            #o.grab()
+#        step(1)
+#        for j in range(y):
+#            step(4)  ## MOVE BACKWARD MOTOR 2
+#            #o = Scope()
+#            #o.grab()
+#        step(1)
