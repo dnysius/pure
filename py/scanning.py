@@ -35,7 +35,7 @@ SCAN_FOLDER = join(join(dirname(getcwd()), "data"), "MY_SCAN_FOLDER")  ## EDIT M
 
 def clear_scan_folder():
      for f in listdir(SCAN_FOLDER):
-          if isfile(join(SCAN_FOLDER,f) and (f[-4:] == ".npy" or f[-4:]==".pkl"):
+          if isfile(join(SCAN_FOLDER,f)) and (f[-4:] == ".npy" or f[-4:]==".pkl"):
                remove(join(SCAN_FOLDER,f))
                
 FILENAME = "scope"
@@ -366,9 +366,29 @@ def plot3d(DOMAIN=[0,-1, 50],folder = SCAN_FOLDER, figsize=[0,0]):
           for y in range(len(tarr[0,:,0])):
                for x in range(len(tarr[0,0,:])):
                     ax.scatter3D(xx[y,x], yy[y,x], tarr[h, y, x], alpha=varr[h, y, x], c='k')
+     plt.xlabel("x axis")
+     plt.ylabel("y axis")
+     plt.show(fig)
+     
+def zbscan(i,folder = SCAN_FOLDER, figsize=[0,0]):
+     tarr, varr = load_arr(folder)
+     
+     '''
+     z bscan
+     '''
+     if figsize==[0,0]:
+          fig = plt.figure()
+     else:
+          fig = plt.figure(figsize=figsize)
+          
+     plt.imshow(varr[i], cmap="gray", aspect='auto')
+     plt.xlabel("x axis")
+     plt.ylabel("y axis")
      plt.show(fig)
 
 #clear_scan_folder()  ## deletes files in scan folder
-#Scan2D(DIMENSIONS=(3,4), START_POS="top right")  ## runs the scan
+#Scan2D(DIMENSIONS=(2,14), START_POS="top right")  ## runs the scan
 if __name__ == '__main__':
+#     grid_test()
      plot3d([0, 10000, 100])
+#     zbscan(100, figsize=[2,14])
