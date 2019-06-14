@@ -375,12 +375,17 @@ def plot3d(DOMAIN=[0,-1, 50],folder = SCAN_FOLDER, figsize=[0,0]):
      START = DOMAIN[0]
      END = DOMAIN[1] ## max time to plot
      EVERY = DOMAIN[2]  # plot every EVERY
-     for h in range(START, END, EVERY): 
-          for y in range(len(tarr[0,:,0])):
-               for x in range(len(tarr[0,0,:])):
-                    ax.scatter3D(xx[y,x],yy[y,x], tarr[h, y,x], alpha=varr[h, y,x], c='k')
+#     for h in range(START, END, EVERY): 
+#          for y in range(len(tarr[0,:,0])):
+#               for x in range(len(tarr[0,0,:])):
+#                    ax.scatter3D(xx[y,x],yy[y,x], tarr[h, y,x], alpha=varr[h, y,x], c='k')
+#     
+     ax.scatter3D(xx[0,0], yy[0,0], tarr[:,0,0    ],c='k')
 #     plt.gca().invert_xaxis()
 #     plt.gca().invert_yaxis()
+     ax.set_zlim(0,.0001)
+     ax.set_xlim(0,3)
+     ax.set_ylim(0,3)
      plt.xlabel("x axis")
      plt.ylabel("y axis")
      plt.show(fig)
@@ -407,6 +412,7 @@ def zbscan(i,folder = SCAN_FOLDER, figsize=[0,0]):
 if __name__ == '__main__':
 #     Scan2D(DIMENSIONS=(4,4), START_POS="bottom right")
      plot3d([0, 1000, 50])
+
      
 #     x = 10
 #     y=10
