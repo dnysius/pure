@@ -168,12 +168,12 @@ def load_obj(obj_name, folder = obj_folder):
 
 def graph_totals(title="Angle Dependence", SAVE=False, DISPLAY=True):
      ## Plot graph of peak values vs angle
-     obj_list = [load_obj(f) for f in listdir(obj_folder) if isfile(obj_folder +f) and f[-3:]=="pkl"]
+     obj_list = [load_obj(f) for f in listdir(obj_folder) if isfile(join(obj_folder, f)) and f[-3:]=="pkl"]
      fig = plt.figure(figsize=[15,14])
      plt.title(title)
      plt.xlabel('angle (degrees)')
      plt.ylabel('relative peak voltages')
-     colors = cm.Dark2(np.linspace(0, 1, len(obj_list[0].deg)))
+     colors = cm.tab20(np.linspace(0, 1, len(obj_list[0].deg)))
      for i in range(len(obj_list)):
           obj = obj_list[i]
           x = obj.peak_totals
@@ -203,6 +203,7 @@ def save_bscans():
      
      
 if __name__ == '__main__':
+#     init()
      graph_totals()
 #     save_bscans()
      
