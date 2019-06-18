@@ -14,16 +14,26 @@ import matplotlib.pyplot as plt
 from mpl_toolkits import mplot3d
 import pickle
 from time import sleep
+import serial.tools.list_ports
 
-#######################################################################################
-## Define global constants
-try:
-#     arduino = serial.Serial('/dev/cu.usbmodem14201', 9600) ## for Macintosh
-     arduino = serial.Serial('COM6', 9600)  ## for Windows
-
-except:
-#     raise Exception("Can't connect to arduino serial port.")
-     print("Can't connect to arduino serial port.")
+ports = list(serial.tools.list_ports.comports())
+arduino = None
+for p in ports:
+    if "Arduino" in p[1]:
+         arduino = serial.Serial(p[0], 9600)
+    
+if arduino == None:
+     print("No arduino selected")
+     
+########################################################################################
+### Define global constants
+#try:
+##     arduino = serial.Serial('/dev/cu.usbmodem14201', 9600) ## for Macintosh
+#     arduino = serial.Serial('COM6', 9600)  ## for Windows
+#
+#except:
+##     raise Exception("Can't connect to arduino serial port.")
+#     print("Can't connect to arduino serial port.")
 
 global TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT, SCAN_FOLDER, FILENAME
 TOP_LEFT = (0, 0)
@@ -55,55 +65,9 @@ def step(command):
      except:
           raise TypeError("Command is not 1-4")
 #######################################################################################
-## Define classes and methods
-
-class Scan1D:
-     
-     def __init__(self, LENGTH, START_POS=0):
-          left_str = ["left", "l", "L", "start", "first", 0]
-          right_str = ["right", "r", "R", "end", "last", -1]
-          self.arr = np.ones(LENGTH, dtype=int)
-          if START_POS in left_str:
-               self.arr[-1] = 0
-               START_POS = 0
-          elif START_POS in right_str:
-               self.arr *= -1
-               self.arr[0] = 0
-               START_POS = len(self.arr) -1 
-          self.scope = Scope(SCAN_FOLDER)
-          self.START_POS = START_POS
-          self.STEP_DICT = {-1: "-x", 1: "x", 0:"0"}
-
-     def STEP(self, DIRECTION='+x'):
-          #####################################################################################
-          ## Command arduino to move motor, work on this
-          try:
-               if DIRECTION == 'x' or DIRECTION == 'X' or DIRECTION == '+x' or DIRECTION == '+X':
-                    ## move "right"
-                    print('right')
-                    
-               elif DIRECTION == 'x' or DIRECTION == 'X' or DIRECTION == '-x' or DIRECTION == '-X':
-                    ## move "left"
-                    print('left')
-               elif DIRECTION == "0":
-                    ## do nothing
-                    pass
-                    
-          except:
-               raise ValueError("DIRECTION is not type str")
-               
-     def run(self):
-          pos = self.START_POS
-          while self.arr[pos] != 0:
-               V = self.arr[pos]
-               ## grab measurement
-               self.scope.grab()
-               self.STEP(self.STEP_DICT[V])  ## Tell arduino to move a step in the right direction
-               pos += V
-          self.scope.grab()  ## grab one last measurement at final position
-                
+## Define classes and methods               
           
-class Scan2D:
+class Scan:
      #####################################################################################
      ## Calculate dimensions by (floor) dividing the total length & width by the step size
      ## the motor moves. The step size in x may be different from that in y.
@@ -334,14 +298,14 @@ class Scan2D:
 def grid_test():
      ## print direction grid to ensure they are set up properly
      ## add more test cases
-     print("\n2x4 bot left\n", Scan2D(DIMENSIONS=(2,4), START_POS="bottom left"), "\n")
-     print("\n3x4 bot left\n", Scan2D(DIMENSIONS=(3,4), START_POS="bottom left"), "\n")
-     print("\n2x4 bot right\n", Scan2D(DIMENSIONS=(2,4), START_POS="bottom right"), "\n")
-     print("\n3x4 bot right\n", Scan2D(DIMENSIONS=(3,4), START_POS="bottom right"), "\n")
-     print("\n2x4 top left\n", Scan2D(DIMENSIONS=(2,4), START_POS="top left"), "\n")
-     print("\n3x4 top left\n", Scan2D(DIMENSIONS=(3,4), START_POS="top left"), "\n")
-     print("\n2x4 top right\n", Scan2D(DIMENSIONS=(2,4), START_POS="top right"), "\n")
-     print("\n3x4 top right\n", Scan2D(DIMENSIONS=(3,4), START_POS="top right"), "\n")
+     print("\n2x4 bot left\n", Scan(DIMENSIONS=(2,4), START_POS="bottom left"), "\n")
+     print("\n3x4 bot left\n", Scan(DIMENSIONS=(3,4), START_POS="bottom left"), "\n")
+     print("\n2x4 bot right\n", Scan(DIMENSIONS=(2,4), START_POS="bottom right"), "\n")
+     print("\n3x4 bot right\n", Scan(DIMENSIONS=(3,4), START_POS="bottom right"), "\n")
+     print("\n2x4 top left\n", Scan(DIMENSIONS=(2,4), START_POS="top left"), "\n")
+     print("\n3x4 top left\n", Scan(DIMENSIONS=(3,4), START_POS="top left"), "\n")
+     print("\n2x4 top right\n", Scan(DIMENSIONS=(2,4), START_POS="top right"), "\n")
+     print("\n3x4 top right\n", Scan(DIMENSIONS=(3,4), START_POS="top right"), "\n")
      
 def load_arr(output_folder = SCAN_FOLDER):
      ## loads tarr and varr from the scan folder
@@ -380,7 +344,7 @@ def plot3d(DOMAIN=[0,-1, 50],folder = SCAN_FOLDER, figsize=[0,0]):
 #               for x in range(len(tarr[0,0,:])):
 #                    ax.scatter3D(xx[y,x],yy[y,x], tarr[h, y,x], alpha=varr[h, y,x], c='k')
 #     
-     ax.scatter3D(xx[0,0], yy[0,0], tarr[:,0,0    ],c='k')
+     ax.scatter3D(xx[0,0], yy[0,0], tarr[:,0,0],c='k')
 #     plt.gca().invert_xaxis()
 #     plt.gca().invert_yaxis()
      ax.set_zlim(0,.0001)
@@ -410,7 +374,7 @@ def zbscan(i,folder = SCAN_FOLDER, figsize=[0,0]):
 #clear_scan_folder()  ## deletes files in scan folder
 #Scan2D(DIMENSIONS=(10,10), START_POS="top right")  ## runs the scan
 if __name__ == '__main__':
-#     Scan2D(DIMENSIONS=(4,4), START_POS="bottom right")
+#     Scan(DIMENSIONS=(4,4), START_POS="bottom right")
      plot3d([0, 1000, 50])
 
      
