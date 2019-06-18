@@ -409,10 +409,16 @@ class Scope:
           del self.KsInfiniiVisionX
           
 if __name__=='__main__':
-     
+     scope = Scope("C:\\Users\\dionysius\\Desktop\\PURE\\pure\\data\\30deg\\3FOC5in")
 #     pbar = tqdm(range(20))
 #     for i in pbar:
 #     oscilloscope.grab()
 #          pbar.set_description("Processing {0}".format(i))
-     pass
+     done = False
+     while not done:
+          cmd = input('//\t')
+          if cmd =='':
+               scope.grab()
+          elif cmd == 'x':
+               done = True
           

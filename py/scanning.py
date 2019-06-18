@@ -15,6 +15,8 @@ from mpl_toolkits import mplot3d
 import pickle
 from time import sleep
 import serial.tools.list_ports
+global min_step
+min_step = 4e-5*10
 
 ports = list(serial.tools.list_ports.comports())
 arduino = None
@@ -42,13 +44,18 @@ BOTTOM_LEFT = (-1, 0)
 BOTTOM_RIGHT = (-1, -1)
 
 #######################################################################################
-SCAN_FOLDER = join(join(dirname(getcwd()), "data"), "MY_SCAN_FOLDER")  ## EDIT MY_SCAN_FOLDER
+SCAN_FOLDER = join(join(dirname(getcwd()), "data"), "1D-3FOC5in")  ## EDIT MY_SCAN_FOLDER
 
 def clear_scan_folder():
      for f in listdir(SCAN_FOLDER):
           if isfile(join(SCAN_FOLDER,f)) and (f[-4:] == ".npy" or f[-4:]==".pkl"):
                remove(join(SCAN_FOLDER,f))
                
+def d2s(dist):
+     ## metres
+     return int(dist//min_step)
+     
+     
 FILENAME = "scope"
 #######################################################################################
 def step(command):
@@ -64,6 +71,36 @@ def step(command):
           arduino.write(str.encode("{}".format(command)))
      except:
           raise TypeError("Command is not 1-4")
+          
+def move():
+     done = False
+     while not done:
+          cmd = input('//\t')
+          if cmd =='':
+               pass
+          elif cmd == 'esc' or cmd == 'exit' or cmd=='done':
+               done = True
+          else:
+               splt = cmd.split(sep=' ')
+               try:
+                    if splt[0] == 'x':
+                         if splt[1][0] == '-':
+                              for i in range(int(d2s(float(splt[1][1:])))):
+                                   step(3)
+                         else:
+                              for i in range(int(d2s(float(splt[1])))):
+                                   step(4)
+                    elif splt[0] == 'y':
+                         if splt[1][0] == '-':
+                              for i in range(int(d2s(float(splt[1][1:])))):
+                                   step(2)
+                         else:
+                              for i in range(int(d2s(float(splt[1])))):
+                                   step(1)
+          
+               except:
+                    raise TypeError("invalid input")
+
 #######################################################################################
 ## Define classes and methods               
           
@@ -91,7 +128,13 @@ class Scan:
           self.out_arr = np.array([], dtype=int)
           #####################################################################################
           ## EDIT THESE PARAMETERS
-          self.SAMPLE_DIMENSIONS= DIMENSIONS  ## (rows, columns)
+          if DIMENSIONS[0]==0 and DIMENSIONS[1] !=0:
+               self.SAMPLE_DIMENSIONS = (1, d2s(DIMENSIONS[1])) 
+          elif DIMENSIONS[0]!=0 and DIMENSIONS[1] ==0:
+               self.SAMPLE_DIMENSIONS = (d2s(DIMENSIONS[0]), 1)               
+          else:               
+               self.SAMPLE_DIMENSIONS= (d2s(DIMENSIONS[0]), d2s(DIMENSIONS[1]))  ## (rows, columns)
+               
           self.START_POS = POS_DICT[START_POS]  ## starting position of transducer
           self.X_STEP_SIZE = 100  ## step along a row
           self.Y_STEP_SIZE = 50  ## step along a column
@@ -354,7 +397,7 @@ def plot3d(DOMAIN=[0,-1, 50],folder = SCAN_FOLDER, figsize=[0,0]):
      plt.ylabel("y axis")
      plt.show(fig)
      
-def zbscan(i,folder = SCAN_FOLDER, figsize=[0,0]):
+def zbscan(i='',folder = SCAN_FOLDER, figsize=[0,0]):
      tarr, varr = load_arr(folder)
      
      '''
@@ -365,7 +408,10 @@ def zbscan(i,folder = SCAN_FOLDER, figsize=[0,0]):
      else:
           fig = plt.figure(figsize=figsize)
           
-     plt.imshow(varr[i], cmap="gray", aspect='auto')
+     if i =='':
+          plt.imshow(np.transpose(varr), cmap="gray", aspect='auto')
+     else:
+          plt.imshow(varr[i], cmap="gray", aspect='auto')
      plt.xlabel("x axis")
      plt.ylabel("y axis")
      plt.show(fig)
@@ -373,21 +419,17 @@ def zbscan(i,folder = SCAN_FOLDER, figsize=[0,0]):
 
 #clear_scan_folder()  ## deletes files in scan folder
 #Scan2D(DIMENSIONS=(10,10), START_POS="top right")  ## runs the scan
-if __name__ == '__main__':
-#     Scan(DIMENSIONS=(4,4), START_POS="bottom right")
-     plot3d([0, 1000, 50])
 
+if __name__ == '__main__':
+#     Scan(DIMENSIONS=(.15,0), START_POS="bottom left")
+#     plot3d([0, 1000, 50])
+     tarr, varr = load_arr()
+     bscan = np.transpose(varr)[0,:, :]
+     bscan = np.transpose(bscan)
+     fig = plt.figure(figsize=[10,10])
+     plt.imshow(bscan[2000: 5000, 0:], aspect='auto', cmap='gray')  ## bscan[axial, lateral]
+     plt.title("1D-3FOC5in")
+     plt.savefig(join("C:\\Users\\dionysius\\Desktop\\PURE\\pure\\scans\\BSCAN\\","1D-3FOC5in.png"), dpi=300)
+     plt.show(fig)
      
-#     x = 10
-#     y=10
-#     for i in range(x):
-#        for j in range(y):
-#            step(3)  ## MOVE FORWARD MOTOR 2
-#            #o = Scope()
-#            #o.grab()
-#        step(1)
-#        for j in range(y):
-#            step(4)  ## MOVE BACKWARD MOTOR 2
-#            #o = Scope()
-#            #o.grab()
-#        step(1)
+     
