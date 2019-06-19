@@ -141,34 +141,10 @@ def load_obj(obj_name, folder = obj_folder):
      return transducer
 
 
-def graph_totals(title="Angle Dependence", SAVE=False, DISPLAY=True):
-     ## Plot graph of peak values vs angle
-     obj_list = [load_obj(f) for f in listdir(obj_folder) if isfile(join(obj_folder, f)) and f[-3:]=="pkl"]
-     fig = plt.figure(figsize=[15,14])
-     plt.title(title)
-     plt.xlabel('angle (degrees)')
-     plt.ylabel('relative peak voltages')
-     colors = cm.tab20(np.linspace(0, 1, len(obj_list[0].deg)))
-     for i in range(len(obj_list)):
-          obj = obj_list[i]
-          x = obj.peak_totals
-          rescaled = x / max(x) ##(x-min(x))/(max(x)-min(x))
-          c = 2 ## this changes the colors used, [1,3]
-          plt.scatter(obj.deg, rescaled, color = colors[c*i], alpha=.6, label = obj.name)
-          plt.plot(obj.deg, rescaled, color=colors[c*i], ls=":", alpha=.6)
-          
-     plt.legend()
-     if SAVE==True:
-          plt.savefig(join(tot_folder, title+".png"), dpi=200)
-     if DISPLAY==False:
-          plt.close(fig)
-     elif DISPLAY==True:
-          plt.show(fig)
 
      
 if __name__ == '__main__':
 #     init()
-     graph_totals()
 #     save_bscans()
 
 #######################################################################################     
@@ -185,3 +161,27 @@ if __name__ == '__main__':
 #     BSCAN(load_obj("FLAT_9cm.pkl").signal_data, title="Flat 9 cm depth", domain=(25650, 26350), SAVE=True, DISPLAY=False)
 #     BSCAN(load_obj("FLAT_15cm.pkl").signal_data, title="Flat 15 cm depth", domain=(24550, 25125), SAVE=True, DISPLAY=False)
 #     
+#
+#def graph_totals(title="Angle Dependence", SAVE=False, DISPLAY=True):
+#     ## Plot graph of peak values vs angle
+#     obj_list = [load_obj(f) for f in listdir(obj_folder) if isfile(join(obj_folder, f)) and "signal_data.pkl" in f]
+#     fig = plt.figure(figsize=[15,14])
+#     plt.title(title)
+#     plt.xlabel('angle (degrees)')
+#     plt.ylabel('relative peak voltages')
+#     colors = cm.tab20(np.linspace(0, 1, len(obj_list[0].deg)))
+#     for i in range(len(obj_list)):
+#          obj = obj_list[i]
+#          x = obj.peak_totals
+#          rescaled = x / max(x) ##(x-min(x))/(max(x)-min(x))
+#          c = 2 ## this changes the colors used, [1,3]
+#          plt.scatter(obj.deg, rescaled, color = colors[c*i], alpha=.6, label = obj.name)
+#          plt.plot(obj.deg, rescaled, color=colors[c*i], ls=":", alpha=.6)
+#          
+#     plt.legend()
+#     if SAVE==True:
+#          plt.savefig(join(tot_folder, title+".png"), dpi=200)
+#     if DISPLAY==False:
+#          plt.close(fig)
+#     elif DISPLAY==True:
+#          plt.show(fig)
