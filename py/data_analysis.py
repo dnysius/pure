@@ -204,9 +204,6 @@ class Signal:
 if __name__ == '__main__':
      fpath = "C:\\Users\\dionysius\\Desktop\\PURE\\pure\\data\\30deg\\3FOC5in"
      foc = Signal(fpath)
-#     plt.figure(figsize=[10,8])
-#     plt.plot(foc.signal_data[-1,:,1])
-#     plt.show()
      foc.analyze_peak(0,0,-1)
 
      
