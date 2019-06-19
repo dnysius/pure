@@ -2,70 +2,58 @@
 ## Dionysius Indraatmadja
 ## Started June 5 2019
 '''
-Need to write code that commands the arduino to move a step along an axis in Scan2D.STEP()
+Main features:
+ - move transducer to desired (y, x) positions using move() interface
+ - Create two 3D numpy arrays from scanning a rectangular grid of known dimensions, saved
+   as .pkl files (times and voltages) using Scan class.
+ - Create b-scan of 3D numpy array loaded from varr.pkl using bscan() function.
 
 '''
 import numpy as np
 import serial
 from scope import Scope  # Scope(save path), to initialize connection to oscilloscope. be sure to close()
-from os import listdir, getcwd, makedirs, remove
-from os.path import join, isfile, dirname, exists
+from os import listdir, getcwd, remove
+from os.path import join, isfile, dirname
 import matplotlib.pyplot as plt
-from mpl_toolkits import mplot3d
 import pickle
 from time import sleep
 import serial.tools.list_ports
-global min_step
-min_step = 4e-5*10
-
-ports = list(serial.tools.list_ports.comports())
+global min_step, FILENAME, FOLDER_NAME
+#######################################################################################
+min_step = 4e-5*10  ## size of motor step in metres
+FOLDER_NAME =  "1D-3FOC5in"  ## data directory /pure/py/data/FOLDER_NAME
+FILENAME = "scope"  ## name of the saved files
+#######################################################################################
+### Define constants and functions
+global TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT, SCAN_FOLDER, BSCAN_FOLDER
+SCAN_FOLDER = join(join(dirname(getcwd()), "data"), FOLDER_NAME)  ## path to save folder
+BSCAN_FOLDER = join(dirname(getcwd()), "data\\scans\\BSCAN\\")
+ports = list(serial.tools.list_ports.comports())  ## find serial ports being used
 arduino = None
 for p in ports:
-    if "Arduino" in p[1]:
+    if "Arduino" in p[1]:  ## search for port connected to the arduino
          arduino = serial.Serial(p[0], 9600)
     
-if arduino == None:
+if arduino == None:  ## warn us if arduino was not found
      print("No arduino selected")
      
-########################################################################################
-### Define global constants
-#try:
-##     arduino = serial.Serial('/dev/cu.usbmodem14201', 9600) ## for Macintosh
-#     arduino = serial.Serial('COM6', 9600)  ## for Windows
-#
-#except:
-##     raise Exception("Can't connect to arduino serial port.")
-#     print("Can't connect to arduino serial port.")
-
-global TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT, SCAN_FOLDER, FILENAME
+## positions of grid vertices
 TOP_LEFT = (0, 0)
 TOP_RIGHT = (0, -1)
 BOTTOM_LEFT = (-1, 0)
 BOTTOM_RIGHT = (-1, -1)
-
-#######################################################################################
-SCAN_FOLDER = join(join(dirname(getcwd()), "data"), "1D-3FOC5in")  ## EDIT MY_SCAN_FOLDER
-
-def clear_scan_folder():
-     for f in listdir(SCAN_FOLDER):
-          if isfile(join(SCAN_FOLDER,f)) and (f[-4:] == ".npy" or f[-4:]==".pkl"):
-               remove(join(SCAN_FOLDER,f))
                
 def d2s(dist):
-     ## metres
+     ## Converts distance in metres to number of steps
      return int(dist//min_step)
      
-     
-FILENAME = "scope"
-#######################################################################################
 def step(command):
-     '''
-     command:
-     1: top motor forward -- black tape side Y axis
-     2: top motor backward
-     3: bottom motor backward
-     4: bottom motor forward -- black tape side X axis
-     '''
+     ## Sends bytes to arduino to signal step motor movement
+     ## command:
+     ## 1: top motor forward -- black tape side Y axis
+     ## 2: top motor backward
+     ## 3: bottom motor backward
+     ## 4: bottom motor forward -- black tape side X axis
      sleep(.75)
      try:
           arduino.write(str.encode("{}".format(command)))
@@ -73,6 +61,12 @@ def step(command):
           raise TypeError("Command is not 1-4")
           
 def move():
+     ## Initializes environment in which to move the transducer freely without grabbing
+     ## oscilloscope screen
+     ## example usage:
+     ## 'x -.01' - moves 1 cm in -x direction
+     ## 'y 1' - moves 1 metre in y direction
+     ## 'esc' - exits program
      done = False
      while not done:
           cmd = input('//\t')
@@ -100,17 +94,51 @@ def move():
           
                except:
                     raise TypeError("invalid input")
-
-#######################################################################################
-## Define classes and methods               
+                    
+def load_arr(output_folder = SCAN_FOLDER):
+     ## loads numpy arrays tarr and varr in the scan folder
+     ftarr = join(output_folder,"tarr.pkl")
+     fvarr = join(output_folder,"varr.pkl")
+     with open(ftarr, 'rb') as rd:
+          tarr = pickle.load(rd)
           
+     with open(fvarr, 'rb') as rd:
+          varr = pickle.load(rd)
+          
+     return tarr, varr
+
+def bscan(i='',folder = SCAN_FOLDER, figsize=[0,0]):
+     ## Plots b-scan from .pkl files in a folder
+     ## when applicable, i is a chosen slice of the 2D scan
+     tarr, varr = load_arr(folder)
+     if figsize==[0,0]:
+          fig = plt.figure()
+     else:
+          fig = plt.figure(figsize=figsize)
+          
+     if i =='':
+          b = np.transpose(varr)[0,:, :]
+          b = np.transpose(bscan)
+          plt.imshow(b[2000: 5000, 0:], aspect='auto', cmap='gray')  ## bscan[axial, lateral]
+          plt.title(FOLDER_NAME)
+          plt.savefig(join(BSCAN_FOLDER, FOLDER_NAME), dpi=300)
+          plt.show(fig)
+          plt.imshow(np.transpose(varr), cmap="gray", aspect='auto')
+     else:
+          plt.imshow(varr[i], cmap="gray", aspect='auto')
+          
+     plt.xlabel("x axis")
+     plt.ylabel("y axis")
+     plt.show(fig)
+     
+#######################################################################################
+## Define classes and methods          
 class Scan:
      #####################################################################################
      ## Calculate dimensions by (floor) dividing the total length & width by the step size
      ## the motor moves. The step size in x may be different from that in y.
      ## This represents 2D scanning in a rectangular area.
-     
-     def __init__(self, DIMENSIONS=(3,3), START_POS=""):
+     def __init__(self, DIMENSIONS=(.01,.01), START_POS=""):
           #####################################################################################
           ## Define class constants
           self.TOP_LEFT = (0, 0)
@@ -136,8 +164,6 @@ class Scan:
                self.SAMPLE_DIMENSIONS= (d2s(DIMENSIONS[0]), d2s(DIMENSIONS[1]))  ## (rows, columns)
                
           self.START_POS = POS_DICT[START_POS]  ## starting position of transducer
-          self.X_STEP_SIZE = 100  ## step along a row
-          self.Y_STEP_SIZE = 50  ## step along a column
           self.scope = Scope(SCAN_FOLDER, filename = FILENAME)
           self.run()
           
@@ -262,8 +288,7 @@ class Scan:
                
           self.arr = np.copy(arr)
           del arr
-               
-                         
+
      def run(self):
           #####################################################################################
           ## Walk through array and call on STEP_DICT functions to move motor, work on this
@@ -338,98 +363,84 @@ class Scan:
           return np.array2string(self.arr)
      
 
-def grid_test():
-     ## print direction grid to ensure they are set up properly
-     ## add more test cases
-     print("\n2x4 bot left\n", Scan(DIMENSIONS=(2,4), START_POS="bottom left"), "\n")
-     print("\n3x4 bot left\n", Scan(DIMENSIONS=(3,4), START_POS="bottom left"), "\n")
-     print("\n2x4 bot right\n", Scan(DIMENSIONS=(2,4), START_POS="bottom right"), "\n")
-     print("\n3x4 bot right\n", Scan(DIMENSIONS=(3,4), START_POS="bottom right"), "\n")
-     print("\n2x4 top left\n", Scan(DIMENSIONS=(2,4), START_POS="top left"), "\n")
-     print("\n3x4 top left\n", Scan(DIMENSIONS=(3,4), START_POS="top left"), "\n")
-     print("\n2x4 top right\n", Scan(DIMENSIONS=(2,4), START_POS="top right"), "\n")
-     print("\n3x4 top right\n", Scan(DIMENSIONS=(3,4), START_POS="top right"), "\n")
+if __name__ == '__main__':
+#     Scan(DIMENSIONS=(.15,0), START_POS="bottom left")
+#     plot3d([0, 1000, 50])
+     tarr, varr = load_arr()
+     b = np.transpose(varr)[0,:, :]
+     b = np.transpose(bscan)
+     fig = plt.figure(figsize=[10,10])
+     plt.imshow(b[2000: 5000, 0:], aspect='auto', cmap='gray')  ## bscan[axial, lateral]
+     plt.title("1D-3FOC5in")
+     plt.savefig(join("C:\\Users\\dionysius\\Desktop\\PURE\\pure\\scans\\BSCAN\\","1D-3FOC5in.png"), dpi=300)
+     plt.show(fig)
      
-def load_arr(output_folder = SCAN_FOLDER):
-     ## loads tarr and varr from the scan folder
-     ftarr = join(output_folder,"tarr.pkl")
-     fvarr = join(output_folder,"varr.pkl")
-     with open(ftarr, 'rb') as rd:
-          tarr = pickle.load(rd)
-          
-     with open(fvarr, 'rb') as rd:
-          varr = pickle.load(rd)
-          
-     return tarr, varr
+#######################################################################################
+## Notes     
+## step should be less than half the wavelength (.34mm wavelength)
+##
+##
+##     
+##
+#######################################################################################
+## Appendix
+#######################################################################################
+#from mpl_toolkits import mplot3d
+#try:
+##     arduino = serial.Serial('/dev/cu.usbmodem14201', 9600) ## for Macintosh
+#     arduino = serial.Serial('COM6', 9600)  ## for Windows
+#
+#except:
+##     raise Exception("Can't connect to arduino serial port.")
+#     print("Can't connect to arduino serial port.")
 
-def plot3d(DOMAIN=[0,-1, 50],folder = SCAN_FOLDER, figsize=[0,0]):
-     tarr, varr = load_arr(folder)
-     
-     '''
-     Plotting 3D scatter
-     
-     '''
-     if figsize==[0,0]:
-          fig = plt.figure()
-     else:
-          fig = plt.figure(figsize=figsize)
-          
-     ax = plt.axes(projection='3d')
-     X = np.arange(0, len(tarr[0,0,:]), 1)
-     Y = np.arange(0, len(tarr[0,:,0]), 1)
-     xx, yy = np.meshgrid(X, Y)
-     
-     START = DOMAIN[0]
-     END = DOMAIN[1] ## max time to plot
-     EVERY = DOMAIN[2]  # plot every EVERY
+#def grid_test():
+#     ## print direction grid to ensure they are set up properly
+#     ## add more test cases
+#     print("\n2x4 bot left\n", Scan(DIMENSIONS=(2,4), START_POS="bottom left"), "\n")
+#     print("\n3x4 bot left\n", Scan(DIMENSIONS=(3,4), START_POS="bottom left"), "\n")
+#     print("\n2x4 bot right\n", Scan(DIMENSIONS=(2,4), START_POS="bottom right"), "\n")
+#     print("\n3x4 bot right\n", Scan(DIMENSIONS=(3,4), START_POS="bottom right"), "\n")
+#     print("\n2x4 top left\n", Scan(DIMENSIONS=(2,4), START_POS="top left"), "\n")
+#     print("\n3x4 top left\n", Scan(DIMENSIONS=(3,4), START_POS="top left"), "\n")
+#     print("\n2x4 top right\n", Scan(DIMENSIONS=(2,4), START_POS="top right"), "\n")
+#     print("\n3x4 top right\n", Scan(DIMENSIONS=(3,4), START_POS="top right"), "\n")
+#
+#def plot3d(DOMAIN=[0,-1, 50],folder = SCAN_FOLDER, figsize=[0,0]):
+#     tarr, varr = load_arr(folder)
+#     
+#     '''
+#     Plotting 3D scatter
+#     
+#     '''
+#     if figsize==[0,0]:
+#          fig = plt.figure()
+#     else:
+#          fig = plt.figure(figsize=figsize)
+#          
+#     ax = plt.axes(projection='3d')
+#     X = np.arange(0, len(tarr[0,0,:]), 1)
+#     Y = np.arange(0, len(tarr[0,:,0]), 1)
+#     xx, yy = np.meshgrid(X, Y)
+#     
+#     START = DOMAIN[0]
+#     END = DOMAIN[1] ## max time to plot
+#     EVERY = DOMAIN[2]  # plot every EVERY
 #     for h in range(START, END, EVERY): 
 #          for y in range(len(tarr[0,:,0])):
 #               for x in range(len(tarr[0,0,:])):
 #                    ax.scatter3D(xx[y,x],yy[y,x], tarr[h, y,x], alpha=varr[h, y,x], c='k')
 #     
-     ax.scatter3D(xx[0,0], yy[0,0], tarr[:,0,0],c='k')
-#     plt.gca().invert_xaxis()
-#     plt.gca().invert_yaxis()
-     ax.set_zlim(0,.0001)
-     ax.set_xlim(0,3)
-     ax.set_ylim(0,3)
-     plt.xlabel("x axis")
-     plt.ylabel("y axis")
-     plt.show(fig)
-     
-def zbscan(i='',folder = SCAN_FOLDER, figsize=[0,0]):
-     tarr, varr = load_arr(folder)
-     
-     '''
-     z bscan
-     '''
-     if figsize==[0,0]:
-          fig = plt.figure()
-     else:
-          fig = plt.figure(figsize=figsize)
-          
-     if i =='':
-          plt.imshow(np.transpose(varr), cmap="gray", aspect='auto')
-     else:
-          plt.imshow(varr[i], cmap="gray", aspect='auto')
-     plt.xlabel("x axis")
-     plt.ylabel("y axis")
-     plt.show(fig)
-     
-
-#clear_scan_folder()  ## deletes files in scan folder
-#Scan2D(DIMENSIONS=(10,10), START_POS="top right")  ## runs the scan
-
-if __name__ == '__main__':
-#     Scan(DIMENSIONS=(.15,0), START_POS="bottom left")
-#     plot3d([0, 1000, 50])
-     tarr, varr = load_arr()
-     bscan = np.transpose(varr)[0,:, :]
-     bscan = np.transpose(bscan)
-     fig = plt.figure(figsize=[10,10])
-     plt.imshow(bscan[2000: 5000, 0:], aspect='auto', cmap='gray')  ## bscan[axial, lateral]
-     plt.title("1D-3FOC5in")
-     plt.savefig(join("C:\\Users\\dionysius\\Desktop\\PURE\\pure\\scans\\BSCAN\\","1D-3FOC5in.png"), dpi=300)
-     plt.show(fig)
-     
+#     ax.scatter3D(xx[0,0], yy[0,0], tarr[:,0,0],c='k')
+#     ax.set_zlim(0,.0001)
+#     ax.set_xlim(0,3)
+#     ax.set_ylim(0,3)
+#     plt.xlabel("x axis")
+#     plt.ylabel("y axis")
+#     plt.show(fig)
+#
+#def clear_scan_folder():
+#     for f in listdir(SCAN_FOLDER):
+#          if isfile(join(SCAN_FOLDER,f)) and (f[-4:] == ".npy" or f[-4:]==".pkl"):
+#               remove(join(SCAN_FOLDER,f))
      
