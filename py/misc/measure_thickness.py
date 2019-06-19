@@ -37,4 +37,6 @@ def thickness(dt):
      return v_m*dt/2
 
 ## How many indices wide are the reflected signals coming from the surfaces?
-print(thickness(np.array([tstep*75, tstep*5])))
+#print(thickness(np.array([tstep*75, tstep*5])))
+
+print(dist_ind(.09), dist_ind(.15))

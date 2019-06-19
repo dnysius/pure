@@ -134,7 +134,7 @@ class Signal:
                print("invalid input")
                self.analyze_peak(i, start, width, x1, x2)
           
-     def ang_bscan(self, domain=(0, -1), vmin=0, vmax=1):
+     def ang_bscan(self, domain=(2600, 5100), vmin=0, vmax=1, y1=0, y2=-1):
           ## Performs B-scan for given set of angles
           ## domain is a tuple with start and end points of the signal
           ## vmin/vmax is min/max of color range for imshow()
@@ -144,17 +144,30 @@ class Signal:
                END = len(self.signal_data[0, :, 1]) - 1
           else:
                pass
+          if y2 ==-1:
+               y2 = END
+          else:
+               y2 += START
+          if y1 == 0:
+               y1 = START
+          else:
+               y1 += START
+               
           y = np.abs(self.signal_data[:,START:END, 1]) / np.max(np.abs(self.signal_data[:,START:END, 1]).flatten())
           bscan = np.transpose(y)  ## take transpose, rename variable
           plt.ioff()
-          fig = plt.figure(figsize=[8,6])
+          fig = plt.figure(figsize=[10,8])
           ax = fig.add_subplot(1, 1, 1)
           ax.set_title(self.title)
 #          major_ticks = np.arange(tstep*START, tstep*END, tstep*((END-START)//10))
 #          minor_ticks = np.arange(tstep*START, tstep*END, tstep*((END-START)//50))
-          ax.imshow(bscan, cmap='gray',origin='upper', aspect='auto', alpha=.9, extent=[0, 30, END, START], vmin = vmin, vmax = vmax)
+          ax.imshow(bscan, cmap='gray',origin='upper', aspect='auto', alpha=.9, extent=[0, len(bscan[0,:]), END, START], vmin = vmin, vmax = vmax)
+          ax.axhline(y=y1, c='goldenrod')
+          ax.axhline(y=y2, c='goldenrod', label='thickness {}m'.format(round(indw2time(y2-y1), 6)))
           ax.set_xlabel('angle (degrees)')
           ax.set_ylabel('time (s)')
+          ax.set_title('{0}, ({1}, {2})'.format(self.title, START, END))
+          plt.legend()
 #          ax.set_yticks(major_ticks)
 #          ax.set_yticks(minor_ticks, minor=True)
 #          ax.grid(True, axis='y', which="major", alpha=.5)
@@ -165,46 +178,69 @@ class Signal:
      
      
      
-     def Iang_bscan(self, domain=(0, -1), vmin=0, vmax=1):
+     def Iang_bscan(self, domain=(2600, 5200), vmin=0, vmax=1,y1=0, y2=-1):
           START = domain[0]
           END = domain[1]
           if END == -1:
-               END = np.shape(self.signal_data)(1) -1
-               
+               END = np.shape(self.signal_data)[1] -1
+          self.ang_bscan((START, END), vmin, vmax, y1, y2)
           cmd = input('//\t')
           if cmd == 's':
-               self.ang_bscan((START, END), vmin, vmax)  
+               self.Iang_bscan((START, END), vmin, vmax, y1, y2)
                
           elif cmd == 'z':
                d0 = input('Start (default {}): \t'.format(START))
                d1 = input('End (default {}): \t'.format(END))
+               if d0 == '':
+                    d0 = START
+               if d1 == '':
+                    d1 = END
                try:
-                    START = d0
-                    END = d1
-                    self.ang_bscan((START, END), vmin, vmax)
+                    START = int(d0)
+                    END = int(d1)
+                    self.Iang_bscan((START, END), vmin, vmax, y1, y2)
                except:
                     raise TypeError("z input error")
                     
           elif cmd == 'v':
                v0 = input('vmin (default {}): \t'.format(vmin))
                v1 = input('vmax (default {}): \t'.format(vmax))
+               if v0 == '':
+                    v0 = vmin
+               if v1 == '':
+                    v1 = vmax
                try:
-                    vmin = v0
-                    vmax = v1
-                    self.ang_bscan((START, END), vmin, vmax)
+                    vmin = int(v0)
+                    vmax = int(v1)
+                    self.Iang_bscan((START, END), vmin, vmax, y1, y2)
                except:
                     raise TypeError("v input error")
                     
+          elif cmd =='c':
+               ny1 = input('y1 (default {}): \t'.format(y1))
+               ny2 = input('y2 (default {}): \t'.format(y2))
+               if ny1 == '':
+                    ny1 = y1
+               if ny2 == '':
+                    ny2 = y2
+               try:
+                    y1 = int(ny1)
+                    y2 = int(ny2)
+                    self.Iang_bscan((START, END), vmin, vmax, y1, y2)
+               except:
+                    raise TypeError("c input error")
           elif cmd == 'x' or cmd=='esc':
                pass
           
           else:
-               self.ang_bscan((START, END), vmin, vmax)
-     
+               self.Iang_bscan((START, END), vmin, vmax, y1, y2)
+               
+               
 if __name__ == '__main__':
-     fpath = "C:\\Users\\dionysius\\Desktop\\PURE\\pure\\data\\30deg\\3FOC5in"
-     foc = Signal(fpath)
-     foc.analyze_peak(0,0,-1)
+     fpath = "C:\\Users\\dionysius\\Desktop\\PURE\\pure\\data\\FLAT15cm"
+     foc = Signal(fpath, ftype='npz')
+#     foc.analyze_peak(0,0,-1)
+     foc.Iang_bscan()
 
      
-          
+#          

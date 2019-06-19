@@ -141,9 +141,8 @@ def load_obj(obj_name, folder = obj_folder):
      return transducer
 
 
-
-     
 if __name__ == '__main__':
+     pass
 #     init()
 #     save_bscans()
 

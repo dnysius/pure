@@ -9,7 +9,7 @@ Main features:
 '''
 global min_step, FILENAME, SCAN_FOLDER
 ## Edit these parameters if necessary
-SCAN_FOLDER =  "FOLDER_NAME"  ## data directory /pure/py/data/FOLDER_NAME
+SCAN_FOLDER =  "1D-3FOC5in"  ## data directory /pure/py/data/FOLDER_NAME
 ## These parameters are optional
 min_step = 4e-5*10  ## size of motor step in metres
 FILENAME = "scope"  ## name of the saved files
@@ -26,13 +26,13 @@ from time import sleep
 
 ### Define constants and functions
 global TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT, BSCAN_FOLDER, arduino
-BSCAN_FOLDER = join(dirname(getcwd()), "data\\scans\\BSCAN\\")
+BSCAN_FOLDER = join(join(dirname(getcwd()), "scans"), "BSCAN")
+SCAN_FOLDER = join(join(dirname(getcwd()), "data"), SCAN_FOLDER)
 ## positions of grid vertices
 TOP_LEFT = (0, 0)
 TOP_RIGHT = (0, -1)
 BOTTOM_LEFT = (-1, 0)
 BOTTOM_RIGHT = (-1, -1)
-
 
 def init_arduino():
      ports = list(serial.tools.list_ports.comports())  ## find serial ports being used
@@ -368,7 +368,7 @@ class Scan:
                pickle.dump(self.varr, wr, pickle.DEFAULT_PROTOCOL)
           
           print("Done saving pickles")
-     
+          
      def __repr__(self):
           ## String representation of the sample area
           return np.array2string(self.arr)
@@ -377,15 +377,15 @@ class Scan:
 if __name__ == '__main__':
 #     Scan(DIMENSIONS=(.15,0), START_POS="bottom left")
 #     plot3d([0, 1000, 50])
-     tarr, varr = load_arr()
-     b = np.transpose(varr)[0,:, :]
-     b = np.transpose(bscan)
+     tarr, varr = load_arr(SCAN_FOLDER)
+     b = varr[:,:, 0]
      fig = plt.figure(figsize=[10,10])
-     plt.imshow(b[2000: 5000, 0:], aspect='auto', cmap='gray')  ## bscan[axial, lateral]
-     plt.title(SCAN_FOLDER)
-     plt.savefig(join("1D-3FOC5in",FILENAME +".png"), dpi=300)
+     plt.imshow(b, aspect='auto', cmap='gray')  ## bscan[axial, lateral]
+     plt.title([s for s in SCAN_FOLDER.split(sep='\\') if s != ''][-1])
+     plt.savefig(join(SCAN_FOLDER,FILENAME +".png"), dpi=300)
      plt.show(fig)
-     
+
+
 #######################################################################################
 ## Notes     
 ## step should be less than half the wavelength (.34mm wavelength)
