@@ -1,6 +1,4 @@
 # -*- coding: utf-8 -*-
-## Dionysius Indraatmadja
-## Started June 5 2019
 '''
 Main features:
  - move transducer to desired (y, x) positions using move() interface
@@ -9,44 +7,50 @@ Main features:
  - Create b-scan of 3D numpy array loaded from varr.pkl using bscan() function.
 
 '''
-import numpy as np
-import serial
-from scope import Scope  # Scope(save path), to initialize connection to oscilloscope. be sure to close()
-from os import listdir, getcwd, remove
-from os.path import join, isfile, dirname
-import matplotlib.pyplot as plt
-import pickle
-from time import sleep
-import serial.tools.list_ports
-global min_step, FILENAME, FOLDER_NAME
-#######################################################################################
+global min_step, FILENAME, SCAN_FOLDER
+## Edit these parameters if necessary
+SCAN_FOLDER =  "FOLDER_NAME"  ## data directory /pure/py/data/FOLDER_NAME
+## These parameters are optional
 min_step = 4e-5*10  ## size of motor step in metres
-FOLDER_NAME =  "1D-3FOC5in"  ## data directory /pure/py/data/FOLDER_NAME
 FILENAME = "scope"  ## name of the saved files
 #######################################################################################
+import numpy as np  ## array operations
+import serial  ## handle serial connection to arduino
+import serial.tools.list_ports
+from scope import Scope  ## Scope(save path), to initialize connection to oscilloscope. be sure to close()
+from os import listdir, getcwd, remove
+from os.path import join, isfile, dirname
+import matplotlib.pyplot as plt  ## plotting
+import pickle  ## saving arrays/objects to .pkl file
+from time import sleep
+
 ### Define constants and functions
-global TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT, SCAN_FOLDER, BSCAN_FOLDER
-SCAN_FOLDER = join(join(dirname(getcwd()), "data"), FOLDER_NAME)  ## path to save folder
+global TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT, BSCAN_FOLDER, arduino
 BSCAN_FOLDER = join(dirname(getcwd()), "data\\scans\\BSCAN\\")
-ports = list(serial.tools.list_ports.comports())  ## find serial ports being used
-arduino = None
-for p in ports:
-    if "Arduino" in p[1]:  ## search for port connected to the arduino
-         arduino = serial.Serial(p[0], 9600)
-    
-if arduino == None:  ## warn us if arduino was not found
-     print("No arduino selected")
-     
 ## positions of grid vertices
 TOP_LEFT = (0, 0)
 TOP_RIGHT = (0, -1)
 BOTTOM_LEFT = (-1, 0)
 BOTTOM_RIGHT = (-1, -1)
-               
+
+
+def init_arduino():
+     ports = list(serial.tools.list_ports.comports())  ## find serial ports being used
+     arduino = None
+     for p in ports:
+         if "Arduino" in p[1]:  ## search for port connected to the arduino
+              arduino = serial.Serial(p[0], 9600)
+              return arduino
+     if arduino == None:  ## warn us if arduino was not found
+          print("No arduino selected")
+          return
+
+
 def d2s(dist):
      ## Converts distance in metres to number of steps
      return int(dist//min_step)
      
+
 def step(command):
      ## Sends bytes to arduino to signal step motor movement
      ## command:
@@ -56,9 +60,11 @@ def step(command):
      ## 4: bottom motor forward -- black tape side X axis
      sleep(.75)
      try:
+          arduino = init_arduino()
           arduino.write(str.encode("{}".format(command)))
      except:
           raise TypeError("Command is not 1-4")
+          
           
 def move():
      ## Initializes environment in which to move the transducer freely without grabbing
@@ -95,6 +101,7 @@ def move():
                except:
                     raise TypeError("invalid input")
                     
+                    
 def load_arr(output_folder = SCAN_FOLDER):
      ## loads numpy arrays tarr and varr in the scan folder
      ftarr = join(output_folder,"tarr.pkl")
@@ -106,6 +113,7 @@ def load_arr(output_folder = SCAN_FOLDER):
           varr = pickle.load(rd)
           
      return tarr, varr
+
 
 def bscan(i='',folder = SCAN_FOLDER, figsize=[0,0]):
      ## Plots b-scan from .pkl files in a folder
@@ -120,8 +128,8 @@ def bscan(i='',folder = SCAN_FOLDER, figsize=[0,0]):
           b = np.transpose(varr)[0,:, :]
           b = np.transpose(bscan)
           plt.imshow(b[2000: 5000, 0:], aspect='auto', cmap='gray')  ## bscan[axial, lateral]
-          plt.title(FOLDER_NAME)
-          plt.savefig(join(BSCAN_FOLDER, FOLDER_NAME), dpi=300)
+          plt.title(SCAN_FOLDER)
+          plt.savefig(join(BSCAN_FOLDER, SCAN_FOLDER), dpi=300)
           plt.show(fig)
           plt.imshow(np.transpose(varr), cmap="gray", aspect='auto')
      else:
@@ -131,6 +139,7 @@ def bscan(i='',folder = SCAN_FOLDER, figsize=[0,0]):
      plt.ylabel("y axis")
      plt.show(fig)
      
+     
 #######################################################################################
 ## Define classes and methods          
 class Scan:
@@ -138,9 +147,12 @@ class Scan:
      ## Calculate dimensions by (floor) dividing the total length & width by the step size
      ## the motor moves. The step size in x may be different from that in y.
      ## This represents 2D scanning in a rectangular area.
-     def __init__(self, DIMENSIONS=(.01,.01), START_POS=""):
+     def __init__(self, DIMENSIONS=(.01,.01), FOLDER = SCAN_FOLDER, START_POS=""):
           #####################################################################################
           ## Define class constants
+          init_arduino()
+          self.SCAN_FOLDER = join(join(dirname(getcwd()), "data"), FOLDER)  ## path to save folder
+          self.arduino = init_arduino()
           self.TOP_LEFT = (0, 0)
           self.TOP_RIGHT = (0, -1)
           self.BOTTOM_LEFT = (-1, 0)
@@ -170,7 +182,6 @@ class Scan:
      def STEP(self, DIRECTION='+x'):
           #####################################################################################
           ## Command arduino to move motor, work on this
-          #####################################################################################
           try:
                if DIRECTION == 'x' or DIRECTION == 'X' or DIRECTION == '+x' or DIRECTION == '+X':
                     ## move "right"  forward bottom motor
@@ -204,7 +215,7 @@ class Scan:
           else:
                print("Unexpected Error")
           
-          arr = np.zeros(SAMPLE_DIMENSIONS)  ## tuple
+          arr = np.zeros(SAMPLE_DIMENSIONS)  ## shape as tuple
           if self.START_POS == self.TOP_RIGHT:               
                for y in range(SAMPLE_DIMENSIONS[0]):
                     if (y % 2) == 0:
@@ -371,17 +382,14 @@ if __name__ == '__main__':
      b = np.transpose(bscan)
      fig = plt.figure(figsize=[10,10])
      plt.imshow(b[2000: 5000, 0:], aspect='auto', cmap='gray')  ## bscan[axial, lateral]
-     plt.title("1D-3FOC5in")
-     plt.savefig(join("C:\\Users\\dionysius\\Desktop\\PURE\\pure\\scans\\BSCAN\\","1D-3FOC5in.png"), dpi=300)
+     plt.title(SCAN_FOLDER)
+     plt.savefig(join("1D-3FOC5in",FILENAME +".png"), dpi=300)
      plt.show(fig)
      
 #######################################################################################
 ## Notes     
 ## step should be less than half the wavelength (.34mm wavelength)
-##
-##
-##     
-##
+## 
 #######################################################################################
 ## Appendix
 #######################################################################################

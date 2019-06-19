@@ -1,34 +1,31 @@
 # -*- coding: utf-8 -*-
-##"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-## Copyright © 2015 Keysight Technologies Inc. All rights reserved.
-##
-## You have a royalty-free right to use, modify, reproduce and distribute this
-## example file (and/or any modified version) in any way you find useful, provided
-## that you agree that Keysight has no warranty, obligations or liability for any
-## Sample Application Files.
-##
-##"""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""""
-
+global VISA_ADDRESS, VISA_PATH, FILENAME
+#######################################################################################
+#######################################################################################
+## INSTRUCTIONS:
+## Edit in the VISA address of the oscilloscope in VISA_ADDRESS
+## Edit the VISA library path (if not using Windows)
+## Initialize Scope object: s = Scope(path_to_directory, filename)
+## Grab oscilloscope data using s.grab()
+## (optional) close connection to oscilloscope using s.close()
+VISA_ADDRESS = 'USB0::0x0957::0x1799::MY52102738::INSTR'
+VISA_PATH = 'C:\\Windows\\System32\\visa32.dll'
+FILENAME = "scope"
+#######################################################################################
+#######################################################################################
 import sys
 import visa # PyVisa info @ http://PyVisa.readthedocs.io/en/stable/
-import time
 import numpy as np
-from os import mkdir, listdir, makedirs
-from os.path import isdir, isfile, join, dirname, exists
+from os import listdir, makedirs
+from os.path import isfile, join, exists
 import re
-from tqdm import tqdm # progress bar reporting
 _nsre = re.compile('([0-9]+)')
-
 def natural_sort_key(s):
     return [int(text) if text.isdigit() else text.lower()
-            for text in re.split(_nsre, s)] 
-## INSTRUCTIONS:
-## Edit in the VISA address of the oscilloscope
-## Edit in the file save locations ## IMPORTANT NOTE:  This script WILL overwrite previously saved files!
-## Manually (or write more code) acquire data on the oscilloscope.  Ensure that it finished (Run/Stop button is red).
+            for text in re.split(_nsre, s)]
+
 class Scope:
-     
-     def __init__(self, directory, filename="scope"):
+     def __init__(self, directory, filename=FILENAME):
           ## Number of Points to request
           self.USER_REQUESTED_POINTS = 8000000
               ## None of these scopes offer more than 8,000,000 points
@@ -37,50 +34,28 @@ class Scope:
               ## Asking for zero (0) points, a negative number of points, fewer than 100 points, or a non-integer number of points (100.1 -> error, but 100. or 100.0 is ok) will result in an error, specifically -222,"Data out of range"
           
           ## Initialization constants
-          self.SCOPE_VISA_ADDRESS = 'USB0::0x0957::0x1799::MY52102738::INSTR' # Get this from Keysight IO Libraries Connection Expert
+          self.SCOPE_VISA_ADDRESS = VISA_ADDRESS # Get this from Keysight IO Libraries Connection Expert
           self.GLOBAL_TOUT =  10000 # IO time out in milliseconds
           
           ## Save Locations
-          self.BASE_FILE_NAME = filename + "_"  # want format to be NAME_[ROW]_[COLUMN].npy
+          self.BASE_FILE_NAME = filename + "_"
           self.BASE_DIRECTORY = directory
           
           if not exists(self.BASE_DIRECTORY):
-               mkdir(self.BASE_DIRECTORY)
-          ############################################################################
-          ## Optional automatic subfolder naming, replace BASE_DIRECTORY with SUBFOLDER
-          ############################################################################
-#          self.dnames = [d for d in listdir(self.BASE_DIRECTORY) if isdir(join(self.BASE_DIRECTORY, d))]
-#          self.dnames.sort(key=natural_sort_key)
-#          if len(self.dnames) > 0:
-#               
-#               try:
-#                    i = int(self.dnames[-1][len(self.BASE_SUBDIR):]) + 1
-#                    
-#               except:
-#                    i = 0
-#                    raise TypeError
-#          else:
-#               i = 0
-#                         
-#          self.SUBFOLDER = self.BASE_DIRECTORY+self.BASE_SUBDIR+"{0}\\".format(i) 
-#          if not isdir(self.SUBFOLDER):
-#               mkdir(self.SUBFOLDER)
+               makedirs(self.BASE_DIRECTORY)
+               
           self.fnames = [f for f in listdir(self.BASE_DIRECTORY) if isfile(join(self.BASE_DIRECTORY, f)) and f[-3:] == 'npy']
           self.fnames.sort(key=natural_sort_key)
-          ##############################################################################################################################################################################
-          ##############################################################################################################################################################################
-          ## Main code
-          ##############################################################################################################################################################################
-          ##############################################################################################################################################################################       
-#          sys.stdout.write("Script is running.  This may take a while...")
           ##############################################################################################################################################################################
           ##############################################################################################################################################################################
           ## Connect and initialize scope
           ##############################################################################################################################################################################
           ##############################################################################################################################################################################
-          
           ## Define VISA Resource Manager & Install directory
-          self.rm = visa.ResourceManager('C:\\Windows\\System32\\visa32.dll') # this uses PyVisa
+          try:
+               self.rm = visa.ResourceManager(VISA_PATH) # this uses PyVisa
+          except:
+               self.rm = visa.ResourceManager()
           ## Open Connection
           ## Define & open the scope by the VISA address ; # This uses PyVisa
           try:
@@ -89,22 +64,16 @@ class Scope:
               print("Unable to connect to oscilloscope at " + str(self.SCOPE_VISA_ADDRESS) + ". Aborting script.\n")
               sys.exit()
               
-          
           ## Set Global Timeout
           ## This can be used wherever, but local timeouts are used for Arming, Triggering, and Finishing the acquisition... Thus it mostly handles IO timeouts
           self.KsInfiniiVisionX.timeout = self.GLOBAL_TOUT
-          
           ## Clear the instrument bus
           self.KsInfiniiVisionX.clear()
-          
           ## DO NOT RESET THE SCOPE! - since that would wipe out data...
-          
           ## Data should already be acquired and scope should be STOPPED (Run/Stop button is red).
-
           ##########################################################
           ##########################################################
           ## Determine Which channels are on AND have acquired data - Scope should have already acquired data and be in a stopped state (Run/Stop button is red).
-          
           #########################################
           ## Get Number of analog channels on scope
           self.IDN = str(self.KsInfiniiVisionX.query("*IDN?"))
@@ -340,7 +309,6 @@ class Scope:
           ## Pull waveform data, scale it
           self.fnames = [f for f in listdir(self.BASE_DIRECTORY) if isfile(join(self.BASE_DIRECTORY, f)) and (f[-3:] == 'npy')]
           self.fnames.sort(key=natural_sort_key)
-          now = time.clock() # Only to show how long it takes to transfer and scale the data.
           i  = 0 # index of Wav_data, recall that python indices start at 0, so ch1 is index 0
           for channel_number in self.CHS_ON:
                   ## Gets the waveform in 16 bit WORD format
@@ -357,22 +325,8 @@ class Scope:
               self.KsInfiniiVisionX.chunk_size = 20480
               ## If you don't do this, and now wanted to do something else... such as ask for a measurement result, and leave the chunk size set to something large,
                   ## it can really slow down the script, so set it back to default, which works well.
-          
-          del i, channel_number
-#          print("\n\nIt took " + str(time.clock() - now) + " seconds to transfer and scale " + str(self.NUMBER_CHANNELS_ON) + " channel(s). Each channel had " + str(self.NUMBER_OF_POINTS_TO_ACTUALLY_RETRIEVE) + " points.\n")
-          del now         
-          ################################################################################################
-          ################################################################################################
-          ## Save waveform data -  really, there are MANY ways to do this, of course
-          ################################################################################################
-          ################################################################################################
-          
-          ## If saving repetitive acquisitions, it may be better to just save off a single time axis file, and not just replicate it w/ every save
-
-          ########################################################
-          ## As a NUMPY BINARY file - fast and small, but really only good for python - can't use header
-          ########################################################
-          now = time.clock() # Only to show how long it takes to save
+                  
+          ## Check most recent filename index
           if len(self.fnames) >= 1:
                recent = self.fnames[-1]
                pre = len(self.BASE_FILE_NAME)
@@ -389,31 +343,14 @@ class Scope:
                
           with open(filename, 'wb') as filehandle: # wb means open for writing in binary; can overwrite
               np.save(filehandle, np.insert(self.Wav_Data,0,self.DataTime,axis=1))
-#          print("It took " + str(time.clock() - now) + " seconds to save " + str(self.NUMBER_CHANNELS_ON) + " channels and the time axis in binary format. Each channel had " + str(self.NUMBER_OF_POINTS_TO_ACTUALLY_RETRIEVE) + " points.\n")
-          del now
-          
-          ## Read the NUMPY BINARY data back into python with:
-#          with open(filename, 'rb') as filehandle: # rb means open for reading binary
-#              recalled_NPY_data = np.load(filehandle)
-              
-          del filename, filehandle, i
-
 
      def close(self):
-          ###################################################################
-          ###################################################################
           ## Done with scope operations - Close Connection to scope properly
-          
           self.KsInfiniiVisionX.clear()
           self.KsInfiniiVisionX.close()
-          del self.KsInfiniiVisionX
           
 if __name__=='__main__':
      scope = Scope("C:\\Users\\dionysius\\Desktop\\PURE\\pure\\data\\30deg\\3FOC5in")
-#     pbar = tqdm(range(20))
-#     for i in pbar:
-#     oscilloscope.grab()
-#          pbar.set_description("Processing {0}".format(i))
      done = False
      while not done:
           cmd = input('//\t')
