@@ -2,8 +2,8 @@
 from scipy.signal import hilbert
 import numpy as np
 import matplotlib.pyplot as plt
-from os import listdir, mkdir, getcwd
-from os.path import isfile, isdir, join, dirname
+from os import listdir, mkdir, getcwd, makedirs
+from os.path import isfile, isdir, join, dirname, exists
 import re
 import pickle
 
@@ -51,6 +51,7 @@ class Signal:
                xy = self.__loadf(i)
                self.signal_data[i, :, :] = xy
           self.signal_data = self.signal_data[:, lenY//2:, :]  ## take the latter half of the signals
+          self.signal_data[:,:,1] = self.signal_data[:, :, 1]/np.amax(np.abs(self.signal_data[:,:,1]).flatten())
           ## Save numpy binary to .pkl file
           out = join(join(dirname(getcwd()), "obj"), self.title+"_signal_data.pkl")
           with open(out, 'wb') as wr:
@@ -234,10 +235,35 @@ class Signal:
           
           else:
                self.Iang_bscan((START, END), vmin, vmax, y1, y2)
+            
                
-               
+def graph_signals(trans, start, end):
+     
+     with open(join(r"C:\Users\dionysius\Desktop\PURE\pure\obj", "{}_signal_data.pkl".format(trans)), "rb") as rd:
+          signal_data = np.load(rd)
+          
+     L = np.shape(signal_data)[0]
+     ang = np.linspace(0, 30, L)
+     spath = "C:\\Users\\dionysius\\Desktop\\PURE\\pure\\data\\30deg\\{}\\signals".format(trans)
+     if not exists(spath):
+          makedirs(spath)
+     for i in range(L):
+          plt.figure(figsize=[8,6])
+          plt.plot(np.arange(start, end,1), signal_data[i, start:end, 1])
+          plt.xlabel('time (unit of timestep)')
+          plt.ylabel('voltage')
+          plt.ylim(-1.1,1.1)
+          plt.title('{2} {0} degrees (index {1})'.format(ang[i], i, trans))
+          plt.savefig(join(spath, "{}.png".format(i)), dpi = 300)
+          plt.show()
+
 if __name__ == '__main__':
-     fpath = "C:\\Users\\dionysius\\Desktop\\PURE\\pure\\data\\FLAT15cm"
-     foc = Signal(fpath, ftype='npz')
-#     foc.analyze_peak(0,0,-1)
-     foc.Iang_bscan()
+     trans = "FLAT5in"
+     start = 4000
+     end = 6000
+#     graph_signals(trans, start, end)
+     fpath = "C:\\Users\\dionysius\\Desktop\\PURE\\pure\\data\\30deg\\{}".format(trans)
+     foc = Signal(fpath, ftype='npy')
+     
+     foc.analyze_peak(5,2200,5200)
+#     foc.Iang_bscan()

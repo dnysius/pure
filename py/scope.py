@@ -350,7 +350,7 @@ class Scope:
           self.KsInfiniiVisionX.close()
           
 if __name__=='__main__':
-     scope = Scope("C:\\Users\\dionysius\\Desktop\\PURE\\pure\\data\\30deg\\3FOC5in")
+     scope = Scope("C:\\Users\\dionysius\\Desktop\\PURE\\pure\\data")
      done = False
      while not done:
           cmd = input('//\t')

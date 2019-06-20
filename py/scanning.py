@@ -9,7 +9,7 @@ Main features:
 '''
 global min_step, FILENAME, SCAN_FOLDER
 ## Edit these parameters if necessary
-SCAN_FOLDER =  "1D-3FOC5in"  ## data directory /pure/py/data/FOLDER_NAME
+SCAN_FOLDER =  "1D-3FOC16cm"  ## data directory /pure/py/data/FOLDER_NAME
 ## These parameters are optional
 min_step = 4e-5*10  ## size of motor step in metres
 FILENAME = "scope"  ## name of the saved files
@@ -34,16 +34,21 @@ TOP_RIGHT = (0, -1)
 BOTTOM_LEFT = (-1, 0)
 BOTTOM_RIGHT = (-1, -1)
 
-def init_arduino():
-     ports = list(serial.tools.list_ports.comports())  ## find serial ports being used
-     arduino = None
-     for p in ports:
-         if "Arduino" in p[1]:  ## search for port connected to the arduino
-              arduino = serial.Serial(p[0], 9600)
-              return arduino
-     if arduino == None:  ## warn us if arduino was not found
-          print("No arduino selected")
-          return
+arduino = serial.Serial("COM6", 9600)
+ports = list(serial.tools.list_ports.comports())  ## find serial ports being used
+for p in ports:
+     if "Arduino" in p[1]:
+          print(p[0])
+#def init_arduino():
+#     ports = list(serial.tools.list_ports.comports())  ## find serial ports being used
+#     arduino = None
+#     for p in ports:
+#         if "Arduino" in p[1]:  ## search for port connected to the arduino
+#              arduino = serial.Serial(p[0], 9600)
+#              return arduino
+#     if arduino == None:  ## warn us if arduino was not found
+#          print("No arduino selected")
+#          return
 
 
 def d2s(dist):
@@ -60,7 +65,7 @@ def step(command):
      ## 4: bottom motor forward -- black tape side X axis
      sleep(.75)
      try:
-          arduino = init_arduino()
+#          arduino = init_arduino()
           arduino.write(str.encode("{}".format(command)))
      except:
           raise TypeError("Command is not 1-4")
@@ -150,9 +155,9 @@ class Scan:
      def __init__(self, DIMENSIONS=(.01,.01), FOLDER = SCAN_FOLDER, START_POS=""):
           #####################################################################################
           ## Define class constants
-          init_arduino()
+#          init_arduino()
           self.SCAN_FOLDER = join(join(dirname(getcwd()), "data"), FOLDER)  ## path to save folder
-          self.arduino = init_arduino()
+#          self.arduino = init_arduino()
           self.TOP_LEFT = (0, 0)
           self.TOP_RIGHT = (0, -1)
           self.BOTTOM_LEFT = (-1, 0)
@@ -314,7 +319,8 @@ class Scan:
                ## take measurement
                self.scope.grab()
                out_arr[pos] = i
-               self.STEP(self.STEP_DICT[V])  ## Tell arduino to move the step motor
+               sleep(2)
+               self.STEP(self.STEP_DICT[V])  ## Tell arduino to move the step motor               
                if V == self.left:
                     pos = (pos[0], pos[1] - 1)
                elif V == self.right:
@@ -375,15 +381,16 @@ class Scan:
      
 
 if __name__ == '__main__':
-#     Scan(DIMENSIONS=(.15,0), START_POS="bottom left")
+#     Scan(DIMENSIONS=(.6,0), START_POS="bottom left")
+     pass
 #     plot3d([0, 1000, 50])
-     tarr, varr = load_arr(SCAN_FOLDER)
-     b = varr[:,:, 0]
-     fig = plt.figure(figsize=[10,10])
-     plt.imshow(b, aspect='auto', cmap='gray')  ## bscan[axial, lateral]
-     plt.title([s for s in SCAN_FOLDER.split(sep='\\') if s != ''][-1])
-     plt.savefig(join(SCAN_FOLDER,FILENAME +".png"), dpi=300)
-     plt.show(fig)
+#     tarr, varr = load_arr(SCAN_FOLDER)
+#     b = varr[:,:, 0]
+#     fig = plt.figure(figsize=[10,10])
+#     plt.imshow(b, aspect='auto', cmap='gray')  ## bscan[axial, lateral]
+#     plt.title([s for s in SCAN_FOLDER.split(sep='\\') if s != ''][-1])
+#     plt.savefig(join(SCAN_FOLDER,FILENAME +".png"), dpi=300)
+#     plt.show(fig)
 
 
 #######################################################################################
