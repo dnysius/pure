@@ -241,6 +241,3 @@ if __name__ == '__main__':
      foc = Signal(fpath, ftype='npz')
 #     foc.analyze_peak(0,0,-1)
      foc.Iang_bscan()
-
-     
-#          
