@@ -9,7 +9,7 @@ Main features:
 '''
 global min_step, FILENAME, SCAN_FOLDER
 ## Edit these parameters if necessary
-SCAN_FOLDER =  "1D-3FOC16cm"  ## data directory /pure/py/data/FOLDER_NAME
+FOLDER_NAME =  "1D-FLAT16cm"  ## data directory /pure/py/data/FOLDER_NAME
 ## These parameters are optional
 min_step = 4e-5*10  ## size of motor step in metres
 FILENAME = "scope"  ## name of the saved files
@@ -27,18 +27,21 @@ from time import sleep
 ### Define constants and functions
 global TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT, BSCAN_FOLDER, arduino
 BSCAN_FOLDER = join(join(dirname(getcwd()), "scans"), "BSCAN")
-SCAN_FOLDER = join(join(dirname(getcwd()), "data"), SCAN_FOLDER)
+SCAN_FOLDER = join(join(dirname(getcwd()), "data"), FOLDER_NAME)
 ## positions of grid vertices
 TOP_LEFT = (0, 0)
 TOP_RIGHT = (0, -1)
 BOTTOM_LEFT = (-1, 0)
 BOTTOM_RIGHT = (-1, -1)
 
-arduino = serial.Serial("COM6", 9600)
-ports = list(serial.tools.list_ports.comports())  ## find serial ports being used
-for p in ports:
-     if "Arduino" in p[1]:
-          print(p[0])
+try:
+     
+     ports = list(serial.tools.list_ports.comports())  ## find serial ports being used
+     for p in ports:
+          if "Arduino" in p[1]:
+               arduino = serial.Serial(p[0], 9600)
+except:
+     pass
 #def init_arduino():
 #     ports = list(serial.tools.list_ports.comports())  ## find serial ports being used
 #     arduino = None
@@ -130,13 +133,11 @@ def bscan(i='',folder = SCAN_FOLDER, figsize=[0,0]):
           fig = plt.figure(figsize=figsize)
           
      if i =='':
-          b = np.transpose(varr)[0,:, :]
-          b = np.transpose(bscan)
-          plt.imshow(b[2000: 5000, 0:], aspect='auto', cmap='gray')  ## bscan[axial, lateral]
-          plt.title(SCAN_FOLDER)
-          plt.savefig(join(BSCAN_FOLDER, SCAN_FOLDER), dpi=300)
-          plt.show(fig)
-          plt.imshow(np.transpose(varr), cmap="gray", aspect='auto')
+          print(np.shape(varr))
+          b = varr[:,:, 0]
+          plt.imshow(b[5000:7000, :], aspect='auto', cmap='gray')  ## bscan[axial, lateral]
+          plt.title(FOLDER_NAME)
+          plt.savefig(join(BSCAN_FOLDER, FOLDER_NAME), dpi=300)
      else:
           plt.imshow(varr[i], cmap="gray", aspect='auto')
           
@@ -319,7 +320,7 @@ class Scan:
                ## take measurement
                self.scope.grab()
                out_arr[pos] = i
-               sleep(2)
+               sleep(.3)
                self.STEP(self.STEP_DICT[V])  ## Tell arduino to move the step motor               
                if V == self.left:
                     pos = (pos[0], pos[1] - 1)
@@ -381,8 +382,8 @@ class Scan:
      
 
 if __name__ == '__main__':
-#     Scan(DIMENSIONS=(.6,0), START_POS="bottom left")
-     pass
+#     Scan(DIMENSIONS=(.07,0), START_POS="top left")
+     bscan(figsize=[10,10])
 #     plot3d([0, 1000, 50])
 #     tarr, varr = load_arr(SCAN_FOLDER)
 #     b = varr[:,:, 0]
