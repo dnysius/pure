@@ -9,7 +9,7 @@ Main features:
 '''
 global min_step, FILENAME, SCAN_FOLDER
 ## Edit these parameters if necessary
-FOLDER_NAME =  "1D-FLAT16cm"  ## data directory /pure/py/data/FOLDER_NAME
+FOLDER_NAME =  "1D-15FOC3in"  ## data directory /pure/py/data/FOLDER_NAME
 ## These parameters are optional
 min_step = 4e-5*10  ## size of motor step in metres
 FILENAME = "scope"  ## name of the saved files
@@ -42,18 +42,12 @@ try:
                arduino = serial.Serial(p[0], 9600)
 except:
      pass
-#def init_arduino():
-#     ports = list(serial.tools.list_ports.comports())  ## find serial ports being used
-#     arduino = None
-#     for p in ports:
-#         if "Arduino" in p[1]:  ## search for port connected to the arduino
-#              arduino = serial.Serial(p[0], 9600)
-#              return arduino
-#     if arduino == None:  ## warn us if arduino was not found
-#          print("No arduino selected")
-#          return
 
-
+def clear_scan_folder():
+     for f in listdir(SCAN_FOLDER):
+          if isfile(join(SCAN_FOLDER,f)) and (f[-4:] == ".npy"):
+               remove(join(SCAN_FOLDER,f))
+               
 def d2s(dist):
      ## Converts distance in metres to number of steps
      return int(dist//min_step)
@@ -66,9 +60,8 @@ def step(command):
      ## 2: top motor backward
      ## 3: bottom motor backward
      ## 4: bottom motor forward -- black tape side X axis
-     sleep(.75)
+     sleep(1.5)
      try:
-#          arduino = init_arduino()
           arduino.write(str.encode("{}".format(command)))
      except:
           raise TypeError("Command is not 1-4")
@@ -123,7 +116,7 @@ def load_arr(output_folder = SCAN_FOLDER):
      return tarr, varr
 
 
-def bscan(i='',folder = SCAN_FOLDER, figsize=[0,0]):
+def bscan(i='',folder = SCAN_FOLDER, figsize=[0,0],start=0,end=-1, y1=0, y2=-1):
      ## Plots b-scan from .pkl files in a folder
      ## when applicable, i is a chosen slice of the 2D scan
      tarr, varr = load_arr(folder)
@@ -131,12 +124,16 @@ def bscan(i='',folder = SCAN_FOLDER, figsize=[0,0]):
           fig = plt.figure()
      else:
           fig = plt.figure(figsize=figsize)
-          
+     if y2==-1:
+          y2 = len(varr[start:end,0])-1
      if i =='':
           print(np.shape(varr))
           b = varr[:,:, 0]
-          plt.imshow(b[5000:7000, :], aspect='auto', cmap='gray')  ## bscan[axial, lateral]
+          plt.imshow(b[start:end, :], aspect='auto', cmap='gray')  ## bscan[axial, lateral]
+          plt.axhline(y=y1)
+          plt.axhline(y=y2, label='{}'.format(y2-y1))
           plt.title(FOLDER_NAME)
+          plt.legend()
           plt.savefig(join(BSCAN_FOLDER, FOLDER_NAME), dpi=300)
      else:
           plt.imshow(varr[i], cmap="gray", aspect='auto')
@@ -145,6 +142,54 @@ def bscan(i='',folder = SCAN_FOLDER, figsize=[0,0]):
      plt.ylabel("y axis")
      plt.show(fig)
      
+     
+def Ibscan(i='', folder=SCAN_FOLDER, figsize=[8,8], start=0, end=-1, y1=0, y2=-1):
+     
+     bscan(i=i,folder = folder, figsize=figsize,start=start,end=end, y1=y1, y2=y2)
+     cmd = input('//\t')
+     if cmd =='x':
+          print('Exit')
+          pass
+     elif cmd == 'c':
+          try:
+               a1 = input('y1 (default {}):\t'.format(y1))
+               a2 = input('y2 (default {}):\t'.format(y2))
+               if a1 =='':
+                    a1 = y1
+               else:
+                    a1 = int(a1)
+                    
+               if a2 =='':
+                    a2 = y2
+               else:
+                    a2 = int(a2)
+                    
+               Ibscan(i=i,folder = folder, figsize=figsize,start=start,end=end, y1=a1, y2=a2)
+          
+          except:
+               raise TypeError('invalid input')
+               
+     elif cmd == 'z':
+          try:
+               a1 = input('start (default {}):\t'.format(start))
+               a2 = input('end (default {}):\t'.format(end))
+               if a1 =='':
+                    a1 = start
+               else:
+                    a1 = int(a1)
+                    
+               if a2 =='':
+                    a2 = end
+               else:
+                    a2 = int(a2)
+                    
+               Ibscan(i=i,folder = folder, figsize=figsize,start=a1,end=a2,  y1=y1, y2=y2)
+          
+          except:
+               raise TypeError('invalid input')
+          
+     else:
+          Ibscan(i=i,folder = folder, figsize=figsize,start=start,end=end, y1=y1, y2=y2)
      
 #######################################################################################
 ## Define classes and methods          
@@ -320,7 +365,6 @@ class Scan:
                ## take measurement
                self.scope.grab()
                out_arr[pos] = i
-               sleep(.3)
                self.STEP(self.STEP_DICT[V])  ## Tell arduino to move the step motor               
                if V == self.left:
                     pos = (pos[0], pos[1] - 1)
@@ -340,6 +384,7 @@ class Scan:
           self.out_arr = out_arr
           self.tarr, self.varr = self.sig2arr(self.out_arr)
           self.save_arr()
+          clear_scan_folder()
           return self.tarr, self.varr
      
      def sig2arr(self, out_arr):
@@ -382,17 +427,9 @@ class Scan:
      
 
 if __name__ == '__main__':
-#     Scan(DIMENSIONS=(.07,0), START_POS="top left")
-     bscan(figsize=[10,10])
-#     plot3d([0, 1000, 50])
-#     tarr, varr = load_arr(SCAN_FOLDER)
-#     b = varr[:,:, 0]
-#     fig = plt.figure(figsize=[10,10])
-#     plt.imshow(b, aspect='auto', cmap='gray')  ## bscan[axial, lateral]
-#     plt.title([s for s in SCAN_FOLDER.split(sep='\\') if s != ''][-1])
-#     plt.savefig(join(SCAN_FOLDER,FILENAME +".png"), dpi=300)
-#     plt.show(fig)
-
+#     pass
+     Scan(DIMENSIONS=(0,0.115), START_POS="top right")
+#     Ibscan()
 
 #######################################################################################
 ## Notes     
@@ -455,8 +492,5 @@ if __name__ == '__main__':
 #     plt.ylabel("y axis")
 #     plt.show(fig)
 #
-#def clear_scan_folder():
-#     for f in listdir(SCAN_FOLDER):
-#          if isfile(join(SCAN_FOLDER,f)) and (f[-4:] == ".npy" or f[-4:]==".pkl"):
-#               remove(join(SCAN_FOLDER,f))
+
      
