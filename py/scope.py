@@ -343,7 +343,10 @@ class Scope:
                
           with open(filename, 'wb') as filehandle: # wb means open for writing in binary; can overwrite
               np.save(filehandle, np.insert(self.Wav_Data,0,self.DataTime,axis=1))
-
+         
+          arr = np.insert(self.Wav_Data,0,self.DataTime,axis=1)
+          return arr
+          
      def close(self):
           ## Done with scope operations - Close Connection to scope properly
           self.KsInfiniiVisionX.clear()

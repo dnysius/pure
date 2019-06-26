@@ -1,0 +1,6 @@
+15FOC7in focused transducer is approx 18cm from bottom surface, approx 17cm from top. 12cm scan, 80.00 microseconds/ scale on oscilloscope.
+5 in approx 13-14cm from  bottom surface, approx 12-13cm from top. 11.5cm scan,50micro sec/ scale on oscilloscope
+3 in approx 9.5cm from bottom,11.5cm scan approx 8.5cm from top. 40microsec/ scale on oscilloscope
+FLAT3in (9000,11500) 620, 900
+3FOC3in (10000, 13000) 920, 1200
+15FOC3in (11000, 15000) 1450, 1730
