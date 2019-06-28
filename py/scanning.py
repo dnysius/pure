@@ -54,7 +54,7 @@ def ibscan(i='', folder=SCAN_FOLDER, figsize=[8, 8], start=0, end=-1, y1=0, y2=-
             else:
                 a2 = int(a2)
             ibscan(i=i, folder=folder, figsize=figsize, start=start, end=end, y1=a1, y2=a2, hil=hil, save=False)
-        except TypeError:
+        except ValueError:
             print("Invalid input")
     elif cmd == 'z':
         try:
@@ -69,8 +69,8 @@ def ibscan(i='', folder=SCAN_FOLDER, figsize=[8, 8], start=0, end=-1, y1=0, y2=-
             else:
                 a2 = int(a2)
             ibscan(i=i, folder=folder, figsize=figsize, start=a1, end=a2, y1=y1, y2=y2, hil=hil, save=False)
-            except:
-                raise TypeError('invalid input')
+        except ValueError:
+            print('invalid input')
     elif cmd == 'raw' or cmd == 'r':
         ibscan(i=i, folder=folder, figsize=figsize, start=start, end=end, y1=y1, y2=y2, hil=False, save=False)
     elif cmd == 'hil' or cmd == 'h' or cmd == 'hilbert':
@@ -189,7 +189,7 @@ class Scan:
             arr[ENDPOS] = 0
         try:
             self.ENDPOS = ENDPOS
-        except:
+        except NameError:
             print("ENDPOS not defined")
         self.arr = np.copy(arr)
 
@@ -290,4 +290,4 @@ def bscan(i="", folder=SCAN_FOLDER, figsize=[0, 0], start=0, end=-1, y1=0, y2=-1
 if __name__ == '__main__':
     #    pass
     #    foc = Scan(DIMENSIONS=(0,0.115), START_POS="top right")
-       ibscan(figsize=[8,8])
+    ibscan(figsize=[8, 8])
