@@ -32,7 +32,7 @@ class Micrometer:
      self.graph_vals
      '''
      
-     def __init__(self, zero, step_size):
+     def __init__(self, zero, deg):
           '''
           zero: the micrometer reading corresponding to 0 degree angle
           step_size: increments of the angle used in the experiment (e.g every 2 degree)
@@ -47,7 +47,7 @@ class Micrometer:
           self.angle = np.array([0,2,4,6,8,10,12,14,15], float)
           self.popt, self.pcov = sc.curve_fit(self.__d, self.mic, self.angle, (1,1))
           self.popt1, self.pcov1 = sc.curve_fit(self.__d, self.angle, self.mic, (1, 1))
-          deg = np.arange(0,16, step_size)  # setup is limited to max angle of 15 deg
+#          deg = np.arange(0,16, step_size)  # setup is limited to max angle of 15 deg
           self.angle = deg
           self.vals = self.a(zero, deg)
           self.mic = self.vals[:, 1]
@@ -166,8 +166,24 @@ class Signal:
           self.xy = np.copy(xy)  # will be changed by class methods
           self.name = ''
           self.peak_ind, self.peak_val = self.peaks_list(threshold, width, START=START, END=END)
-          
          
+          
+     def graph_pk(self, domain=0):
+          ## param[threshold, width, start index, end index]
+          if domain==0:
+               ## default from 50% to 75%
+               START = len(self.xy[:,0])//2 
+               END = 3*len(self.xy[:,0])//4
+          else:
+               START = domain[0]
+               END = domain[1]
+          
+          T = self.xy[START:END, 0]
+          V = self.xy[START:END, 1]
+          fig = plt.figure()
+          plt.plot(T, V)
+          plt.show(fig)
+
      def peaks_list(self, threshold, width, START=0, END=-1):
           '''
           Find the peaks in the signal
@@ -250,8 +266,9 @@ class Transducer:
           self.mypath = mypath
           self.fnames = [f for f in listdir(self.mypath) if isfile(join(self.mypath, f)) and (f[-3:] == ftype or f[-4:]== ftype)]
           self.signal_data = []
-          Micro = Micrometer(24.2, 1)
-          self.deg = Micro.angle
+#          Micro = Micrometer(24.2, np.linspace(0, 15, 16))
+#          self.deg = Micro.angle
+          self.deg = np.linspace(0,15,16)
           self.threshold = param[0]
           self.width = param[1]
           self.START = param[2]
@@ -259,9 +276,9 @@ class Transducer:
           self.fnames.sort(key=natural_sort_key)
           for i in range(len(self.fnames)):
                if ftype=='.csv' or ftype=='csv':
-                    xy = np.loadtxt(open(self.mypath+"\\"+self.fnames[i], "rb"), delimiter=',', skiprows=0)
+                    xy = np.loadtxt(open(join(self.mypath,self.fnames[i]), "rb"), delimiter=',', skiprows=0)
                else:
-                    xy = np.load(open(self.mypath+"\\"+self.fnames[i], "rb"))
+                    xy = np.load(open(join(self.mypath,self.fnames[i]), "rb"))
                if ftype=='.npz' or ftype=='npz':
                     xy = xy[xy.files[0]]
                sig = Signal(xy, self.threshold, self.width, START=self.START, END=self.END)
@@ -291,6 +308,7 @@ class Transducer:
 #          self.graph_h(SAVE=False, DISPLAY=True)
 #          self.graph_total(SAVE=False, DISPLAY=True)
           
+     
           
      def graph_h(self,i='all', SAVE=False, DISPLAY=True):
           '''
@@ -302,7 +320,7 @@ class Transducer:
           lw = 4000
           rw = 4000
           plt.ioff()
-          folder = self.mypath + "\\hilbert"
+          folder = join(self.mypath,"hilbert")
           if not isdir(folder):
                mkdir(folder)
           if i=='all':
@@ -318,7 +336,7 @@ class Transducer:
                     plt.title(sig.name)
                     plt.legend()
                     if SAVE is True:
-                         plt.savefig(folder + "\\HIL_" +sig.name+".png", dpi=self.GLOBAL_DPI)
+                         plt.savefig(join(folder, "HIL_" +sig.name+".png"), dpi=self.GLOBAL_DPI)
                          
                     if DISPLAY is True:
                          plt.show(fig)
@@ -367,7 +385,7 @@ class Transducer:
           DISPLAY: bool, outputs to screen if True
           '''
           plt.ioff()
-          folder = self.mypath + "\\signals"
+          folder = join(self.mypath,"signals")
           if not isdir(folder):
                mkdir(folder)
           
@@ -380,7 +398,7 @@ class Transducer:
                     plt.ylabel('voltage (V)')
                     plt.title(self.name)
                     if SAVE is True:
-                         plt.savefig(folder + "\\SIG_" +sig.name+".png", dpi=self.GLOBAL_DPI)
+                         plt.savefig(join(folder, "SIG_" +sig.name+".png"), dpi=self.GLOBAL_DPI)
                     if DISPLAY is True:
                          plt.show(fig)
                     elif DISPLAY is False:
@@ -421,7 +439,7 @@ class Transducer:
           DISPLAY: bool, outputs to screen if True
           '''
           plt.ioff()
-          folder = self.mypath + "\\fft"
+          folder = join(self.mypath, "fft")
           if not isdir(folder):
                mkdir(folder)
           if i=='all':
@@ -431,7 +449,7 @@ class Transducer:
                     plt.plot(abs(c))
                     plt.title(self.name)
                     if SAVE is True:
-                         plt.savefig(folder + "\\FFT_" +sig.name+".png", dpi=self.GLOBAL_DPI)
+                         plt.savefig(join(folder, "FFT_" +sig.name+".png"), dpi=self.GLOBAL_DPI)
                          
                     if DISPLAY is True:
                          plt.show(fig)
@@ -473,7 +491,7 @@ class Transducer:
           for sig in self.signal_data:
                lst = sig.peak_val
                self.peak_totals.append(lst[0])
-          folder = self.mypath + "\\profile"
+          folder = join(self.mypath, "profile")
           if not isdir(folder):
                mkdir(folder)
 
@@ -483,7 +501,7 @@ class Transducer:
           plt.xlabel('angle (degree)')
           plt.ylabel('peak voltage (V)')
           if SAVE is True:
-               plt.savefig(folder + "\\TOT_" +self.name+".png", dpi=self.GLOBAL_DPI)
+               plt.savefig(join(folder, "TOT_" +self.name+".png"), dpi=self.GLOBAL_DPI)
                
           if DISPLAY is True:
                plt.show(fig)
@@ -493,7 +511,7 @@ class Transducer:
          
           
 
-#if __name__ == "__main__":
-#     fpath9 = 'C:\\Users\\dionysius\\Desktop\\PURE\\jun5\\1_5inFOC\\9cm\\clean'
-#     foc9 = Transducer(fpath9,"1_5FOC_9cm", param=(4,200))
-
+if __name__ == "__main__":
+     fpath = 'C:\\Users\\dionysius\\Desktop\\PURE\\pure\\3FOC9cm'
+     foc3 = Transducer(fpath,"3FOC9cm", param=(4,200))
+     

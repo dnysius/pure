@@ -1,0 +1,4 @@
+tape axis end of long metal sample to the table. find a wedge that is at 45 degrees.
+tie long string on the other end of the sample.
+pull string a little bit —> grab() and repeat until 45 degrees is reached.
+you don't need curve fit, but assume that string pull is uniform each time, and use linspace to divide the range [0,45] into N datasets and analyze with the code.
