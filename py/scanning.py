@@ -9,7 +9,7 @@ from scipy.signal import hilbert
 from misc.move import d2s, step, move
 global TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT
 global BSCAN_FOLDER, FILENAME, SCAN_FOLDER
-FOLDER_NAME = "1D-FLAT7in"
+FOLDER_NAME = "1D-15FOC3in"
 FILENAME = "scope"
 BSCAN_FOLDER = join(dirname(getcwd()), "scans", "BSCAN")
 SCAN_FOLDER = join(dirname(getcwd()), "data", FOLDER_NAME)
@@ -99,11 +99,11 @@ class Scan:
         self.arr = np.array([])
         self.out_arr = np.array([], dtype=int)
         if DIMENSIONS[0] == 0 and DIMENSIONS[1] != 0:
-            self.SAMPLE_DIMENSIONS = (1, d2s(DIMENSIONS[1]))
+            self.SAMPLE_DIMENSIONS = (1, d2s(DIMENSIONS[1])+1)
         elif DIMENSIONS[0] != 0 and DIMENSIONS[1] == 0:
-            self.SAMPLE_DIMENSIONS = (d2s(DIMENSIONS[0]), 1)
+            self.SAMPLE_DIMENSIONS = (d2s(DIMENSIONS[0])+1, 1)
         else:
-            self.SAMPLE_DIMENSIONS = (d2s(DIMENSIONS[0]), d2s(DIMENSIONS[1]))
+            self.SAMPLE_DIMENSIONS = (d2s(DIMENSIONS[0])+1, d2s(DIMENSIONS[1])+1)
         self.START_POS = POS_DICT[START_POS]
         self.scope = Scope(SCAN_FOLDER, filename=FILENAME)
         clear_scan_folder()
@@ -121,8 +121,8 @@ class Scan:
                 step(1)
             elif DIRECTION in ['-y', '-Y']:
                 step(2)
-            except ValueError:
-                print("DIRECTION is not type str")
+        except ValueError:
+            print("DIRECTION is not type str")
 
     def STEP_PARAM(self):
         SAMPLE_DIMENSIONS = self.SAMPLE_DIMENSIONS
@@ -259,30 +259,30 @@ def bscan(i="", folder=SCAN_FOLDER, figsize=[0, 0], start=0, end=-1, y1=0, y2=-1
         y2 = len(varr[start:end, 0]) - 1
     if i == '':
         b = varr[:, 0, :]
+    else:
+        b = varr[:,i,:]
     if hil is True:
-        for i in range(np.shape(b)[1]):
-            b[:, i] = np.log10(np.abs(hilbert(b[:, i])))
+#        for i in range(np.shape(b)[1]):
+        b = np.log10(np.abs(hilbert(b, axis=0)))
 
-        plt.imshow(b[start:end, :], aspect='auto', cmap='gray', vmin=0)
-        plt.axhline(y=y1, label='{}'.format(y1+start))
-        plt.axhline(y=y2, label='{}'.format(y2+start))
-        dt = np.mean(tarr[y2+start, :, :]) - np.mean(tarr[y1+start, :, :])
-        v_w = 1498
-        v_m = 6420
-        dw = v_w*dt/2
-        dm = v_m*dt/2
-        tstep = np.mean(tarr[1, :, :]) - np.mean(tarr[0, :, :])
-        plt.axhline(y=0, label='water: {}'.format(dw), alpha=0)
-        plt.axhline(y=0, label='aluminum: {}'.format(dm), alpha=0)
-        plt.title("{0}".format(FOLDER_NAME))
-        plt.legend()
-        if save is True:
-            plt.savefig(join(BSCAN_FOLDER, "1D", FOLDER_NAME), dpi=300)
-            with open(join(SCAN_FOLDER, "results.txt"), 'w') as wr:
-                wr.write("Timestep (s): {0}\ntime between ({1}, {2}): {3}"
-                         .format(tstep, y1+start, y2+start, dt))
-        else:
-            plt.imshow(varr[i], cmap="gray", aspect='auto')
+    plt.imshow(b[start:end, :], aspect='auto', cmap='gray', vmin=0)
+    plt.axhline(y=y1, label='{}'.format(y1+start))
+    plt.axhline(y=y2, label='{}'.format(y2+start))
+    dt = np.mean(tarr[y2+start, :, :]) - np.mean(tarr[y1+start, :, :])
+    v_w = 1498
+    v_m = 6420
+    dw = v_w*dt/2
+    dm = v_m*dt/2
+    tstep = np.mean(tarr[1, :, :]) - np.mean(tarr[0, :, :])
+    plt.axhline(y=0, label='water: {}'.format(dw), alpha=0)
+    plt.axhline(y=0, label='aluminum: {}'.format(dm), alpha=0)
+    plt.title("{0}".format(FOLDER_NAME))
+    plt.legend()
+    if save is True:
+        plt.savefig(join(BSCAN_FOLDER, "1D", FOLDER_NAME), dpi=300)
+        with open(join(SCAN_FOLDER, "results.txt"), 'w') as wr:
+            wr.write("Timestep (s): {0}\ntime between ({1}, {2}): {3}"
+                     .format(tstep, y1+start, y2+start, dt))
     plt.xlabel("x axis")
     plt.ylabel("y axis")
     plt.show(fig)
@@ -290,5 +290,5 @@ def bscan(i="", folder=SCAN_FOLDER, figsize=[0, 0], start=0, end=-1, y1=0, y2=-1
 
 if __name__ == '__main__':
     #    pass
-    #    foc = Scan(DIMENSIONS=(0,0.115), START_POS="top right")
+#        foc = Scan(DIMENSIONS=(0, 0.10), START_POS="top left")
     ibscan(figsize=[8, 8])

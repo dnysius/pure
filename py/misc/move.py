@@ -2,18 +2,23 @@
 from time import sleep
 import serial
 import serial.tools.list_ports
-global min_step, ArduinoNotFoundError
+global min_step, ArduinoNotFoundError, arduino
 min_step = 4e-4
-ports = list(serial.tools.list_ports.comports())
-for p in ports:
-    if "Arduino" in p[1]:
-        arduino = serial.Serial(p[0], 9600)
-try:
-    arduino
-except NameError:
-    ArduinoNotFoundError = True
-else:
-    ArduinoNotFoundError = False
+ArduinoNotFoundError = None
+arduino = None
+
+
+def init():
+    ports = list(serial.tools.list_ports.comports())
+    try:
+        for p in ports:
+            if "Arduino" in p[1]:
+                arduino = serial.Serial(p[0], 9600)
+        arduino
+    except NameError:
+        ArduinoNotFounesdError = True
+    else:
+        ArduinoNotFoundError = False
 
 
 def d2s(dist):
@@ -44,6 +49,7 @@ def move():
     # 'y 1' - moves 1 metre in y direction
     # 'esc' - exits program
     done = ArduinoNotFoundError
+    init()
     if ArduinoNotFoundError is True:
         print("ArduinoNotFoundError: cannot call move()")
     while not done:
@@ -62,16 +68,20 @@ def move():
                     else:
                         for i in range(int(d2s(float(splt[1])))):
                             step(4)
-                    elif splt[0] == 'y':
-                        if splt[1][0] == '-':
-                            for i in range(int(d2s(float(splt[1][1:])))):
-                                step(2)
-                        else:
-                            for i in range(int(d2s(float(splt[1])))):
-                                step(1)
-            except:
-                raise TypeError("invalid input")
+                elif splt[0] == 'y':
+                    if splt[1][0] == '-':
+                        for i in range(int(d2s(float(splt[1][1:])))):
+                            step(2)
+                    else:
+                        for i in range(int(d2s(float(splt[1])))):
+                            step(1)
+            except ValueError:
+                print("invalid input")
 
+
+if __name__ != '__main__':
+    init()
 
 if __name__ == '__main__':
+    init()
     move()
