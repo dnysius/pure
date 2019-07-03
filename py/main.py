@@ -21,10 +21,8 @@ angle | micrometer reading
 14	0.71838933
 15	-0.95886858
 """
-## Import Signal class from data_analysis.py in the same directory
+# Import Signal class from data_analysis.py in the same directory
 from data_analysis import Signal
-
-## Import libraries
 from os import listdir, getcwd, makedirs
 from os.path import join, isfile, dirname, exists
 import pickle  # saving numpy binary data to files
@@ -32,124 +30,114 @@ import matplotlib.pyplot as plt  # plotting
 import matplotlib.cm as cm  # colormap
 import numpy as np
 
-## Define constants
-global tot_folder, obj_folder, BSCAN_folder, timestep  ## global variables
-timestep = 3.999999999997929e-08  ## oscilloscope time interval between data points
-obj_folder = join(dirname(getcwd()), "obj")  ## save folder for arrays
-tot_folder = join(dirname(getcwd()), "scans")  ## save folder for angle dependence graph
-BSCAN_folder = join(dirname(getcwd()), "scans\\BSCAN")  ## save folder for BSCAN
+global tot_folder, obj_folder, BSCAN_folder, timestep  # global variables
+timestep = 3.999999999997929e-08  # oscilloscope time interval between data points
+obj_folder = join(dirname(getcwd()), "obj")  # save folder for arrays
+tot_folder = join(dirname(getcwd()), "scans")  # save folder for angle dependence graph
+BSCAN_folder = join(dirname(getcwd()), "scans\\BSCAN")  # save folder for BSCAN
 
-## Create save folders
 if not exists(BSCAN_folder):
-     makedirs(BSCAN_folder)
-
+    makedirs(BSCAN_folder)
 if not exists(obj_folder):
-     makedirs(obj_folder)
-
+    makedirs(obj_folder)
 if not exists(tot_folder):
-     makedirs(tot_folder)
+    makedirs(tot_folder)
 
-## Define functions
 def init():
-     ## Initializes Signal objects using signal data (npy, npz, or csv)
-     data_folder_path = join(dirname(getcwd()), "data")
-     flat15_path = join(data_folder_path, 'FLAT15cm')
-     foc15_path = join(data_folder_path,'3FOC15cm')
-     flat9_path = join(data_folder_path, 'FLAT9cm')
-     foc9_path = 'C:\\Users\\dionysius\\Desktop\\PURE\\pure\\data\\3FOC9cm'
-     fpath15 = 'C:\\Users\\dionysius\\Desktop\\PURE\\pure\\data\\1-5FOC15cm'
-     fpath9 = 'C:\\Users\\dionysius\\Desktop\\PURE\\pure\\data\\1-5FOC9cm'
+    # Initializes Signal objects using signal data (npy, npz, or csv)
+    data_folder_path = join(dirname(getcwd()), "data")
+    flat15_path = join(data_folder_path, 'FLAT15cm')
+    foc15_path = join(data_folder_path, '3FOC15cm')
+    flat9_path = join(data_folder_path, 'FLAT9cm')
+    foc9_path = 'C:\\Users\\dionysius\\Desktop\\PURE\\pure\\data\\3FOC9cm'
+    fpath15 = 'C:\\Users\\dionysius\\Desktop\\PURE\\pure\\data\\1-5FOC15cm'
+    fpath9 = 'C:\\Users\\dionysius\\Desktop\\PURE\\pure\\data\\1-5FOC9cm'
 
-     flat = Signal(flat15_path, ftype='npz')
-     foc = Signal(foc15_path, ftype='npz')
-     foc2 = Signal(foc9_path, ftype='npy')
-     flat2 = Signal(flat9_path,ftype='npy')
-     foc15 = Signal(fpath15)
-     foc9 = Signal(fpath9)
-     ## Save to obj_list
-     obj_list = [flat, foc, foc2, flat2, foc15, foc9]
-     for obj in obj_list:
-          obj.write_all()
-          save_obj(obj)
+    flat = Signal(flat15_path, ftype='npz')
+    foc = Signal(foc15_path, ftype='npz')
+    foc2 = Signal(foc9_path, ftype='npy')
+    flat2 = Signal(flat9_path, ftype='npy')
+    foc15 = Signal(fpath15)
+    foc9 = Signal(fpath9)
+    obj_list = [flat, foc, foc2, flat2, foc15, foc9]
+    for obj in obj_list:
+        obj.write_all()
+        save_obj(obj)
 
 
 def BSCAN(signal_data, title='B-Scan', domain=(0, -1), DISPLAY=True, SAVE=False, vmin=0, vmax=1):
-     ## Performs B-scan for given set of measurements
-     ## signal_data is a list of Signal objects created in the Transducer class
-     ## domain is a tuple with start and end points of the signal
-     ## vmin/vmax is min/max of color range for imshow()
-     START = domain[0] ## offset the start of the signal; don't want to include transmitted part
-     END = domain[1]
-     arr = np.abs(signal_data[0].xy[START:END, 1])  ## take abs of first signal
-     max_val = 0
-     for sig in signal_data:
-          V = np.amax(sig.xy)
-          if V > max_val:
-               max_val = V
+    # Performs B-scan for given set of measurements
+    # signal_data is a list of Signal objects created in the Transducer class
+    # domain is a tuple with start and end points of the signal
+    # vmin/vmax is min/max of color range for imshow()
+    START = domain[0] # offset the start of the signal; don't want to include transmitted part
+    END = domain[1]
+    arr = np.abs(signal_data[0].xy[START:END, 1])  # take abs of first signal
+    max_val = 0
+    for sig in signal_data:
+        V = np.amax(sig.xy)
+        if V > max_val:
+            max_val = V
+    arr /= max_val
+    for i in range(1, len(signal_data)):  # start from second index
+        next_arr = np.abs(signal_data[i].xy[START:END, 1])  # abs of the next signal
+        next_arr /= max_val
+        arr = np.vstack((arr, next_arr))  # add to previous array
+        bscan = np.transpose(arr)  # take transpose, rename variable
+        plt.ioff()
+        fig = plt.figure(figsize=[14, 8])
+        ax = fig.add_subplot(1, 1, 1)
+        major_ticks = np.arange(timestep*START, timestep*END, timestep*((END - START)//10))
+        minor_ticks = np.arange(timestep*START, timestep*END, timestep*((END - START)//50))
+        x_ticks = np.arange(0, 17, 1)
+        ax.set_title(title)
+        ax.imshow(bscan, cmap='gray', origin='upper', aspect='auto', alpha=.9, extent=[0, 16, timestep*END, timestep*START], vmin=vmin, vmax=vmax)
+        ax.set_xlabel('angle (degrees)')
+        ax.set_ylabel('time (s)')
+        ax.set_xticks(x_ticks)
+        ax.set_yticks(major_ticks)
+        ax.set_yticks(minor_ticks, minor=True)
+        ax.grid(True, axis='y', which="major", alpha=.5)
+        ax.grid(True, axis='y', which="minor", alpha=.2, linestyle="--")
+        ax.grid(True, axis='x', which="major", alpha=.2, linestyle="--")
+    if SAVE is True:
+        plt.savefig(join(BSCAN_folder, title+'.png'))
+    if DISPLAY is True:
+        plt.show(fig)
+    elif DISPLAY is False:
+        plt.close(fig)
+    plt.ion()
 
-     arr /= max_val
-     for i in range(1, len(signal_data)):  ## start from second index
-         next_arr = np.abs(signal_data[i].xy[START:END, 1])  ## abs of the next signal
-         next_arr /= max_val
-         arr = np.vstack((arr, next_arr))  ## add to previous array
-     
-     bscan = np.transpose(arr)  ## take transpose, rename variable
-     plt.ioff()
-     fig = plt.figure(figsize=[14,8])
-     ax = fig.add_subplot(1, 1, 1)
-     major_ticks = np.arange(timestep*START, timestep*END, timestep*((END-START)//10))
-     minor_ticks = np.arange(timestep*START, timestep*END, timestep*((END-START)//50))
-     x_ticks = np.arange(0, 17, 1)
-     ax.set_title(title)
-     ax.imshow(bscan, cmap='gray',origin='upper', aspect='auto', alpha=.9, extent=[0, 16, timestep*END, timestep*START], vmin = vmin, vmax = vmax)
-     ax.set_xlabel('angle (degrees)')
-     ax.set_ylabel('time (s)')
-     ax.set_xticks(x_ticks)
-     ax.set_yticks(major_ticks)
-     ax.set_yticks(minor_ticks, minor=True)
-     ax.grid(True, axis='y', which="major", alpha=.5)
-     ax.grid(True, axis='y', which="minor", alpha=.2, linestyle="--")
-     ax.grid(True, axis='x', which="major", alpha=.2, linestyle="--")
-     if SAVE == True:
-          plt.savefig(join(BSCAN_folder, title+'.png'))
-     if DISPLAY == True:
-          plt.show(fig)
-     elif DISPLAY == False:
-          plt.close(fig)
-     plt.ion()
-     
 
-def save_obj(obj, output_folder = obj_folder):
-     ## Save numpy binary to .pkl file
-     name = obj.name + ".pkl"
-     output = join(output_folder, name)
+def save_obj(obj, output_folder=obj_folder):
+    # Save numpy binary to .pkl file
+    name = obj.name + ".pkl"
+    output = join(output_folder, name)
+    with open(output, 'wb') as wr:
+        pickle.dump(obj, wr, pickle.DEFAULT_PROTOCOL)
 
-     with open(output, 'wb') as wr:
-          pickle.dump(obj, wr, pickle.DEFAULT_PROTOCOL)
-          
-     print("Done saving: {}".format(name))
-     
-     
-def load_obj(obj_name, folder = obj_folder):
-     ## Load Transducer data saved in .pkl
-     if obj_name[-4:] != '.pkl':
-          obj_name = obj_name + '.pkl'
-          
-     output = join(folder,obj_name)
-     with open(output, 'rb') as rd:
-          transducer = pickle.load(rd)
-     return transducer
+    print("Done saving: {}".format(name))
+
+
+def load_obj(obj_name, folder=obj_folder):
+    # Load Transducer data saved in .pkl
+    if obj_name[-4:] != '.pkl':
+        obj_name = obj_name + '.pkl'
+
+    output = join(folder, obj_name)
+    with open(output, 'rb') as rd:
+        transducer = pickle.load(rd)
+    return transducer
 
 
 if __name__ == '__main__':
-     pass
-#     init()
-#     save_bscans()
+    pass
 
-#######################################################################################     
-####################################################################################### 
+
+#######################################################################################
+#######################################################################################
 # Appendix
-#     
+#
 #def save_bscans():
 #     ## This function keeps all B-scan parameters for each dataset
 #     BSCAN(load_obj("1_5FOC_9cm.pkl").signal_data, title="1.5 Focused 9 cm depth", domain=(28100,28800), vmax=.7, SAVE=True, DISPLAY=False)
@@ -159,7 +147,7 @@ if __name__ == '__main__':
 #     BSCAN(load_obj("FLAT_9cm.pkl").signal_data, title="Flat 9 cm depth", domain=(20000, 30000), SAVE=True, DISPLAY=False)
 #     BSCAN(load_obj("FLAT_9cm.pkl").signal_data, title="Flat 9 cm depth", domain=(25650, 26350), SAVE=True, DISPLAY=False)
 #     BSCAN(load_obj("FLAT_15cm.pkl").signal_data, title="Flat 15 cm depth", domain=(24550, 25125), SAVE=True, DISPLAY=False)
-#     
+#
 #
 #def graph_totals(title="Angle Dependence", SAVE=False, DISPLAY=True):
 #     ## Plot graph of peak values vs angle
@@ -176,7 +164,7 @@ if __name__ == '__main__':
 #          c = 2 ## this changes the colors used, [1,3]
 #          plt.scatter(obj.deg, rescaled, color = colors[c*i], alpha=.6, label = obj.name)
 #          plt.plot(obj.deg, rescaled, color=colors[c*i], ls=":", alpha=.6)
-#          
+#
 #     plt.legend()
 #     if SAVE==True:
 #          plt.savefig(join(tot_folder, title+".png"), dpi=200)

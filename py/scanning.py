@@ -113,13 +113,13 @@ class Scan:
 
     def STEP(self, DIRECTION='+x'):
         try:
-            if DIRECTION == 'x' or DIRECTION == 'X' or DIRECTION == '+x' or DIRECTION == '+X':
+            if DIRECTION in ['x', 'X', '+x', '+X']:
                 step(4)
-            elif DIRECTION == '-x' or DIRECTION == '-X':
+            elif DIRECTION in ['-x', '-X']:
                 step(3)
-            elif DIRECTION == 'y' or DIRECTION == 'Y' or DIRECTION == '+y' or DIRECTION == '+Y':
+            elif DIRECTION in ['y', 'Y', '+y', '+Y']:
                 step(1)
-            elif DIRECTION == '-y' or DIRECTION == '-Y':
+            elif DIRECTION in ['-y', '-Y']:
                 step(2)
             except ValueError:
                 print("DIRECTION is not type str")
@@ -222,7 +222,7 @@ class Scan:
         return self.tarr, self.varr
 
     def sig2arr(self, out_arr):
-        with open(join(SCAN_FOLDER, FILENAME+"_0.npy"), "rb") as f:
+        with open(join(SCAN_FOLDER, "{}_0.npy".format(FILENAME)), "rb") as f:
             SIGNAL_LENGTH = len(np.load(f)[:, 0])
             START = SIGNAL_LENGTH//2
             END = SIGNAL_LENGTH
@@ -232,7 +232,7 @@ class Scan:
                              self.SAMPLE_DIMENSIONS[1]), dtype=float)
             for y in range(self.SAMPLE_DIMENSIONS[0]):
                 for x in range(self.SAMPLE_DIMENSIONS[1]):
-                    file = FILENAME + "_" + "{}".format(int(out_arr[y, x])) + ".npy"
+                    file = "{0}_{1}.npy".format(FILENAME, int(out_arr[y, x]))
                     with open(join(SCAN_FOLDER, file), "rb") as npobj:
                         arr = np.load(npobj)
                         tarr[:, y, x] = arr[START:END, 0]
@@ -279,7 +279,8 @@ def bscan(i="", folder=SCAN_FOLDER, figsize=[0, 0], start=0, end=-1, y1=0, y2=-1
         if save is True:
             plt.savefig(join(BSCAN_FOLDER, "1D", FOLDER_NAME), dpi=300)
             with open(join(SCAN_FOLDER, "results.txt"), 'w') as wr:
-                wr.write("Timestep (s): {0}\ntime between ({1}, {2}): {3}".format(tstep, y1+start, y2+start, dt))
+                wr.write("Timestep (s): {0}\ntime between ({1}, {2}): {3}"
+                         .format(tstep, y1+start, y2+start, dt))
         else:
             plt.imshow(varr[i], cmap="gray", aspect='auto')
     plt.xlabel("x axis")
