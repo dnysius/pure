@@ -23,20 +23,9 @@ def load_arr(output_folder=join(dirname(getcwd()), "data", FOLDER_NAME)):
     return tarr, varr
 
 
-def delay_t(x, z):
-    return lambda xn: (2/c_0)*np.sqrt(np.square(x-xn)+np.square(z))
-
-
 def find_nearest(array, value):
     array = np.asarray(array, dtype=float)
     return (np.abs(array - value)).argmin()
-
-
-def S(xi, T, V, L, x, z, T_COMPARE):
-    xni = np.arange(0, L, 1)
-    ind = np.reshape((2/c_0)*np.sqrt(np.power(x-xni, 2)+np.power(z, 2)), (L, 1))
-    zi = np.argmin(np.abs(T_COMPARE - ind), axis=1)  # find nearest to ind
-    return np.sum(V[zi, xi])
 
 
 def SAFT(tarr, varr):
@@ -62,27 +51,39 @@ def SAFT(tarr, varr):
 
     pbar = tqdm(total=np.size(PRE)+np.size(POST))
     pbar.set_description("Progress:\t")
-    for xi in range(len(xarr)):
+    xni = np.arange(0, L, 1)
+    xi = 0
+    while xi < len(xarr):
         x = xarr[xi]*min_step
-        for ti in range(FD):
+        ti = 0
+        while ti < SD:
             pbar.update(1)
             if ti < FD:  # PRE
                 z = PRE_T[ti]*c_0/2
-                PRE_OUT[ti, xi] = S(xi, T, V, L, x, z, T_COMPARE)
+                ind = np.reshape((2/c_0)*np.sqrt(np.power(x-xni, 2)
+                                 + np.power(z, 2)), (L, 1))
+                zi = np.argmin(np.abs(T_COMPARE - ind), axis=1)
+                PRE_OUT[ti, xi] = np.sum(V[zi, xi])
             elif FD <= ti < SD:  # POST
                 z = POST_T[ti-FD]*c_0/2
-                POST_OUT[ti-FD, xi] = S(xi, T, V, L, x, z, T_COMPARE)
+                ind = np.reshape((2/c_0)*np.sqrt(np.power(x-xni, 2)
+                                 + np.power(z, 2)), (L, 1))
+                zi = np.argmin(np.abs(T_COMPARE - ind), axis=1)
+                POST_OUT[ti-FD, xi] = np.sum(V[zi, xi])
+            ti += 1
+
         gc.collect()
+        xi += 1
     pbar.close()
     PRE_OUT = np.flip(PRE_OUT, axis=0)
     STITCHED = np.vstack((PRE_OUT, POST_OUT))
-    pickle.dump(STITCHED, join(dirname(getcwd()), "data",
-                               "{}.pkl".format(FOLDER_NAME)))
+
     return STITCHED
 
 
 start = clock()
 tarr, varr = load_arr()
 STITCHED = SAFT(tarr, varr)
-print(np.shape(varr))
+pickle.dump(STITCHED, open(join(dirname(getcwd()), "data",
+                           "{}.pkl".format(FOLDER_NAME)), "wb"))
 print('total time: {}'.format(clock()-start))
