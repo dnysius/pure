@@ -11,7 +11,7 @@ from os import getcwd
 from os.path import join, dirname
 import pickle
 from tqdm import tqdm
-from time import thread_time_ns
+from time import thread_time
 import matplotlib.pyplot as plt
 global min_step, c_0, DEFAULT_ARR_FOLDER
 global xarr, FD, SD, pbar, T, V, L, T_COMPARE, PRE_OUT, POST_OUT, xni
@@ -63,12 +63,10 @@ xni = np.arange(0, L, 1)
 xi = 0
 pbar = tqdm(total=SD*L)
 tstep = np.mean(T[1:]-T[:-1])
-t1 = thread_time_ns()
-end = 0
+t1 = thread_time()
 while xi < L:
     x = xarr[xi]
     ti = 0
-    start = 0
     while ti < SD:
         pbar.update(1)
         z = T[ti]*c_0/2
@@ -87,11 +85,10 @@ while xi < L:
             zi = np.floor(ind/tstep).astype(int)  # less accurate, computationally efficient
             POST_OUT[ti-FD, xi] = np_sum(V[zi[zi<SD], xi])
         ti += 1
-        pbar.set_description('xi {0}, ti {1}, speed {2}:\t'.format(xi, ti, end-start))
-    end = thread_time_ns() - start
+        pbar.set_description('xi {0}, ti {1}:\t'.format(xi, ti))
     xi += 1
 
-dt1 = thread_time_ns()-t1
+dt1 = thread_time()-t1
 pbar.close()
 PRE_OUT = np.flip(PRE_OUT, axis=0)
 STITCHED = np.vstack((PRE_OUT, POST_OUT))
