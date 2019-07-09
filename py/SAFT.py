@@ -11,7 +11,6 @@ from os import getcwd
 from os.path import join, dirname
 import pickle
 from tqdm import tqdm
-from time import thread_time
 import matplotlib.pyplot as plt
 global min_step, c_0, DEFAULT_ARR_FOLDER
 global xarr, FD, SD, pbar, T, V, L, T_COMPARE, PRE_OUT, POST_OUT, xni
@@ -63,7 +62,6 @@ xni = np.arange(0, L, 1)
 xi = 0
 pbar = tqdm(total=SD*L)
 tstep = np.mean(T[1:]-T[:-1])
-t1 = thread_time()
 while xi < L:
     x = xarr[xi]
     ti = 0
@@ -74,26 +72,27 @@ while xi < L:
         # one iteration of this loop takes 0.1 s... BORING!
         if ti < FD:  # PRE
             ind = ((2/c_0)*np_sqrt(np_power(x-xarr[xni], 2)
-                    + z2)).reshape((L, 1))
+                   + z2)).reshape((L, 1))
 #            zi = np_abs(T_COMPARE - ind).argmin(axis=1)  # more accurate
             zi = np.floor(ind/tstep).astype(int)  # less accurate, computationally efficient
-            PRE_OUT[ti, xi] = np_sum(V[zi[zi<FD], xi])  # zi<SD performs SAFT on PRE and POST
-        elif ti >= FD:  # POST
+            PRE_OUT[ti, xi] = np_sum(V[zi[zi < FD], xi])  # zi<SD performs SAFT on PRE and POST
+        if ti >= FD:  # POST
             ind = ((2/c_0)*np_sqrt(np_power(x-xarr[xni], 2)
-                    + z2)).reshape((L, 1))
+                   + z2)).reshape((L, 1))
 #            zi = np_abs(T_COMPARE - ind).argmin(axis=1)  # more accurate
             zi = np.floor(ind/tstep).astype(int)  # less accurate, computationally efficient
-            POST_OUT[ti-FD, xi] = np_sum(V[zi[zi<SD], xi])
+            POST_OUT[ti-FD, xi] = np_sum(V[zi[zi < SD], xi])
         ti += 1
         pbar.set_description('xi {0}, ti {1}:\t'.format(xi, ti))
     xi += 1
 
-dt1 = thread_time()-t1
 pbar.close()
 PRE_OUT = np.flip(PRE_OUT, axis=0)
-STITCHED = np.vstack((PRE_OUT, POST_OUT))
-pickle.dump(STITCHED, open(join(DEFAULT_ARR_FOLDER,"SAFT-{}-test.pkl".format(FOLDER_NAME)), "wb"))
-print('Loop time: {}'.format(dt1))
+#pickle.dump(POST_OUT, open(join(DEFAULT_ARR_FOLDER, "SAFT-{}-post.pkl".format(FOLDER_NAME)), "wb"))
+#pickle.dump(PRE_OUT, open(join(DEFAULT_ARR_FOLDER, "SAFT-{}-pre.pkl".format(FOLDER_NAME)), "wb"))
+
+#STITCHED = np.vstack((PRE_OUT, POST_OUT))
+#pickle.dump(STITCHED, open(join(DEFAULT_ARR_FOLDER,"SAFT-{}-test.pkl".format(FOLDER_NAME)), "wb"))
 
 #fig = plt.figure(figsize=[2,10])
 #plt.imshow(STITCHED[:, 0:1], aspect='auto', cmap='gist_stern')

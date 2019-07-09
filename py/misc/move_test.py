@@ -5,20 +5,16 @@ import serial.tools.list_ports
 global min_step, ArduinoNotFoundError, arduino
 min_step = 4e-4
 ArduinoNotFoundError = None
-arduino = None
-
-
-def init():
-    ports = list(serial.tools.list_ports.comports())
-    try:
-        for p in ports:
-            if "Arduino" in p[1]:
-                arduino = serial.Serial(p[0], 9600)
-        arduino
-    except NameError:
-        ArduinoNotFoundError = True
-    else:
-        ArduinoNotFoundError = False
+ports = list(serial.tools.list_ports.comports())
+try:
+    for p in ports:
+        if "Arduino" in p[1]:
+            arduino = serial.Serial(p[0], 9600)
+    arduino
+except NameError:
+    ArduinoNotFoundError = True
+else:
+    ArduinoNotFoundError = False
 
 
 def d2s(dist):
@@ -49,7 +45,6 @@ def move():
     # 'y 1' - moves 1 metre in y direction
     # 'esc' - exits program
     done = ArduinoNotFoundError
-    init()
     if ArduinoNotFoundError is True:
         print("ArduinoNotFoundError: cannot call move()")
     while not done:
@@ -79,9 +74,5 @@ def move():
                 print("invalid input")
 
 
-if __name__ != '__main__':
-    init()
-
 if __name__ == '__main__':
-    init()
     move()
