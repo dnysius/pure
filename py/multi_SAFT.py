@@ -91,8 +91,8 @@ def main(xi):
 if __name__=='__main__':
     # Parallel processing
     jobs = []
-    pbar = tqdm(total=100)
-    for i in range(100):
+    pbar = tqdm(total=L)
+    for i in range(L):
         pbar.update(1)
         jobs.append(threading.Thread(target=main, args=(i,)))
     
@@ -100,15 +100,16 @@ if __name__=='__main__':
     for job in jobs:
         job.start()
         
-    pbar = tqdm(total=100)
+    pbar = tqdm(total=L)
     pbar.set_description('Joining\n')
     for job in jobs:
-        pbar.update(100)
+        pbar.update(L)
         job.join()
     pbar.close()
+    
 PRE_OUT = np.flip(PRE_OUT, axis=0)
-#pickle.dump(POST_OUT, open(join(DEFAULT_ARR_FOLDER, "SAFT-{}-post.pkl".format(FOLDER_NAME)), "wb"))
-#pickle.dump(PRE_OUT, open(join(DEFAULT_ARR_FOLDER, "SAFT-{}-pre.pkl".format(FOLDER_NAME)), "wb"))
+pickle.dump(POST_OUT, open(join(DEFAULT_ARR_FOLDER, "SAFT-{}-post.pkl".format(FOLDER_NAME)), "wb"))
+pickle.dump(PRE_OUT, open(join(DEFAULT_ARR_FOLDER, "SAFT-{}-pre.pkl".format(FOLDER_NAME)), "wb"))
 
 STITCHED = np.vstack((PRE_OUT, POST_OUT))
 pickle.dump(STITCHED, open(join(DEFAULT_ARR_FOLDER,"SAFT-{}-test.pkl".format(FOLDER_NAME)), "wb"))
@@ -118,6 +119,6 @@ pickle.dump(STITCHED, open(join(DEFAULT_ARR_FOLDER,"SAFT-{}-test.pkl".format(FOL
 #plt.show()
 
 fig = plt.figure(figsize=[2,10])
-plt.imshow(STITCHED[:, 0:100], aspect='auto', cmap='hot', vmin=0)
+plt.imshow(STITCHED[:,:], aspect='auto', cmap='hot', vmin=0)
 plt.colorbar()
 plt.show()
