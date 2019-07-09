@@ -91,8 +91,8 @@ PRE_OUT = np.flip(PRE_OUT, axis=0)
 #pickle.dump(POST_OUT, open(join(DEFAULT_ARR_FOLDER, "SAFT-{}-post.pkl".format(FOLDER_NAME)), "wb"))
 #pickle.dump(PRE_OUT, open(join(DEFAULT_ARR_FOLDER, "SAFT-{}-pre.pkl".format(FOLDER_NAME)), "wb"))
 
-#STITCHED = np.vstack((PRE_OUT, POST_OUT))
-#pickle.dump(STITCHED, open(join(DEFAULT_ARR_FOLDER,"SAFT-{}-test.pkl".format(FOLDER_NAME)), "wb"))
+STITCHED = np.vstack((PRE_OUT, POST_OUT))
+pickle.dump(STITCHED, open(join(DEFAULT_ARR_FOLDER,"SAFT-{}-test.pkl".format(FOLDER_NAME)), "wb"))
 
 #fig = plt.figure(figsize=[2,10])
 #plt.imshow(STITCHED[:, 0:1], aspect='auto', cmap='gist_stern')
