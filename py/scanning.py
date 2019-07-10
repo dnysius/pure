@@ -39,10 +39,7 @@ def step(command):
     except TypeError:
         print("Command is not 1-4")
     except:
-        if ArduinoNotFoundError is True:
-            print("ArduinoNotFoundError: cannot call step()")
-        else:
-            print("Unexpected Error")
+        print("Unexpected Error")
             
             
 def clear_scan_folder():
@@ -316,14 +313,11 @@ def bscan(i="", folder=SCAN_FOLDER, figsize=[0, 0], start=0, end=-1, y1=0, y2=-1
 
 if __name__ == '__main__':
     #    pass
-<<<<<<< HEAD
 #        foc = Scan(DIMENSIONS=(0, 0.10), START_POS="top left")
     fsarr = join(SCAN_FOLDER, "SAFT-1D-15FOC3in-test.pkl")
     with open(fsarr, 'rb') as rd:
         sarr = pickle.load(rd)
     
 #    ibscan(figsize=[8, 8])
-=======
     foc = Scan(DIMENSIONS=(0.02, 0.05), START_POS="top right")
     #ibscan(figsize=[8, 8])
->>>>>>> 2cd85a69521ee5b7f024711e106ff93ed11dbd0c
