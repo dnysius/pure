@@ -291,4 +291,8 @@ def bscan(i="", folder=SCAN_FOLDER, figsize=[0, 0], start=0, end=-1, y1=0, y2=-1
 if __name__ == '__main__':
     #    pass
 #        foc = Scan(DIMENSIONS=(0, 0.10), START_POS="top left")
-    ibscan(figsize=[8, 8])
+    fsarr = join(SCAN_FOLDER, "SAFT-1D-15FOC3in-test.pkl")
+    with open(fsarr, 'rb') as rd:
+        sarr = pickle.load(rd)
+    
+#    ibscan(figsize=[8, 8])
