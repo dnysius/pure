@@ -49,9 +49,6 @@ FD = find_nearest(T, 2*FOCAL_DEPTH/c_0)  # focal depth
 # SD = find_nearest(T, 2*SAMPLE_DEPTH/c_0) + 1  # sample depth
 SD = len(T)-1
 L = np.shape(V)[1]
-T_COMPARE = np.empty((L, len(T)))
-for l in range(L):
-    T_COMPARE[l, :] = T[:]
 PRE = np.flip(V[:FD, :], axis=0)
 PRE_T = np.flip(T[:FD], axis=0)
 PRE_OUT = np.empty(np.shape(PRE))
@@ -60,10 +57,8 @@ POST_T = T[FD:SD]
 POST_OUT = np.empty(np.shape(POST))
 xarr = np.linspace(-L/2, L/2, L)*min_step
 xni = np.arange(0, L, 1)
-xi = 0
 tstep = np.mean(T[1:]-T[:-1])
 #while xi < L:
-
 def main(xi):
     x = xarr[xi]
     ti = 0
@@ -73,19 +68,14 @@ def main(xi):
         if ti < FD:  # PRE
             ind = ((2/c_0)*np_sqrt(np_power(x-xarr[xni], 2)
                    + z2)).reshape((L, 1))
-            zi = np.floor(ind/tstep).astype(int)  # less accurate, computationally efficient
-            PRE_OUT[ti, xi] = np_sum(V[zi[zi < FD], xi])  # zi<SD performs SAFT on PRE and POST
-#            PRE_COL[ti] = np_sum(V[zi[zi < FD], xi])
+            zi = np.floor(ind/tstep).astype(int)
+            PRE_OUT[ti, xi] = np_sum(V[zi[zi < FD], xi])
         if ti >= FD:  # POST
             ind = ((2/c_0)*np_sqrt(np_power(x-xarr[xni], 2)
                    + z2)).reshape((L, 1))
-            zi = np.floor(ind/tstep).astype(int)  # less accurate, computationally efficient
+            zi = np.floor(ind/tstep).astype(int)
             POST_OUT[ti-FD, xi] = np_sum(V[zi[zi < SD], xi])
-#            POST_COL[ti-FD] = np_sum(V[zi[zi < SD], xi])
         ti += 1
-#    PRE_COL = np.flip(PRE_COL, axis=0)
-#    STICHED_COL = np.vstack((PRE_COL, POST_COL))
-#    return STICHED_COL
     
 
 if __name__=='__main__':
@@ -108,15 +98,11 @@ if __name__=='__main__':
     pbar.close()
     
 PRE_OUT = np.flip(PRE_OUT, axis=0)
-pickle.dump(POST_OUT, open(join(DEFAULT_ARR_FOLDER, "SAFT-{}-post.pkl".format(FOLDER_NAME)), "wb"))
-pickle.dump(PRE_OUT, open(join(DEFAULT_ARR_FOLDER, "SAFT-{}-pre.pkl".format(FOLDER_NAME)), "wb"))
+#pickle.dump(POST_OUT, open(join(DEFAULT_ARR_FOLDER, "SAFT-{}-post.pkl".format(FOLDER_NAME)), "wb"))
+#pickle.dump(PRE_OUT, open(join(DEFAULT_ARR_FOLDER, "SAFT-{}-pre.pkl".format(FOLDER_NAME)), "wb"))
 
 STITCHED = np.vstack((PRE_OUT, POST_OUT))
 pickle.dump(STITCHED, open(join(DEFAULT_ARR_FOLDER,"SAFT-{}-test.pkl".format(FOLDER_NAME)), "wb"))
-
-#fig = plt.figure(figsize=[2,10])
-#plt.imshow(STITCHED[:, 0:1], aspect='auto', cmap='gist_stern')
-#plt.show()
 
 fig = plt.figure(figsize=[2,10])
 plt.imshow(STITCHED[:,:], aspect='auto', cmap='hot', vmin=0)
