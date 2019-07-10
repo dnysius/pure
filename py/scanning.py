@@ -6,10 +6,7 @@ from os.path import join, isfile, dirname
 import matplotlib.pyplot as plt
 import pickle
 from scipy.signal import hilbert
-from misc.move import d2s, step, move
 global TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT
-global BSCAN_FOLDER, FILENAME, SCAN_FOLDER
-FOLDER_NAME = "1D-15FOC3in"
 FILENAME = "scope"
 BSCAN_FOLDER = join(dirname(getcwd()), "scans", "BSCAN")
 SCAN_FOLDER = join(dirname(getcwd()), "data", FOLDER_NAME)
@@ -290,9 +287,12 @@ def bscan(i="", folder=SCAN_FOLDER, figsize=[0, 0], start=0, end=-1, y1=0, y2=-1
 
 if __name__ == '__main__':
     #    pass
+<<<<<<< HEAD
 #        foc = Scan(DIMENSIONS=(0, 0.10), START_POS="top left")
     fsarr = join(SCAN_FOLDER, "SAFT-1D-15FOC3in-test.pkl")
     with open(fsarr, 'rb') as rd:
         sarr = pickle.load(rd)
     
 #    ibscan(figsize=[8, 8])
+=======
+>>>>>>> 2cd85a69521ee5b7f024711e106ff93ed11dbd0c
