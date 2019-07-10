@@ -6,10 +6,12 @@ from os.path import join, isfile, dirname
 import matplotlib.pyplot as plt
 import pickle
 from scipy.signal import hilbert
-from misc.move import d2s, step, move
+import serial
+from time import sleep
 global TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT
-global BSCAN_FOLDER, FILENAME, SCAN_FOLDER
-FOLDER_NAME = "1D-15FOC3in"
+global BSCAN_FOLDER, FILENAME, SCAN_FOLDER, min_step, arduino
+min_step = 4e-4
+FOLDER_NAME = "2D-3FOC3in"
 FILENAME = "scope"
 BSCAN_FOLDER = join(dirname(getcwd()), "scans", "BSCAN")
 SCAN_FOLDER = join(dirname(getcwd()), "data", FOLDER_NAME)
@@ -18,7 +20,31 @@ TOP_RIGHT = (0, -1)
 BOTTOM_LEFT = (-1, 0)
 BOTTOM_RIGHT = (-1, -1)
 
+arduino = serial.Serial('/dev/cu.usbmodem14201',9600)
 
+def d2s(dist):
+    # Converts distance in metres to number of steps
+    return int(dist//min_step)
+
+
+def step(command):
+    # Sends bytes to arduino to signal step motor movement
+    # 1: top motor forward -- black tape side Y axis
+    # 2: top motor backward
+    # 3: bottom motor backward
+    # 4: bottom motor forward -- black tape side X axis
+    sleep(1.5)
+    try:
+        arduino.write(str.encode("{}".format(command)))
+    except TypeError:
+        print("Command is not 1-4")
+    except:
+        if ArduinoNotFoundError is True:
+            print("ArduinoNotFoundError: cannot call step()")
+        else:
+            print("Unexpected Error")
+            
+            
 def clear_scan_folder():
     for f in listdir(SCAN_FOLDER):
         if isfile(join(SCAN_FOLDER, f)) and (f[-4:] == ".npy"):
@@ -290,5 +316,5 @@ def bscan(i="", folder=SCAN_FOLDER, figsize=[0, 0], start=0, end=-1, y1=0, y2=-1
 
 if __name__ == '__main__':
     #    pass
-#        foc = Scan(DIMENSIONS=(0, 0.10), START_POS="top left")
-    ibscan(figsize=[8, 8])
+    foc = Scan(DIMENSIONS=(0.02, 0.05), START_POS="top right")
+    #ibscan(figsize=[8, 8])
