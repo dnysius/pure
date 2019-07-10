@@ -20,7 +20,9 @@ TOP_RIGHT = (0, -1)
 BOTTOM_LEFT = (-1, 0)
 BOTTOM_RIGHT = (-1, -1)
 
-arduino = serial.Serial('/dev/cu.usbmodem14201',9600)
+#arduino = serial.Serial('/dev/cu.usbmodem14201', 9600)
+arduino = serial.Serial('COM1', 9600)
+
 
 def d2s(dist):
     # Converts distance in metres to number of steps
@@ -40,8 +42,8 @@ def step(command):
         print("Command is not 1-4")
     except:
         print("Unexpected Error")
-            
-            
+
+
 def clear_scan_folder():
     for f in listdir(SCAN_FOLDER):
         if isfile(join(SCAN_FOLDER, f)) and (f[-4:] == ".npy"):
@@ -313,11 +315,6 @@ def bscan(i="", folder=SCAN_FOLDER, figsize=[0, 0], start=0, end=-1, y1=0, y2=-1
 
 if __name__ == '__main__':
     #    pass
-#        foc = Scan(DIMENSIONS=(0, 0.10), START_POS="top left")
-    fsarr = join(SCAN_FOLDER, "SAFT-1D-15FOC3in-test.pkl")
-    with open(fsarr, 'rb') as rd:
-        sarr = pickle.load(rd)
-    
 #    ibscan(figsize=[8, 8])
-    foc = Scan(DIMENSIONS=(0.02, 0.05), START_POS="top right")
+    foc = Scan(DIMENSIONS=(0.1, 0.1), START_POS="top right")
     #ibscan(figsize=[8, 8])
