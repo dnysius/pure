@@ -37,7 +37,7 @@ def clean(mypath, skip=2, inp='.csv', ext='.npy'):
 
 
 if __name__ == '__main__':
-    print(isabs('C:/Users/dionysius/Desktop/PURE/pure/data/3FOC9cm'))
-    # use string literal r" " for paths
-    print(isabs(r'C:\Users\dionysius\Desktop\PURE\pure\data\3FOC9cm'))
-
+#    print(isabs('C:/Users/dionysius/Desktop/PURE/pure/data/3FOC9cm'))
+#    # use string literal r" " for paths
+#    print(isabs(r'C:\Users\dionysius\Desktop\PURE\pure\data\3FOC9cm'))
+#    clean("aasd//a", skip=0, inp=".npy", ext=".csv")
