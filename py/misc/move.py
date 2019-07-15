@@ -16,7 +16,7 @@ def init():
                 arduino = serial.Serial(p[0], 9600)
         arduino
     except NameError:
-        ArduinoNotFoundError = True
+        ArduinoNotFounesdError = True
     else:
         ArduinoNotFoundError = False
 
