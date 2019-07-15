@@ -8,10 +8,11 @@ import pickle
 from scipy.signal import hilbert
 import serial
 from time import sleep
+import serial.tools.list_ports
 global TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT
 global BSCAN_FOLDER, FILENAME, SCAN_FOLDER, min_step, arduino
 min_step = 4e-4
-FOLDER_NAME = "2D-3FOC3in"
+FOLDER_NAME = "2D-3FOC5in0DEG"
 FILENAME = "scope"
 BSCAN_FOLDER = join(dirname(getcwd()), "scans", "BSCAN")
 SCAN_FOLDER = join(dirname(getcwd()), "data", FOLDER_NAME)
@@ -21,7 +22,12 @@ BOTTOM_LEFT = (-1, 0)
 BOTTOM_RIGHT = (-1, -1)
 
 #arduino = serial.Serial('/dev/cu.usbmodem14201', 9600)
-arduino = serial.Serial('COM1', 9600)
+#arduino = serial.Serial('COM1', 9600)
+
+ports = list(serial.tools.list_ports.comports())
+for p in ports:
+    if "Arduino" in p[1]:
+        arduino = serial.Serial(p[0], 9600)
 
 
 def d2s(dist):
@@ -316,5 +322,5 @@ def bscan(i="", folder=SCAN_FOLDER, figsize=[0, 0], start=0, end=-1, y1=0, y2=-1
 if __name__ == '__main__':
     #    pass
 #    ibscan(figsize=[8, 8])
-    foc = Scan(DIMENSIONS=(0.1, 0.1), START_POS="top right")
+    foc = Scan(DIMENSIONS=(0.01, 0.08), START_POS="bottom left")
     #ibscan(figsize=[8, 8])
