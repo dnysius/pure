@@ -48,9 +48,9 @@ FD = find_nearest(T, 2*FOCAL_DEPTH/c_0)  # focal depth
 # SD = find_nearest(T, 2*SAMPLE_DEPTH/c_0) + 1  # sample depth
 SD = len(T)-1
 L = np.shape(V)[1]
-T_COMPARE = np.empty((L, len(T)))
-for l in range(L):
-    T_COMPARE[l, :] = T[:]
+#T_COMPARE = np.empty((L, len(T)))
+#for l in range(L):
+#    T_COMPARE[l, :] = T[:]
 PRE = np.flip(V[:FD, :], axis=0)
 PRE_T = np.flip(T[:FD], axis=0)
 PRE_OUT = np.empty(np.shape(PRE))
