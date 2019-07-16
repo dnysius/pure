@@ -15,7 +15,6 @@ from tqdm import tqdm
 import matplotlib.pyplot as plt
 global min_step, c_0, DEFAULT_ARR_FOLDER
 global xarr, FD, SD, pbar, T, V, L, T_COMPARE, PRE_OUT, POST_OUT, xni
-FOLDER_NAME = "1D-15FOC3in"
 FOLDER_NAME = "1D-15FOC7in"
 DEFAULT_ARR_FOLDER = join(dirname(getcwd()), "data", FOLDER_NAME)
 #DEFAULT_ARR_FOLDER = getcwd()
