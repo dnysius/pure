@@ -16,6 +16,7 @@ import matplotlib.pyplot as plt
 global min_step, c_0, DEFAULT_ARR_FOLDER
 global xarr, FD, SD, pbar, T, V, L, T_COMPARE, PRE_OUT, POST_OUT, xni
 FOLDER_NAME = "1D-15FOC3in"
+FOLDER_NAME = "1D-15FOC7in"
 DEFAULT_ARR_FOLDER = join(dirname(getcwd()), "data", FOLDER_NAME)
 #DEFAULT_ARR_FOLDER = getcwd()
 FOCAL_DEPTH = 0.0381  # 1.5 inch in metres
@@ -76,7 +77,6 @@ def main(xi):
             zi = np.floor(ind/tstep).astype(int)
             POST_OUT[ti-FD, xi] = np_sum(V[zi[zi < SD], xi])
         ti += 1
-    
 
 if __name__=='__main__':
     # Parallel processing
@@ -85,18 +85,15 @@ if __name__=='__main__':
     for i in range(L):
         pbar.update(1)
         jobs.append(threading.Thread(target=main, args=(i,)))
-    
     pbar.close()
     for job in jobs:
         job.start()
-        
     pbar = tqdm(total=L)
     pbar.set_description('Joining\n')
     for job in jobs:
         pbar.update(L)
         job.join()
     pbar.close()
-    
 PRE_OUT = np.flip(PRE_OUT, axis=0)
 #pickle.dump(POST_OUT, open(join(DEFAULT_ARR_FOLDER, "SAFT-{}-post.pkl".format(FOLDER_NAME)), "wb"))
 #pickle.dump(PRE_OUT, open(join(DEFAULT_ARR_FOLDER, "SAFT-{}-pre.pkl".format(FOLDER_NAME)), "wb"))
