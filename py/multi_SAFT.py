@@ -100,7 +100,7 @@ PRE_OUT = np.flip(PRE_OUT, axis=0)
 STITCHED = np.vstack((PRE_OUT, POST_OUT))
 pickle.dump(STITCHED, open(join(DEFAULT_ARR_FOLDER,"SAFT-{}-test.pkl".format(FOLDER_NAME)), "wb"))
 
-fig = plt.figure(figsize=[2,10])
+fig = plt.figure(figsize=[10,10])
 plt.imshow(STITCHED[:,:], aspect='auto', cmap='hot', vmin=0)
 plt.colorbar()
 plt.show()

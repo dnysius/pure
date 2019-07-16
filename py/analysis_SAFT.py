@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from os import getcwd, listdir
 from scipy.signal import hilbert
 global tarr, varr, saft, SCAN_FOLDER, BSCAN_FOLDER
-SCAN_FOLDER = join(dirname(getcwd()), "data", "1D-15FOC3in")
+SCAN_FOLDER = join(dirname(getcwd()), "data", "1D-15FOC7in")
 BSCAN_FOLDER = join(dirname(getcwd()), "scans", "BSCAN", "1D")
 
 
@@ -62,11 +62,10 @@ def bscan(i="", figsize=[8, 8], start=0, end=-1, y1=0, y2=-1, save=False, hil=Tr
         with open(join(SCAN_FOLDER, file), "rb") as rd:
             if 'tarr' in file:
                 tarr = pickle.load(rd)
-                print(np.shape(tarr))
             elif 'varr' in file:
 #                varr = pickle.load(rd)
                 pass
-            else:
+            elif 'SAFT' in file:
                 saft = pickle.load(rd)
     if figsize == [0, 0]:
         fig = plt.figure()
@@ -80,7 +79,7 @@ def bscan(i="", figsize=[8, 8], start=0, end=-1, y1=0, y2=-1, save=False, hil=Tr
         b = saft[:, :]
 #    if hil is True:
 #        b = np.log10(np.abs(hilbert(b, axis=0)))
-    plt.imshow(b[start:end, :], aspect='auto', cmap='gray', vmin=0)
+    plt.imshow(b[start:end, :], aspect='auto', cmap='gray')
     plt.axhline(y=y1, label='{}'.format(y1+start))
     plt.axhline(y=y2, label='{}'.format(y2+start))
     dt = np.mean(tarr[y2+start, 0, :]) - np.mean(tarr[y1+start, 0, :])
@@ -104,4 +103,4 @@ def bscan(i="", figsize=[8, 8], start=0, end=-1, y1=0, y2=-1, save=False, hil=Tr
 
 
 if __name__ == '__main__':
-    bscan()
+    ibscan()
