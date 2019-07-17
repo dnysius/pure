@@ -15,10 +15,10 @@ from tqdm import tqdm
 import matplotlib.pyplot as plt
 global min_step, c_0, DEFAULT_ARR_FOLDER
 global xarr, FD, SD, pbar, T, V, L, T_COMPARE, PRE_OUT, POST_OUT, xni
-FOLDER_NAME = "1D-15FOC7in"
+FOLDER_NAME = "1D-3FOC3in"
 DEFAULT_ARR_FOLDER = join(dirname(getcwd()), "data", FOLDER_NAME)
 #DEFAULT_ARR_FOLDER = getcwd()
-FOCAL_DEPTH = 0.0381  # 1.5 inch in metres
+FOCAL_DEPTH = 0.0381*2  # 1.5 inch in metres
 SAMPLE_DEPTH = 15000
 min_step = 4e-4
 c_0 = 1498  # water
@@ -69,12 +69,12 @@ def main(xi):
             ind = ((2/c_0)*np_sqrt(np_power(x-xarr[xni], 2)
                    + z2)).reshape((L, 1))
             zi = np.floor(ind/tstep).astype(int)
-            PRE_OUT[ti, xi] = np_sum(V[zi[zi < FD], xi])
+            PRE_OUT[ti, xi] = np_sum(V[zi[zi < FD], :])
         if ti >= FD:  # POST
             ind = ((2/c_0)*np_sqrt(np_power(x-xarr[xni], 2)
                    + z2)).reshape((L, 1))
             zi = np.floor(ind/tstep).astype(int)
-            POST_OUT[ti-FD, xi] = np_sum(V[zi[zi < SD], xi])
+            POST_OUT[ti-FD, xi] = np_sum(V[zi[zi < SD], :])
         ti += 1
 
 if __name__=='__main__':
@@ -101,6 +101,6 @@ STITCHED = np.vstack((PRE_OUT, POST_OUT))
 pickle.dump(STITCHED, open(join(DEFAULT_ARR_FOLDER,"SAFT-{}-test.pkl".format(FOLDER_NAME)), "wb"))
 
 fig = plt.figure(figsize=[10,10])
-plt.imshow(STITCHED[:,:], aspect='auto', cmap='hot', vmin=0)
+plt.imshow(STITCHED[:,:], aspect='auto', cmap='hot')
 plt.colorbar()
 plt.show()

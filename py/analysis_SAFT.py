@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from os import getcwd, listdir
 from scipy.signal import hilbert
 global tarr, varr, saft, SCAN_FOLDER, BSCAN_FOLDER
-SCAN_FOLDER = join(dirname(getcwd()), "data", "1D-15FOC7in")
+SCAN_FOLDER = join(dirname(getcwd()), "data", "1D-3FOC3in")
 BSCAN_FOLDER = join(dirname(getcwd()), "scans", "BSCAN", "1D")
 
 
