@@ -11,11 +11,10 @@ from numpy import \
 from os import getcwd
 from os.path import join, dirname
 import pickle
-from tqdm import tqdm
 import matplotlib.pyplot as plt
 global min_step, c_0, DEFAULT_ARR_FOLDER
 global xarr, FD, SD, pbar, T, V, L, T_COMPARE, PRE_OUT, POST_OUT, xni
-FOLDER_NAME = "1D-15FOC3in"
+FOLDER_NAME = "1D-3FOC7in0DEG - 1"
 DEFAULT_ARR_FOLDER = join(dirname(getcwd()), "data", FOLDER_NAME)
 FOCAL_DEPTH = 0.0381  # 1.5 inch in metres
 min_step = 4e-4
@@ -65,20 +64,17 @@ def main(xi):  # xi is imaging index/position
     while ti < SD:
         z = T[ti]*c_0/2
         z2 = np_power(z, 2)  # distance, squared
+        ind = (2/c_0)*np_sqrt(np_power(x-xarr[xni], 2)
+                              + z2)
+        zi = (ind/tstep).astype(int)
         if ti < FD:  # PRE
-            ind = (2/c_0)*np_sqrt(np_power(x-xarr[xni], 2)
-                                  + z2)
-            zi = (ind/tstep).astype(int)
             PRE_OUT[ti, xi] = np_sum(V[zi[zi < FD], xni[zi < FD]])
         if ti >= FD:  # POST
-            ind = (2/c_0)*np_sqrt(np_power(x-xarr[xni], 2)
-                   + z2)  # in time
-            # interpolation
-            zi = (ind/tstep).astype(int)
             POST_OUT[ti-FD, xi] = np_sum(V[zi[zi < SD], xni[zi < SD]])
         ti += 1
 
-if __name__=='__main__':
+
+if __name__ != '__main__':
     # Parallel processing
     jobs = []
     print("Append")
@@ -90,12 +86,15 @@ if __name__=='__main__':
     print("Joining")
     for job in jobs:
         job.join()
+    print("Stitching")
     PRE_OUT = np.flip(PRE_OUT, axis=0)
     STITCHED = np.vstack((PRE_OUT, POST_OUT))
     pickle.dump(STITCHED, open(join(DEFAULT_ARR_FOLDER,
                                     "SAFT-{}-test.pkl"
                                     .format(FOLDER_NAME)), "wb"))
-    fig = plt.figure(figsize=[10, 10])
-    plt.imshow(STITCHED[:, :], aspect='auto', cmap='hot')
-    plt.colorbar()
-    plt.show()
+
+
+fig = plt.figure(figsize=[10, 10])
+plt.imshow(STITCHED[:, :], aspect='auto', cmap='hot')
+plt.colorbar()
+plt.show()

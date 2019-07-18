@@ -55,20 +55,34 @@ yarr = (np.linspace(0, LY, LY)-LY/2)*min_step
 yni = np.arange(0, LY, 1)
 xx, yy = np.meshgrid(xni, yni)
 tni = np.arange(0, SD, 1)
+ind = np.arange(0, LX*LY, LX)
+yind = np.empty((LX*LY,), dtype=int)
+xind = np.tile(np.arange(0, LX, 1), LY)
+i = 0
+while i < LY:
+    yind[ind[i]:] = i
+    i += 1
 
 
 def main(yi, xi):
     x = xarr[xi]
     y = 0
-    for ti in tni:
-        for i in range(len(yni)):
+    ti = 0
+    while ti < SD:
+        i = 0
+        while i < len(yni):
             z2 = np_power(T[ti]*c_0/2, 2)
-            zi = ((2/c_0)*np_sqrt(np_power(x-xarr[xx[i, :]], 2)
-                                  + np_power(y-yarr[yy[i, :]], 2) + z2)/tstep).astype(int)
+            zi = (((2/c_0)*np_sqrt(np_power(x-xarr[xx], 2)
+                                   + np_power(y-yarr[yy], 2)
+                                   + z2)/tstep).astype(int)).flatten('C')
             if ti < FD:
-                PRE_OUT[ti, yi, xi] = np_sum(V[zi, i, :])
+                PRE_OUT[ti, yi, xi] = np_sum(V[zi[zi < FD],
+                                             yind[zi < FD], xind[zi < FD]])
             elif ti >= FD:
-                POST_OUT[ti-FD, yi, xi] = np_sum(V[zi, i, :])
+                POST_OUT[ti-FD, yi, xi] = np_sum(V[zi[zi < SD],
+                                                 yind[zi < SD], xind[zi < SD]])
+            i += 1
+        ti += 1
 
 
 if __name__ == '__main__':
