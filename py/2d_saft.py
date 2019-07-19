@@ -11,7 +11,7 @@ import pickle
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 global min_step, c_0, DEFAULT_ARR_FOLDER
-global xarr,yarr, FD, SD, T, V, PRE_OUT, POST_OUT, zi
+global xarr, yarr, FD, SD, T, V, PRE_OUT, POST_OUT, zi
 FOLDER_NAME = "1D-3FOC3in"
 DEFAULT_ARR_FOLDER = join(dirname(getcwd()), "data", FOLDER_NAME)
 FOCAL_DEPTH = 0.0381*2  # 1.5 inch in metres
@@ -69,43 +69,37 @@ def main(yi, xi):
     y = 0
     ti = 0
     while ti < SD:
-        i = 0
-        while i < len(yni):
-            z2 = np_power(T[ti]*c_0/2, 2)
-            zi = (((2/c_0)*np_sqrt(np_power(x-xarr[xx], 2)
-                                   + np_power(y-yarr[yy], 2)
-                                   + z2)/tstep).astype(int)).flatten('C')
-            if ti < FD:
-                PRE_OUT[ti, yi, xi] = np_sum(V[zi[zi < FD],
-                                             yind[zi < FD], xind[zi < FD]])
-            elif ti >= FD:
-                POST_OUT[ti-FD, yi, xi] = np_sum(V[zi[zi < SD],
-                                                 yind[zi < SD], xind[zi < SD]])
-            i += 1
+        z2 = np_power(T[ti]*c_0/2, 2)
+        zi = (((2/c_0)*np_sqrt(np_power(x-xarr[xx], 2)
+                               + np_power(y-yarr[yy], 2)
+                               + z2)/tstep).astype(int)).flatten('C')
+        if ti < FD:
+            PRE_OUT[ti, yi, xi] = np_sum(V[zi[zi < FD],
+                                         yind[zi < FD], xind[zi < FD]])
+        elif ti >= FD:
+            POST_OUT[ti-FD, yi, xi] = np_sum(V[zi[zi < SD],
+                                             yind[zi < SD], xind[zi < SD]])
         ti += 1
 
 
 if __name__ == '__main__':
     jobs = []
-    pbar1 = tqdm(total=LY*LX)
-    pbar1.set_description("Creating job list: ")
+    print("Append")
     for y in range(LY):
         for x in range(LX):
-            pbar1.update(1)
             jobs.append(threading.Thread(target=main, args=(y, x)))
-    pbar1.close()
-    pbar2 = tqdm(total=LY*LX)
-    pbar2.set_description("Starting jobs: ")
+    print("Starting")
+    i = 0
     for job in jobs:
-        pbar2.update(1)
+        if i % 10 == 0:
+            print("Starting job ", i)
         job.start()
-    pbar2.close()
-    pbar3 = tqdm(total=LY*LX)
-    pbar3.set_description("Joining jobs: ")
+        i += 1
+    i = 0
     for job in jobs:
-        pbar3.update(1)
+        if i % 10 == 20:
+            print("Joining job ", i)
         job.join()
-    pbar3.close()
     PRE_OUT = np.flip(PRE_OUT, axis=0)
     STITCHED = np.vstack((PRE_OUT, POST_OUT))
     pickle.dump(STITCHED, open(join(DEFAULT_ARR_FOLDER,
