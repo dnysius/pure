@@ -12,10 +12,16 @@ import serial.tools.list_ports
 global TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT
 global BSCAN_FOLDER, FILENAME, SCAN_FOLDER, min_step, arduino
 min_step = 4e-4
-FOLDER_NAME = "2D-3FOC5in0DEG"
+FOLDER_NAME = "2D-3FOC5in0deg"
 FILENAME = "scope"
 BSCAN_FOLDER = join(dirname(getcwd()), "scans", "BSCAN")
-SCAN_FOLDER = join(dirname(getcwd()), "data", FOLDER_NAME)
+if FOLDER_NAME[:2] == "2D":
+    par = "2D SCANS"
+elif FOLDER_NAME[:2] == "1D":
+    par = "1D SCANS"
+else:
+    par = "ANGLE DEPENDENCE"
+SCAN_FOLDER = join(dirname(getcwd()), "data", par, FOLDER_NAME)
 TOP_LEFT = (0, 0)
 TOP_RIGHT = (0, -1)
 BOTTOM_LEFT = (-1, 0)

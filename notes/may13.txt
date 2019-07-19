@@ -1,0 +1,18 @@
+2019/5/13
+start: 10:50
+meeting - big picture is to use SAFT with focused transducer. if this project is highly successful, then we can apply for more grants in the future.
+goal today is read the papers listed in the references section of the grant paper in this order : [4] [2] [3].
+other goals are: to set up the motorized transducer holder using arduino; set up angle dependence data acquisition (create a setup that is better than the previously used one).
+What is B-mode imaging?
+principal assumption of SAFT implementations is that the region of interest is located in the far field of the transducer. This is often not the case in NDT/NDE applications where the transducer is very close to/in contact with the surface.
+two problems: diffraction effects may impair image quality, and sparse/infrequent spatial sampling may yield aliasing (misidentification of a signal frequency- introducing distortion or error) artifacts
+2019/5/14
+"double path continuous time spatial impulse response (SIR)"
+"spatial impulse response"
+It is a well known fact in electrical engineering that a linear electrical system is fully characterized by its impulse
+response as shown in Fig. 2.1. Applying a delta function to the input of the circuit and measuring its output
+characterizes the system. 
+2019/5/15
+Dr. Xu sent thesis document. ID card works now. Met with Graham Pearson, will need to complete safety training.
+Will focus on gathering data first (Ying). Will need to improve angle dependence set up, and get the transducer stage working.
+angle dependence: need to find a way to stabilize the mechanism of tilting the specimen to a certain degree. currently, the specimen target center is also being elevated. i have some initial ideas for building a specimen holder which rotates about a vector that lives at the surface plane. we expect to have a curved function rather than a linear fit.
