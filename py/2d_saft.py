@@ -8,7 +8,6 @@ from numpy import \
 from os import getcwd
 from os.path import join, dirname
 import pickle
-from tqdm import tqdm
 import matplotlib.pyplot as plt
 global min_step, c_0, DEFAULT_ARR_FOLDER
 global xarr, yarr, FD, SD, T, V, PRE_OUT, POST_OUT, zi

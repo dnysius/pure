@@ -4,14 +4,20 @@ import numpy as np
 from os.path import join, dirname, isfile
 import matplotlib.pyplot as plt
 from os import getcwd, listdir
-from scipy.signal import hilbert
-global tarr, varr, saft, SCAN_FOLDER, BSCAN_FOLDER
-SCAN_FOLDER = join(dirname(getcwd()), "data", "1D-15FOC3in")
-BSCAN_FOLDER = join(dirname(getcwd()), "scans", "BSCAN", "1D")
+global tarr, varr, SCAN_FOLDER, BSCAN_FOLDER, FOLDER_NAME
+FOLDER_NAME = "1D-15FOC3in"
+if FOLDER_NAME[:2] == "1D":
+    dim = "1D"
+    par = "1D SCANS"
+else:
+    dim = "2D"
+    par = "2D SCANS"
+SCAN_FOLDER = join(dirname(getcwd()), "data", par, FOLDER_NAME)
+BSCAN_FOLDER = join(dirname(getcwd()), "scans", "SAFT", dim)
 
 
-def ibscan(i='', figsize=[8, 8], start=0, end=-1, y1=0, y2=-1, hil=True, save=False):
-    bscan(i=i, figsize=figsize, start=start, end=end, y1=y1, y2=y2, hil=hil, save=save)
+def ibscan(i='', figsize=[8, 8], start=0, end=-1, y1=0, y2=-1, sa=True):
+    bscan(i=i, figsize=figsize, start=start, end=end, y1=y1, y2=y2, sa=sa)
     cmd = input('//\t')
     if cmd == 'x':
         print('Exit')
@@ -28,7 +34,8 @@ def ibscan(i='', figsize=[8, 8], start=0, end=-1, y1=0, y2=-1, hil=True, save=Fa
                 a2 = y2
             else:
                 a2 = int(a2)
-            ibscan(i=i, figsize=figsize, start=start, end=end, y1=a1, y2=a2, hil=hil, save=False)
+            ibscan(i=i, figsize=figsize, start=start,
+                   end=end, y1=a1, y2=a2, sa=sa)
         except ValueError:
             print("Invalid input")
     elif cmd == 'z':
@@ -43,62 +50,59 @@ def ibscan(i='', figsize=[8, 8], start=0, end=-1, y1=0, y2=-1, hil=True, save=Fa
                 a2 = end
             else:
                 a2 = int(a2)
-            ibscan(i=i, figsize=figsize, start=a1, end=a2, y1=y1, y2=y2, hil=hil, save=False)
+            ibscan(i=i, figsize=figsize, start=a1, end=a2, y1=y1, y2=y2, sa=sa)
         except ValueError:
             print('invalid input')
     elif cmd == 'raw' or cmd == 'r':
-        ibscan(i=i, figsize=figsize, start=start, end=end, y1=y1, y2=y2, hil=False, save=False)
-    elif cmd == 'hil' or cmd == 'h' or cmd == 'hilbert':
-        ibscan(i=i, figsize=figsize, start=start, end=end, y1=y1, y2=y2, hil=True, save=False)
+        ibscan(i=i, figsize=figsize, start=start,
+               end=end, y1=y1, y2=y2, sa=False)
+    elif cmd == 'sa' or cmd == 'saft':
+        ibscan(i=i, figsize=figsize, start=start,
+               end=end, y1=y1, y2=y2, sa=True)
     elif cmd == 's':
-        ibscan(i=i, figsize=figsize, start=start, end=end, y1=y1, y2=y2, hil=hil, save=True)
+        ibscan(i=i, figsize=figsize, start=start, end=end, y1=y1, y2=y2, sa=sa)
     else:
-        ibscan(i=i, figsize=figsize, start=start, end=end, y1=y1, y2=y2, hil=hil, save=False)
+        ibscan(i=i, figsize=figsize, start=start, end=end, y1=y1, y2=y2, sa=sa)
 
 
-def bscan(i="", figsize=[8, 8], start=0, end=-1, y1=0, y2=-1, save=False, hil=True):
-    onlyfiles = [f for f in listdir(SCAN_FOLDER) if isfile(join(SCAN_FOLDER, f))]
+def bscan(i="", figsize=[8, 8], start=0, end=-1, y1=0, y2=-1, sa=True):
+    onlyfiles = [f for f in listdir(SCAN_FOLDER)
+                 if isfile(join(SCAN_FOLDER, f))]
     for file in onlyfiles:
         with open(join(SCAN_FOLDER, file), "rb") as rd:
             if 'tarr' in file:
                 tarr = pickle.load(rd)
-            elif 'varr' in file:
-#                varr = pickle.load(rd)
-                pass
-            elif 'SAFT' in file:
-                saft = pickle.load(rd)
+            elif not sa and 'varr' in file:
+                b = pickle.load(rd)
+            elif sa and 'SAFT' in file:
+                b = pickle.load(rd)
     if figsize == [0, 0]:
         fig = plt.figure()
     else:
         fig = plt.figure(figsize=figsize)
     if y2 == -1:
-        y2 = len(saft[start:end, 0]) - 1
+        y2 = len(b[start:end, 0]) - 1
     if i == '':
-        b = saft[:, :]
+        b = b[:, :]
     else:
-        b = saft[:, :]
-#    if hil is True:
-#        b = np.log10(np.abs(hilbert(b, axis=0)))
+        b = b[:, :]
     plt.imshow(b[start:end, :], aspect='auto', cmap='gray')
-    plt.axhline(y=y1, label='{}'.format(y1+start))
-    plt.axhline(y=y2, label='{}'.format(y2+start))
+    plt.axhline(y=y1)
+    plt.axhline(y=y2)
     dt = np.mean(tarr[y2+start, 0, :]) - np.mean(tarr[y1+start, 0, :])
     v_w = 1498
     v_m = 6420
     dw = v_w*dt/2
     dm = v_m*dt/2
-    tstep = np.mean(tarr[1, 0, :]) - np.mean(tarr[0, 0, :])
     plt.axhline(y=0, label='water: {}'.format(dw), alpha=0)
     plt.axhline(y=0, label='aluminum: {}'.format(dm), alpha=0)
-    plt.title("{0}".format("test"))
+    if sa:
+        plt.title("{0} {1}".format(FOLDER_NAME, "SAFT"))
+    elif not sa:
+        plt.title("{0} {1}".format(FOLDER_NAME, "BSCAN"))
     plt.legend()
-#    if save is True:
-#        plt.savefig(join(BSCAN_FOLDER, "1D", "test"), dpi=300)
-#        with open(join(SCAN_FOLDER, "results.txt"), 'w') as wr:
-#            wr.write("Timestep (s): {0}\ntime between ({1}, {2}): {3}"
-#                     .format(tstep, y1+start, y2+start, dt))
-    plt.xlabel("x axis")
-    plt.ylabel("y axis")
+    plt.xlabel("lateral")
+    plt.ylabel("axial")
     plt.show(fig)
 
 

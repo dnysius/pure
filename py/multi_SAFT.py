@@ -14,8 +14,12 @@ import pickle
 import matplotlib.pyplot as plt
 global min_step, c_0, DEFAULT_ARR_FOLDER
 global xarr, FD, SD, pbar, T, V, L, T_COMPARE, PRE_OUT, POST_OUT, xni
-FOLDER_NAME = "1D-3FOC7in0DEG - 1"
-DEFAULT_ARR_FOLDER = join(dirname(getcwd()), "data", FOLDER_NAME)
+FOLDER_NAME = "1D-15FOC5in"
+if FOLDER_NAME[:2] == "1D":
+    par = "1D SCANS"
+else:
+    par = "2D SCANS"
+DEFAULT_ARR_FOLDER = join(dirname(getcwd()), "data", par, FOLDER_NAME)
 FOCAL_DEPTH = 0.0381  # 1.5 inch in metres
 min_step = 4e-4
 c_0 = 1498  # water
@@ -74,7 +78,7 @@ def main(xi):  # xi is imaging index/position
         ti += 1
 
 
-if __name__ != '__main__':
+if __name__ == '__main__':
     # Parallel processing
     jobs = []
     print("Append")
