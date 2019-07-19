@@ -51,17 +51,15 @@ POST_T = T[FD:SD]
 POST_OUT = np.empty(np.shape(POST))
 xarr = np.linspace(-LX/2, LX/2, LX)*min_step
 xni = np.arange(0, LX, 1)
-yarr = (np.linspace(0, LY, LY)-LY/2)*min_step
+yarr = (np.linspace(0, LY, LY)-LY/2)*min_step  # need to fix for case y=1
 yni = np.arange(0, LY, 1)
 xx, yy = np.meshgrid(xni, yni)
 tni = np.arange(0, SD, 1)
 ind = np.arange(0, LX*LY, LX)
 yind = np.empty((LX*LY,), dtype=int)
 xind = np.tile(np.arange(0, LX, 1), LY)
-i = 0
-while i < LY:
+for i in range(LY):
     yind[ind[i]:] = i
-    i += 1
 
 
 def main(yi, xi):
@@ -70,9 +68,9 @@ def main(yi, xi):
     ti = 0
     while ti < SD:
         z2 = np_power(T[ti]*c_0/2, 2)
-        zi = (((2/c_0)*np_sqrt(np_power(x-xarr[xx], 2)
-                               + np_power(y-yarr[yy], 2)
-                               + z2)/tstep).astype(int)).flatten('C')
+        zi = ((2/c_0)*np_sqrt(np_power(x-xarr[xx.flatten('C')], 2)
+                              + np_power(y-yarr[yy.flatten('C')], 2)
+                              + z2)/tstep).astype(int)
         if ti < FD:
             PRE_OUT[ti, yi, xi] = np_sum(V[zi[zi < FD],
                                          yind[zi < FD], xind[zi < FD]])
@@ -96,6 +94,7 @@ if __name__ == '__main__':
         job.start()
         i += 1
     i = 0
+    print("Joining")
     for job in jobs:
         if i % 10 == 20:
             print("Joining job ", i)
