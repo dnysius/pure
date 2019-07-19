@@ -2,11 +2,8 @@
 import numpy as np
 import threading
 from numpy import \
-    reshape as np_reshape, \
     power as np_power, \
     sqrt as np_sqrt, \
-    argmin as np_argmin, \
-    abs as np_abs, \
     sum as np_sum
 from os import getcwd
 from os.path import join, dirname
