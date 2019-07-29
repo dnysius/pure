@@ -11,13 +11,13 @@ import pickle
 import matplotlib.pyplot as plt
 global min_step, c_0, DEFAULT_ARR_FOLDER
 global xarr, FD, SD, pbar, T, V, L, T_COMPARE, PRE_OUT, POST_OUT, xni
-FOLDER_NAME = "1D-15FOC5in"
+FOLDER_NAME = "1D-3FOC5in"
 if FOLDER_NAME[:2] == "1D":
     par = "1D SCANS"
 else:
     par = "2D SCANS"
 DEFAULT_ARR_FOLDER = join(dirname(getcwd()), "data", par, FOLDER_NAME)
-FOCAL_DEPTH = 0.0381  # 1.5 inch in metres
+FOCAL_DEPTH = 0.0381*2  # 1.5 inch in metres
 min_step = 4e-4
 c_0 = 1498  # water
 
@@ -91,7 +91,7 @@ if __name__ == '__main__':
     PRE_OUT = np.flip(PRE_OUT, axis=0)
     STITCHED = np.vstack((PRE_OUT, POST_OUT))
     pickle.dump(STITCHED, open(join(DEFAULT_ARR_FOLDER,
-                                    "SAFT-{}-test.pkl"
+                                    "SAFT-{}.pkl"
                                     .format(FOLDER_NAME)), "wb"))
 
 

@@ -5,21 +5,17 @@ import serial.tools.list_ports
 global min_step, ArduinoNotFoundError, arduino
 min_step = 4e-4
 ArduinoNotFoundError = None
-arduino = None
 
-
-def init():
-    ports = list(serial.tools.list_ports.comports())
-    try:
-        for p in ports:
-            if "Arduino" in p[1]:
-                arduino = serial.Serial(p[0], 9600)
-        arduino
-    except NameError:
-        ArduinoNotFounesdError = True
-    else:
-        ArduinoNotFoundError = False
-
+#ports = list(serial.tools.list_ports.comports())
+#try:
+#    for p in ports:
+#        if "Arduino" in p[1] and arduino is None:
+#            arduino = serial.Serial(p[0], 9600)
+#except NameError:
+#    ArduinoNotFoundError = True
+#else:
+#    ArduinoNotFoundError = False
+arduino = serial.Serial("COM5", 9600)
 
 def d2s(dist):
     # Converts distance in metres to number of steps
@@ -32,7 +28,7 @@ def step(command):
     # 2: top motor backward
     # 3: bottom motor backward
     # 4: bottom motor forward -- black tape side X axis
-    sleep(1.5)
+#    sleep(1.5)
     try:
         arduino.write(str.encode("{}".format(command)))
     except TypeError:
@@ -49,7 +45,6 @@ def move():
     # 'y 1' - moves 1 metre in y direction
     # 'esc' - exits program
     done = ArduinoNotFoundError
-    init()
     if ArduinoNotFoundError is True:
         print("ArduinoNotFoundError: cannot call move()")
     while not done:
@@ -79,9 +74,13 @@ def move():
                 print("invalid input")
 
 
-if __name__ != '__main__':
-    init()
-
 if __name__ == '__main__':
-    init()
-    move()
+#    move()
+    i = 0
+    for y in range(200):
+        for x in range(200):
+            if i % 2 != 0:
+                step(4)
+            else:
+                step(3)
+        step(1)
