@@ -5,9 +5,10 @@
 import sys
 import visa  # PyVisa info @ http://PyVisa.readthedocs.io/en/stable/
 import numpy as np
-from os import listdir, makedirs
-from os.path import isfile, join, exists
+from os import listdir, makedirs, getcwd
+from os.path import isfile, join, exists, dirname
 import re
+
 global VISA_ADDRESS, VISA_PATH, FILENAME
 VISA_ADDRESS = 'USB0::0x0957::0x1799::MY52102738::INSTR'
 VISA_PATH = 'C:\\Windows\\System32\\visa32.dll'
@@ -191,4 +192,7 @@ class Scope:
 
 
 if __name__=='__main__':
-    pass
+    d = join(dirname(getcwd()), "data", "test")
+    if not exists(d):
+        makedirs(d)
+    s = Scope(d)
