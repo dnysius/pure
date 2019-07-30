@@ -8,6 +8,7 @@ import numpy as np
 from os import listdir, makedirs, getcwd
 from os.path import isfile, join, exists, dirname
 import re
+from threading import Thread
 
 global VISA_ADDRESS, VISA_PATH, FILENAME
 VISA_ADDRESS = 'USB0::0x0957::0x1799::MY52102738::INSTR'
@@ -159,9 +160,7 @@ class Scope:
         if self.TOTAL_BYTES_TO_XFER >= 400000:
             self.KsInfiniiVisionX.chunk_size = self.TOTAL_BYTES_TO_XFER
 
-    def grab(self):
-        self.fnames = [f for f in listdir(self.BASE_DIRECTORY) if isfile(join(self.BASE_DIRECTORY, f)) and (f[-3:] == 'npy')]
-        self.fnames.sort(key=natural_sort_key)
+    def grab(self, ind):
         i = 0 # index of Wav_data, recall that python indices start at 0, so ch1 is index 0
         for channel_number in self.CHS_ON:
             self.Wav_Data[:,i] = np.array(self.KsInfiniiVisionX.query_binary_values(':WAVeform:SOURce CHANnel' + str(channel_number) + ';DATA?', "h", False)) # See also: https://PyVisa.readthedocs.io/en/stable/rvalues.html#reading-binary-values
@@ -170,17 +169,17 @@ class Scope:
 
         if self.TOTAL_BYTES_TO_XFER >= 400000:
             self.KsInfiniiVisionX.chunk_size = 20480
-        if len(self.fnames) >= 1:
-            recent = self.fnames[-1]
-            pre = len(self.BASE_FILE_NAME)
-            suf = -4
-            try:
-                i = int(recent[pre:suf]) + 1
-            except:
-                raise TypeError
-        else:
-            i = 0
-        filename = join(self.BASE_DIRECTORY, self.BASE_FILE_NAME + "{0}".format(i) + ".npy")
+#        if len(self.fnames) >= 1:
+#            recent = self.fnames[-1]
+#            pre = len(self.BASE_FILE_NAME)
+#            suf = -4
+#            try:
+#                i = int(recent[pre:suf]) + 1
+#            except:
+#                raise TypeError
+#        else:
+#            i = 0
+        filename = join(self.BASE_DIRECTORY, self.BASE_FILE_NAME + "{0}".format(ind) + ".npy")
         with open(filename, 'wb') as filehandle: # wb means open for writing in binary; can overwrite
             np.save(filehandle, np.insert(self.Wav_Data, 0, self.DataTime, axis=1))
         arr = np.insert(self.Wav_Data, 0, self.DataTime, axis=1)
@@ -191,8 +190,14 @@ class Scope:
         self.KsInfiniiVisionX.close()
 
 
-if __name__=='__main__':
+if __name__ == '__main__':
     d = join(dirname(getcwd()), "data", "test")
     if not exists(d):
         makedirs(d)
     s = Scope(d)
+    for i in range(3000):
+#        t = Thread(target=s.grab())
+#        t.start()
+#        t.join()
+        s.grab(i)
+        print(i)

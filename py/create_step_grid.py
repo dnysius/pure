@@ -232,14 +232,13 @@ class Scan:
 
     def run(self):
         self.STEP_PARAM()
+        output_arr = join(output_folder, ".npy")
         out_arr = np.empty(np.shape(self.arr))
         pos = self.START_POS
         i = 0
         while self.arr[pos] != 0:
             V = self.arr[pos]
-            self.scope.grab(i)
             out_arr[pos] = i
-            self.STEP(self.STEP_DICT[V])
             if V == self.left:
                 pos = (pos[0], pos[1] - 1)
             elif V == self.right:
@@ -250,31 +249,12 @@ class Scan:
                 pos = (pos[0] + 1, pos[1])
             i += 1
             if self.arr[pos] == 0:
-                self.scope.grab(i)
                 out_arr[pos] = i
         self.out_arr = out_arr
-        self.tarr, self.varr = self.sig2arr(self.out_arr)
-        self.save_arr()
-        self.tstep = self.tarr[1, 0, 0] - self.tarr[0, 0, 0]
-        return self.tarr, self.varr
+        output_out_arr = join(output_folder, "out_arr.npy")
+        with open(output_out_arr, 'wb') as wr:
+            np.save(wr, output_out_arr)
 
-    def sig2arr(self, out_arr):
-        with open(join(SCAN_FOLDER, "{}_0.npy".format(FILENAME)), "rb") as f:
-            SIGNAL_LENGTH = len(np.load(f)[:, 0])
-            START = SIGNAL_LENGTH//2
-            END = SIGNAL_LENGTH
-            tarr = np.empty((END - START, self.SAMPLE_DIMENSIONS[0],
-                             self.SAMPLE_DIMENSIONS[1]), dtype=float)
-            varr = np.empty((END - START, self.SAMPLE_DIMENSIONS[0],
-                             self.SAMPLE_DIMENSIONS[1]), dtype=float)
-            for y in range(self.SAMPLE_DIMENSIONS[0]):
-                for x in range(self.SAMPLE_DIMENSIONS[1]):
-                    file = "{0}_{1}.npy".format(FILENAME, int(out_arr[y, x]))
-                    with open(join(SCAN_FOLDER, file), "rb") as npobj:
-                        arr = np.load(npobj)
-                        tarr[:, y, x] = arr[START:END, 0]
-                        varr[:, y, x] = arr[START:END, 1]
-        return tarr, varr
 
     def save_arr(self, output_folder=SCAN_FOLDER):
         output_tarr = join(output_folder, "tarr.pkl")
@@ -286,47 +266,9 @@ class Scan:
         print("Done saving pickles")
 
 
-def bscan(i="", folder=SCAN_FOLDER, figsize=[0, 0], start=0, end=-1, y1=0, y2=-1, save=False, hil=True):
-    tarr, varr = load_arr(folder)
-    if figsize == [0, 0]:
-        fig = plt.figure()
-    else:
-        fig = plt.figure(figsize=figsize)
-    if y2 == -1:
-        y2 = len(varr[start:end, 0]) - 1
-    if i == '':
-        b = varr[:, 0, :]
-    else:
-        b = varr[:,i,:]
-    if hil is True:
-#        for i in range(np.shape(b)[1]):
-        b = np.log10(np.abs(hilbert(b, axis=0)))
-
-    plt.imshow(b[start:end, :], aspect='auto', cmap='gray', vmin=0)
-    plt.axhline(y=y1, label='{}'.format(y1+start))
-    plt.axhline(y=y2, label='{}'.format(y2+start))
-    dt = np.mean(tarr[y2+start, :, :]) - np.mean(tarr[y1+start, :, :])
-    v_w = 1498
-    v_m = 6420
-    dw = v_w*dt/2
-    dm = v_m*dt/2
-    tstep = np.mean(tarr[1, :, :]) - np.mean(tarr[0, :, :])
-    plt.axhline(y=0, label='water: {}'.format(dw), alpha=0)
-    plt.axhline(y=0, label='aluminum: {}'.format(dm), alpha=0)
-    plt.title("{0}".format(FOLDER_NAME))
-    plt.legend()
-    if save is True:
-        plt.savefig(join(BSCAN_FOLDER, "1D", FOLDER_NAME), dpi=300)
-        with open(join(SCAN_FOLDER, "results.txt"), 'w') as wr:
-            wr.write("Timestep (s): {0}\ntime between ({1}, {2}): {3}"
-                     .format(tstep, y1+start, y2+start, dt))
-    plt.xlabel("x axis")
-    plt.ylabel("y axis")
-    plt.show(fig)
-
 
 if __name__ == '__main__':
     #    pass
 #    ibscan(figsize=[8, 8])
-    foc = Scan(DIMENSIONS=(0, 0.08), START_POS="bottom left")
+    foc = Scan(DIMENSIONS=(0.02, 0.08), START_POS="bottom left")
     #ibscan(figsize=[8, 8])
