@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from scipy.signal import hilbert
 from os import getcwd, listdir
 global tarr, varr, SCAN_FOLDER, BSCAN_FOLDER, FOLDER_NAME
-FOLDER_NAME = "1D-15FOC3in"
+FOLDER_NAME = "1D-3FOC5in"
 if FOLDER_NAME[:2] == "1D":
     dim = "1D"
     par = "1D SCANS"
@@ -87,7 +87,8 @@ def bscan(i="", figsize=[8, 8], start=0, end=-1, y1=0, y2=-1, sa=True):
         b = b[:, :]
     else:
         b = b[:, :]
-    plt.imshow(b[start:end, :], aspect='auto', cmap='gray')
+    plt.imshow(np.log10(np.abs(hilbert(b[start:end, :]))), aspect='auto', cmap='gray')
+#    plt.colorbar()
     plt.axhline(y=y1)
     plt.axhline(y=y2)
     dt = np.mean(tarr[y2+start, 0, :]) - np.mean(tarr[y1+start, 0, :])

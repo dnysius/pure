@@ -5,21 +5,13 @@
 import sys
 import visa  # PyVisa info @ http://PyVisa.readthedocs.io/en/stable/
 import numpy as np
-from os import listdir, makedirs, getcwd
-from os.path import isfile, join, exists, dirname
-import re
-from threading import Thread
+from os import makedirs, getcwd
+from os.path import join, exists, dirname
 
 global VISA_ADDRESS, VISA_PATH, FILENAME
 VISA_ADDRESS = 'USB0::0x0957::0x1799::MY52102738::INSTR'
 VISA_PATH = 'C:\\Windows\\System32\\visa32.dll'
 FILENAME = "scope"
-_nsre = re.compile('([0-9]+)')
-
-
-def natural_sort_key(s):
-    return [int(text) if text.isdigit() else text.lower()
-            for text in re.split(_nsre, s)]
 
 
 class Scope:
@@ -31,10 +23,6 @@ class Scope:
         self.BASE_DIRECTORY = directory
         if not exists(self.BASE_DIRECTORY):
             makedirs(self.BASE_DIRECTORY)
-        self.fnames = [f for f in listdir(self.BASE_DIRECTORY)
-                       if isfile(join(self.BASE_DIRECTORY, f))
-                       and f[-3:] == 'npy']
-        self.fnames.sort(key=natural_sort_key)
         try:
             self.rm = visa.ResourceManager(VISA_PATH)
         except:
@@ -196,8 +184,5 @@ if __name__ == '__main__':
         makedirs(d)
     s = Scope(d)
     for i in range(3000):
-#        t = Thread(target=s.grab())
-#        t.start()
-#        t.join()
         s.grab(i)
         print(i)

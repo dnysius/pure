@@ -12,7 +12,7 @@ import serial.tools.list_ports
 global TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT
 global BSCAN_FOLDER, FILENAME, SCAN_FOLDER, min_step, arduino
 min_step = 4e-4
-FOLDER_NAME = "2D-3FOC5in0deg"
+FOLDER_NAME = "1D-3FOC7in"
 FILENAME = "scope"
 BSCAN_FOLDER = join(dirname(getcwd()), "scans", "BSCAN")
 if FOLDER_NAME[:2] == "2D":
@@ -28,12 +28,14 @@ BOTTOM_LEFT = (-1, 0)
 BOTTOM_RIGHT = (-1, -1)
 
 #arduino = serial.Serial('/dev/cu.usbmodem14201', 9600)
-#arduino = serial.Serial('COM1', 9600)
-
+#arduino = serial.Serial('COM5', 9600)
+arduino = None
 ports = list(serial.tools.list_ports.comports())
 for p in ports:
     if "Arduino" in p[1]:
         arduino = serial.Serial(p[0], 9600)
+if arduino is None:
+    print('No Arduino found')
 
 
 def d2s(dist):
@@ -72,52 +74,6 @@ def load_arr(output_folder=SCAN_FOLDER):
     return tarr, varr
 
 
-def ibscan(i='', folder=SCAN_FOLDER, figsize=[8, 8], start=0, end=-1, y1=0, y2=-1, hil=True, save=False):
-    bscan(i=i, folder=folder, figsize=figsize, start=start, end=end, y1=y1, y2=y2, hil=hil, save=save)
-    cmd = input('//\t')
-    if cmd == 'x':
-        print('Exit')
-        pass
-    elif cmd == 'c':
-        try:
-            a1 = input('y1 (default {}):\t'.format(y1))
-            a2 = input('y2 (default {}):\t'.format(y2))
-            if a1 == '':
-                a1 = y1
-            else:
-                a1 = int(a1)
-            if a2 == '':
-                a2 = y2
-            else:
-                a2 = int(a2)
-            ibscan(i=i, folder=folder, figsize=figsize, start=start, end=end, y1=a1, y2=a2, hil=hil, save=False)
-        except ValueError:
-            print("Invalid input")
-    elif cmd == 'z':
-        try:
-            a1 = input('start (default {}):\t'.format(start))
-            a2 = input('end (default {}):\t'.format(end))
-            if a1 == '':
-                a1 = start
-            else:
-                a1 = int(a1)
-            if a2 == '':
-                a2 = end
-            else:
-                a2 = int(a2)
-            ibscan(i=i, folder=folder, figsize=figsize, start=a1, end=a2, y1=y1, y2=y2, hil=hil, save=False)
-        except ValueError:
-            print('invalid input')
-    elif cmd == 'raw' or cmd == 'r':
-        ibscan(i=i, folder=folder, figsize=figsize, start=start, end=end, y1=y1, y2=y2, hil=False, save=False)
-    elif cmd == 'hil' or cmd == 'h' or cmd == 'hilbert':
-        ibscan(i=i, folder=folder, figsize=figsize, start=start, end=end, y1=y1, y2=y2, hil=True, save=False)
-    elif cmd == 's':
-        ibscan(i=i, folder=folder, figsize=figsize, start=start, end=end, y1=y1, y2=y2, hil=hil, save=True)
-    else:
-        ibscan(i=i, folder=folder, figsize=figsize, start=start, end=end, y1=y1, y2=y2, hil=hil, save=False)
-
-
 class Scan:
     def __init__(self, DIMENSIONS=(.01, .01), FOLDER=SCAN_FOLDER, START_POS=""):
         self.SCAN_FOLDER = join(dirname(getcwd()), "data", FOLDER)
@@ -146,7 +102,7 @@ class Scan:
         clear_scan_folder()
         self.tstep = 0
         self.run()
-        clear_scan_folder()
+#        clear_scan_folder()
 
     def STEP(self, DIRECTION='+x'):
         try:
@@ -286,47 +242,9 @@ class Scan:
         print("Done saving pickles")
 
 
-def bscan(i="", folder=SCAN_FOLDER, figsize=[0, 0], start=0, end=-1, y1=0, y2=-1, save=False, hil=True):
-    tarr, varr = load_arr(folder)
-    if figsize == [0, 0]:
-        fig = plt.figure()
-    else:
-        fig = plt.figure(figsize=figsize)
-    if y2 == -1:
-        y2 = len(varr[start:end, 0]) - 1
-    if i == '':
-        b = varr[:, 0, :]
-    else:
-        b = varr[:,i,:]
-    if hil is True:
-#        for i in range(np.shape(b)[1]):
-        b = np.log10(np.abs(hilbert(b, axis=0)))
-
-    plt.imshow(b[start:end, :], aspect='auto', cmap='gray', vmin=0)
-    plt.axhline(y=y1, label='{}'.format(y1+start))
-    plt.axhline(y=y2, label='{}'.format(y2+start))
-    dt = np.mean(tarr[y2+start, :, :]) - np.mean(tarr[y1+start, :, :])
-    v_w = 1498
-    v_m = 6420
-    dw = v_w*dt/2
-    dm = v_m*dt/2
-    tstep = np.mean(tarr[1, :, :]) - np.mean(tarr[0, :, :])
-    plt.axhline(y=0, label='water: {}'.format(dw), alpha=0)
-    plt.axhline(y=0, label='aluminum: {}'.format(dm), alpha=0)
-    plt.title("{0}".format(FOLDER_NAME))
-    plt.legend()
-    if save is True:
-        plt.savefig(join(BSCAN_FOLDER, "1D", FOLDER_NAME), dpi=300)
-        with open(join(SCAN_FOLDER, "results.txt"), 'w') as wr:
-            wr.write("Timestep (s): {0}\ntime between ({1}, {2}): {3}"
-                     .format(tstep, y1+start, y2+start, dt))
-    plt.xlabel("x axis")
-    plt.ylabel("y axis")
-    plt.show(fig)
-
-
 if __name__ == '__main__':
     #    pass
-#    ibscan(figsize=[8, 8])
-    foc = Scan(DIMENSIONS=(0, 0.08), START_POS="bottom left")
-    #ibscan(figsize=[8, 8])
+    foc = Scan(DIMENSIONS=(0, 0.06), START_POS="bottom left")
+
+
+arduino.close()
