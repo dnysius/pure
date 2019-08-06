@@ -87,7 +87,7 @@ def bscan(i="", figsize=[8, 8], start=0, end=-1, y1=0, y2=-1, sa=True):
         b = b[:, :]
     else:
         b = b[:, :]
-    plt.imshow(np.log10(np.abs(hilbert(b[start:end, :]))), aspect='auto', cmap='gray')
+    plt.imshow(np.log10(np.abs(hilbert(b[start:end, :], axis=0))), aspect='auto', cmap='gray')
 #    plt.colorbar()
     plt.axhline(y=y1)
     plt.axhline(y=y2)
