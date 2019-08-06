@@ -1,3 +1,4 @@
+
 # -*- coding: utf-8 -*-
 import numpy as np
 import threading
@@ -11,7 +12,7 @@ import pickle
 import matplotlib.pyplot as plt
 global min_step, c_0, DEFAULT_ARR_FOLDER
 global xarr, FD, SD, pbar, T, V, L, T_COMPARE, PRE_OUT, POST_OUT, xni
-FOLDER_NAME = "1D-3FOC7in"
+FOLDER_NAME = "1D-15FOC7in"
 if FOLDER_NAME[:2] == "1D":
     par = "1D SCANS"
 else:

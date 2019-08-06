@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from scipy.signal import hilbert
 from os import getcwd, listdir
 global tarr, varr, SCAN_FOLDER, BSCAN_FOLDER, FOLDER_NAME
-FOLDER_NAME = "1D-3FOC5in"
+FOLDER_NAME = "1D-15FOC3in"
 if FOLDER_NAME[:2] == "1D":
     dim = "1D"
     par = "1D SCANS"
