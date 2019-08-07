@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from os import getcwd
 from os.path import join, dirname
 min_step = 4e-4
-FOLDER_NAME = "1D-15FOC3in"
+FOLDER_NAME = "1D-3FOC3in"
 FILENAME = "scope"
 BSCAN_FOLDER = join(dirname(getcwd()), "scans", "BSCAN")
 if FOLDER_NAME[:2] == "2D":
@@ -39,11 +39,14 @@ def bscan(i="", folder=SCAN_FOLDER, figsize=[0, 0], start=0, end=-1, y1=0, y2=-1
     if i == '':
         b = varr[:, 0, :]
     else:
-        b = varr[:,i,:]
+        b = varr[:, i,:]
+        
     if hil is True:
-        b = np.log10(np.abs(hilbert(b, axis=0)))
-
-    plt.imshow(b[start:end, :], aspect='auto', cmap='gray')
+        b = np.abs(hilbert(b, axis=0))
+        b = 20*np.log10(b/np.max(b.flatten()))
+        
+    plt.imshow(b[start:end, :], aspect='auto', cmap='gray', vmin=-60)
+    plt.colorbar()
     plt.axhline(y=y1, label='{}'.format(y1+start))
     plt.axhline(y=y2, label='{}'.format(y2+start))
     dt = np.mean(tarr[y2+start, :, :]) - np.mean(tarr[y1+start, :, :])
