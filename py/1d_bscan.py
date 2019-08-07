@@ -28,7 +28,7 @@ def load_arr(output_folder=SCAN_FOLDER):
     return tarr, varr
 
 
-def bscan(i="", folder=SCAN_FOLDER, figsize=[0, 0], start=0, end=-1, y1=0, y2=-1, hil=True):
+def bscan(folder=SCAN_FOLDER, figsize=[0, 0], start=0, end=-1, y1=0, y2=-1, hil=True):
     tarr, varr = load_arr(folder)
     if figsize == [0, 0]:
         fig = plt.figure()
@@ -36,11 +36,7 @@ def bscan(i="", folder=SCAN_FOLDER, figsize=[0, 0], start=0, end=-1, y1=0, y2=-1
         fig = plt.figure(figsize=figsize)
     if y2 == -1:
         y2 = len(varr[start:end, 0]) - 1
-    if i == '':
-        b = varr[:, 0, :]
-    else:
-        b = varr[:, i,:]
-        
+    b = varr[:, 0, :]
     if hil is True:
         b = np.abs(hilbert(b, axis=0))
         b = 20*np.log10(b/np.max(b.flatten()))

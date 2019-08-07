@@ -66,7 +66,7 @@ def ibscan(i='', figsize=[8, 8], start=0, end=-1, y1=0, y2=-1, sa=True):
         ibscan(i=i, figsize=figsize, start=start, end=end, y1=y1, y2=y2, sa=sa)
 
 
-def bscan(i="", figsize=[8, 8], start=0, end=-1, y1=0, y2=-1, sa=True):
+def bscan(figsize=[8, 8], start=0, end=-1, y1=0, y2=-1, sa=True):
     onlyfiles = [f for f in listdir(SCAN_FOLDER)
                  if isfile(join(SCAN_FOLDER, f))]
     for file in onlyfiles:
@@ -83,10 +83,7 @@ def bscan(i="", figsize=[8, 8], start=0, end=-1, y1=0, y2=-1, sa=True):
         fig = plt.figure(figsize=figsize)
     if y2 == -1:
         y2 = len(b[start:end, 0]) - 1
-    if i == '':
-        b = b[:, :]
-    else:
-        b = b[:, :]
+    b = b[:, :]
     b = np.abs(hilbert(b[start:end, :], axis=0))
     b = 20*np.log10(b/np.max(b.flatten()))
     plt.imshow(b, aspect='auto', cmap='gray', vmin=-60)
