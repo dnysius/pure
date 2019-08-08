@@ -17,8 +17,8 @@ SCAN_FOLDER = join(dirname(getcwd()), "data", par, FOLDER_NAME)
 BSCAN_FOLDER = join(dirname(getcwd()), "scans", "SAFT", dim)
 
 
-def ibscan(i='', figsize=[8, 8], start=0, end=-1, y1=0, y2=-1, sa=True):
-    bscan(i=i, figsize=figsize, start=start, end=end, y1=y1, y2=y2, sa=sa)
+def ibscan(figsize=[8, 8], start=0, end=-1, y1=0, y2=-1, sa=True):
+    bscan(figsize=figsize, start=start, end=end, y1=y1, y2=y2, sa=sa)
     cmd = input('//\t')
     if cmd == 'x':
         print('Exit')
@@ -35,7 +35,7 @@ def ibscan(i='', figsize=[8, 8], start=0, end=-1, y1=0, y2=-1, sa=True):
                 a2 = y2
             else:
                 a2 = int(a2)
-            ibscan(i=i, figsize=figsize, start=start,
+            ibscan(figsize=figsize, start=start,
                    end=end, y1=a1, y2=a2, sa=sa)
         except ValueError:
             print("Invalid input")
@@ -51,19 +51,19 @@ def ibscan(i='', figsize=[8, 8], start=0, end=-1, y1=0, y2=-1, sa=True):
                 a2 = end
             else:
                 a2 = int(a2)
-            ibscan(i=i, figsize=figsize, start=a1, end=a2, y1=y1, y2=y2, sa=sa)
+            ibscan(figsize=figsize, start=a1, end=a2, y1=y1, y2=y2, sa=sa)
         except ValueError:
             print('invalid input')
     elif cmd == 'raw' or cmd == 'r':
-        ibscan(i=i, figsize=figsize, start=start,
+        ibscan(figsize=figsize, start=start,
                end=end, y1=y1, y2=y2, sa=False)
     elif cmd == 'sa' or cmd == 'saft':
-        ibscan(i=i, figsize=figsize, start=start,
+        ibscan(figsize=figsize, start=start,
                end=end, y1=y1, y2=y2, sa=True)
     elif cmd == 's':
-        ibscan(i=i, figsize=figsize, start=start, end=end, y1=y1, y2=y2, sa=sa)
+        ibscan(figsize=figsize, start=start, end=end, y1=y1, y2=y2, sa=sa)
     else:
-        ibscan(i=i, figsize=figsize, start=start, end=end, y1=y1, y2=y2, sa=sa)
+        ibscan(figsize=figsize, start=start, end=end, y1=y1, y2=y2, sa=sa)
 
 
 def bscan(figsize=[8, 8], start=0, end=-1, y1=0, y2=-1, sa=True):

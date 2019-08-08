@@ -40,7 +40,7 @@ def bscan(folder=SCAN_FOLDER, figsize=[0, 0], start=0, end=-1, y1=0, y2=-1, hil=
     if hil is True:
         b = np.abs(hilbert(b, axis=0))
         b = 20*np.log10(b/np.max(b.flatten()))
-        
+
     plt.imshow(b[start:end, :], aspect='auto', cmap='gray', vmin=-60)
     plt.colorbar()
     plt.axhline(y=y1, label='{}'.format(y1+start))
@@ -59,8 +59,8 @@ def bscan(folder=SCAN_FOLDER, figsize=[0, 0], start=0, end=-1, y1=0, y2=-1, hil=
     plt.show(fig)
 
 
-def ibscan(i='', folder=SCAN_FOLDER, figsize=[8, 8], start=0, end=-1, y1=0, y2=-1, hil=True):
-    bscan(i=i, folder=folder, figsize=figsize, start=start, end=end, y1=y1, y2=y2, hil=hil)
+def ibscan(folder=SCAN_FOLDER, figsize=[8, 8], start=0, end=-1, y1=0, y2=-1, hil=True):
+    bscan(folder=folder, figsize=figsize, start=start, end=end, y1=y1, y2=y2, hil=hil)
     cmd = input('//\t')
     if cmd == 'x':
         print('Exit')
@@ -77,7 +77,7 @@ def ibscan(i='', folder=SCAN_FOLDER, figsize=[8, 8], start=0, end=-1, y1=0, y2=-
                 a2 = y2
             else:
                 a2 = int(a2)
-            ibscan(i=i, folder=folder, figsize=figsize, start=start, end=end, y1=a1, y2=a2, hil=hil)
+            ibscan(folder=folder, figsize=figsize, start=start, end=end, y1=a1, y2=a2, hil=hil)
         except ValueError:
             print("Invalid input")
     elif cmd == 'z':
@@ -92,15 +92,15 @@ def ibscan(i='', folder=SCAN_FOLDER, figsize=[8, 8], start=0, end=-1, y1=0, y2=-
                 a2 = end
             else:
                 a2 = int(a2)
-            ibscan(i=i, folder=folder, figsize=figsize, start=a1, end=a2, y1=y1, y2=y2, hil=hil)
+            ibscan(folder=folder, figsize=figsize, start=a1, end=a2, y1=y1, y2=y2, hil=hil)
         except ValueError:
             print('invalid input')
     elif cmd == 'raw' or cmd == 'r':
-        ibscan(i=i, folder=folder, figsize=figsize, start=start, end=end, y1=y1, y2=y2, hil=False)
+        ibscan(folder=folder, figsize=figsize, start=start, end=end, y1=y1, y2=y2, hil=False)
     elif cmd == 'hil' or cmd == 'h' or cmd == 'hilbert':
-        ibscan(i=i, folder=folder, figsize=figsize, start=start, end=end, y1=y1, y2=y2, hil=True)
+        ibscan(folder=folder, figsize=figsize, start=start, end=end, y1=y1, y2=y2, hil=True)
     else:
-        ibscan(i=i, folder=folder, figsize=figsize, start=start, end=end, y1=y1, y2=y2, hil=hil)
+        ibscan(folder=folder, figsize=figsize, start=start, end=end, y1=y1, y2=y2, hil=hil)
 
 
 if __name__ == '__main__':
