@@ -11,8 +11,8 @@ import pickle
 import matplotlib.pyplot as plt
 global min_step, c_0, DEFAULT_ARR_FOLDER
 global xarr, yarr, FD, SD, T, V, PRE_OUT, POST_OUT, zi
-FOLDER_NAME = "1D-3FOC3in"
-DEFAULT_ARR_FOLDER = join(dirname(getcwd()), "data", FOLDER_NAME)
+FOLDER_NAME = "2D-3FOC5in"
+DEFAULT_ARR_FOLDER = join(dirname(dirname(getcwd())), FOLDER_NAME)
 FOCAL_DEPTH = 0.0381*2  # 1.5 inch in metres
 min_step = 4e-4
 c_0 = 1498  # water
@@ -63,7 +63,7 @@ for i in range(LY):
 
 def main(yi, xi):
     x = xarr[xi]
-    y = 0
+    y = yarr[yi]
     ti = 0
     while ti < SD:
         z2 = np_power(T[ti]*c_0/2, 2)

@@ -179,10 +179,6 @@ class Scope:
 
 
 if __name__ == '__main__':
-    d = join(dirname(getcwd()), "data", "test")
-    if not exists(d):
-        makedirs(d)
+    d = join(dirname(getcwd()), "data", "Dena")
     s = Scope(d)
-    for i in range(3000):
-        s.grab(i)
-        print(i)
+    s.grab("22-27")  #  mm
