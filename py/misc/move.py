@@ -28,7 +28,7 @@ def step(command):
     # 2: top motor backward
     # 3: bottom motor backward
     # 4: bottom motor forward -- black tape side X axis
-#    sleep(1.5)
+    sleep(1.5)
     try:
         arduino.write(str.encode("{}".format(command)))
     except TypeError:
@@ -76,11 +76,15 @@ def move():
 
 if __name__ == '__main__':
 #    move()
-    i = 0
-    for y in range(200):
-        for x in range(200):
-            if i % 2 != 0:
-                step(4)
-            else:
-                step(3)
-        step(1)
+#    i = 0
+#    for y in range(200):
+#        for x in range(200):
+#            if i % 2 != 0:
+#                step(4)
+#            else:
+#                step(3)
+#        step(1)
+    for x in range(int(.06//min_step)):
+        step(4)
+
+arduino.close()

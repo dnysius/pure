@@ -12,7 +12,7 @@ import pickle
 import matplotlib.pyplot as plt
 global min_step, c_0, DEFAULT_ARR_FOLDER
 global xarr, FD, SD, pbar, T, V, L, T_COMPARE, PRE_OUT, POST_OUT, xni
-FOLDER_NAME = "1D-3FOC5in-pipe-40um"
+FOLDER_NAME = "1D-3FOC5in-7deg"
 if FOLDER_NAME[:2] == "1D":
     par = "1D SCANS"
 else:
