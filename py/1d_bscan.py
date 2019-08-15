@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from os import getcwd
 from os.path import join, dirname
 min_step = 4e-4
-FOLDER_NAME = "1D-3FOC3in"
+FOLDER_NAME = "1D-3FOC5in-10deg"
 FILENAME = "scope"
 BSCAN_FOLDER = join(dirname(getcwd()), "scans", "BSCAN")
 if FOLDER_NAME[:2] == "2D":
@@ -59,7 +59,7 @@ def bscan(folder=SCAN_FOLDER, figsize=[0, 0], start=0, end=-1, y1=0, y2=-1, hil=
     plt.show(fig)
 
 
-def ibscan(folder=SCAN_FOLDER, figsize=[8, 8], start=0, end=-1, y1=0, y2=-1, hil=True):
+def ibscan(folder=SCAN_FOLDER, figsize=[10, 10], start=0, end=-1, y1=0, y2=-1, hil=True):
     bscan(folder=folder, figsize=figsize, start=start, end=end, y1=y1, y2=y2, hil=hil)
     cmd = input('//\t')
     if cmd == 'x':
