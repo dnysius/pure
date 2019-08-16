@@ -6,7 +6,7 @@ import matplotlib.pyplot as plt
 from os import getcwd
 from os.path import join, dirname
 min_step = 4e-4
-FOLDER_NAME = "1D-3FOC5in-10deg"
+FOLDER_NAME = "1D-FLAT5in-7deg"
 FILENAME = "scope"
 BSCAN_FOLDER = join(dirname(getcwd()), "scans", "BSCAN")
 if FOLDER_NAME[:2] == "2D":
