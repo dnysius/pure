@@ -48,9 +48,9 @@ PRE_OUT = np.empty(np.shape(PRE))
 POST = V[FD:SD, :, :]
 POST_T = T[FD:SD]
 POST_OUT = np.empty(np.shape(POST))
-xarr = np.linspace(-LX/2, LX/2, LX)*min_step
+xarr = np.linspace(0, LX, LX)*min_step
 xni = np.arange(0, LX, 1)
-yarr = (np.linspace(0, LY, LY)-LY/2)*min_step  # need to fix for case y=1
+yarr = np.linspace(0, LY, LY)*min_step
 yni = np.arange(0, LY, 1)
 xx, yy = np.meshgrid(xni, yni)
 tni = np.arange(0, SD, 1)
