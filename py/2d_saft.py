@@ -11,7 +11,7 @@ import pickle
 import matplotlib.pyplot as plt
 global min_step, c_0, DEFAULT_ARR_FOLDER
 global xarr, yarr, FD, SD, T, V, PRE_OUT, POST_OUT, zi
-FOLDER_NAME = "2D-3FOC5in"
+FOLDER_NAME = "2D-3FOC5in-pipe"
 DEFAULT_ARR_FOLDER = join(dirname(dirname(getcwd())), FOLDER_NAME)
 FOCAL_DEPTH = 0.0381*2  # 1.5 inch in metres
 min_step = 4e-4
@@ -103,8 +103,3 @@ if __name__ == '__main__':
     pickle.dump(STITCHED, open(join(DEFAULT_ARR_FOLDER,
                                "SAFT-{}-3D.pkl".format(FOLDER_NAME)), "wb"))
     print("\nDone")
-
-fig = plt.figure(figsize=[10, 10])
-plt.imshow(STITCHED[:, 0, :], aspect='auto', cmap='hot')
-plt.colorbar()
-plt.show()
