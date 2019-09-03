@@ -29,9 +29,8 @@ class Signal:
             self.title = s[-2]
         else:
             self.title = s[-1]
-        self.folder = join(mypath, "analysis/")
-        if not isdir(join(mypath, "analysis/")):
-            mkdir(join(mypath, "analysis/"))
+        if not isdir(mypath):
+            mkdir(mypath)
             self.BSCAN_FOLDER = BSCAN_FOLDER
             self.ftype = ftype
             self.fnames = [f for f in listdir(mypath) if isfile(join(mypath, f)) and f[-3:] == self.ftype[-3:]]
@@ -45,7 +44,7 @@ class Signal:
                 self.signal_data[i, :, :] = xy
         self.signal_data = self.signal_data[:, lenY//2:, :]
         self.signal_data[:, :, 1] = self.signal_data[:, :, 1]/np.amax(np.abs(self.signal_data[:, :, 1]).flatten())
-        out = join(join(dirname(getcwd()), "obj"), self.title+"_signal_data.pkl")
+        out = join(dirname(getcwd()), "obj", self.title+"_signal_data.pkl")
         with open(out, 'wb') as wr:
             pickle.dump(self.signal_data, wr, pickle.DEFAULT_PROTOCOL)
 

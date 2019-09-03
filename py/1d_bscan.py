@@ -5,8 +5,9 @@ from scipy.signal import hilbert
 import matplotlib.pyplot as plt
 from os import getcwd
 from os.path import join, dirname
+global min_step
 min_step = 4e-4
-FOLDER_NAME = "1D-FLAT5in-7deg"
+FOLDER_NAME = "1D-3FOC7in"
 FILENAME = "scope"
 BSCAN_FOLDER = join(dirname(getcwd()), "scans", "BSCAN")
 if FOLDER_NAME[:2] == "2D":
@@ -20,42 +21,46 @@ SCAN_FOLDER = join(dirname(getcwd()), "data", par, FOLDER_NAME)
 
 def load_arr(output_folder=SCAN_FOLDER):
     ftarr = join(output_folder, "tarr.pkl")
-    fvarr = join(output_folder, "varr.pkl")
+    fvarr = join(output_folder, "SAFT-1D-3FOC7in.pkl")
     with open(ftarr, 'rb') as rd:
         tarr = pickle.load(rd)
     with open(fvarr, 'rb') as rd:
         varr = pickle.load(rd)
+        print(varr.shape)
     return tarr, varr
 
 
 def bscan(folder=SCAN_FOLDER, figsize=[0, 0], start=0, end=-1, y1=0, y2=-1, hil=True):
     tarr, varr = load_arr(folder)
-    if figsize == [0, 0]:
-        fig = plt.figure()
-    else:
-        fig = plt.figure(figsize=figsize)
+    fig, ax1 = plt.subplots(1, 1, figsize=(10, 10))
     if y2 == -1:
         y2 = len(varr[start:end, 0]) - 1
-    b = varr[:, 0, :]
+#    b = varr[:, 0, :]
+    b = varr
+    timestep = np.mean(tarr[1:, :, :] - tarr[:-1, :, :])
+    print(timestep)
     if hil is True:
         b = np.abs(hilbert(b, axis=0))
         b = 20*np.log10(b/np.max(b.flatten()))
-
-    plt.imshow(b[start:end, :], aspect='auto', cmap='gray', vmin=-60)
-    plt.colorbar()
-    plt.axhline(y=y1, label='{}'.format(y1+start))
-    plt.axhline(y=y2, label='{}'.format(y2+start))
+        b = b[start:end, :]
+    plt.imshow(b, aspect='auto', cmap='gray', vmin=-60, interpolation='none')
+    ax1.set_xticklabels(np.round(ax1.get_xticks()*100*min_step, 4))
+    ax1.set_yticklabels(np.round((ax1.get_yticks()+start)*100*timestep*1498/2, 2))
+#    plt.axhline(y=y1, label='{}'.format(y1+start))
+#    plt.axhline(y=y2, label='{}'.format(y2+start))
     dt = np.mean(tarr[y2+start, :, :]) - np.mean(tarr[y1+start, :, :])
     v_w = 1498
     v_m = 6420
     dw = v_w*dt/2
     dm = v_m*dt/2
-    plt.axhline(y=0, label='water: {}'.format(dw), alpha=0)
-    plt.axhline(y=0, label='aluminum: {}'.format(dm), alpha=0)
+    plt.imshow(b, aspect='auto', cmap='gray', vmin=-60, interpolation='none')
+#    plt.axhline(y=0, label='water: {}'.format(dw), alpha=0)
+#    plt.axhline(y=0, label='aluminum: {}'.format(dm), alpha=0)
     plt.title("{0}".format(FOLDER_NAME))
-    plt.legend()
-    plt.xlabel("x axis")
-    plt.ylabel("y axis")
+#    plt.legend()
+    plt.xlabel("lateral distance (cm)")
+    plt.ylabel("axial distance (cm)")
+    plt.colorbar()
     plt.show(fig)
 
 
@@ -104,4 +109,4 @@ def ibscan(folder=SCAN_FOLDER, figsize=[10, 10], start=0, end=-1, y1=0, y2=-1, h
 
 
 if __name__ == '__main__':
-    ibscan()
+    bscan()

@@ -28,13 +28,14 @@ from os.path import join, isfile, dirname, exists
 import pickle  # saving numpy binary data to files
 import matplotlib.pyplot as plt  # plotting
 import matplotlib.cm as cm  # colormap
+import matplotlib
 import numpy as np
 
 global tot_folder, obj_folder, BSCAN_folder, timestep  # global variables
 timestep = 3.999999999997929e-08  # oscilloscope time interval between data points
-obj_folder = join(dirname(getcwd()), "obj")  # save folder for arrays
-tot_folder = join(dirname(getcwd()), "scans")  # save folder for angle dependence graph
-BSCAN_folder = join(dirname(getcwd()), "scans\\BSCAN")  # save folder for BSCAN
+obj_folder = join(dirname(dirname(getcwd())), "data", "obj")  # save folder for arrays
+tot_folder = join(dirname(dirname(getcwd())), "scans")  # save folder for angle dependence graph
+BSCAN_folder = join(dirname(dirname(getcwd())), "scans\\BSCAN")  # save folder for BSCAN
 
 if not exists(BSCAN_folder):
     makedirs(BSCAN_folder)
@@ -43,15 +44,16 @@ if not exists(obj_folder):
 if not exists(tot_folder):
     makedirs(tot_folder)
 
+
 def init():
     # Initializes Signal objects using signal data (npy, npz, or csv)
-    data_folder_path = join(dirname(getcwd()), "data")
-    flat15_path = join(data_folder_path, 'FLAT15cm')
+    data_folder_path = join(dirname(getcwd()), "data", "ANGLE DEPENDENCE", "0deg")
+    flat15_path = join(data_folder_path, 'FLAT_15cm')
     foc15_path = join(data_folder_path, '3FOC15cm')
     flat9_path = join(data_folder_path, 'FLAT9cm')
-    foc9_path = 'C:\\Users\\dionysius\\Desktop\\PURE\\pure\\data\\3FOC9cm'
-    fpath15 = 'C:\\Users\\dionysius\\Desktop\\PURE\\pure\\data\\1-5FOC15cm'
-    fpath9 = 'C:\\Users\\dionysius\\Desktop\\PURE\\pure\\data\\1-5FOC9cm'
+    foc9_path = join(data_folder_path, '3FOC9cm')
+    fpath15 = join(data_folder_path, '1-5FOC15cm')
+    fpath9 = join(data_folder_path, '1-5FOC9cm')
 
     flat = Signal(flat15_path, ftype='npz')
     foc = Signal(foc15_path, ftype='npz')
@@ -130,8 +132,40 @@ def load_obj(obj_name, folder=obj_folder):
     return transducer
 
 
+def graph_totals(SAVE=False, DISPLAY=True):
+     ## Plot graph of peak values vs angle
+     obj_list = [load_obj(f) for f in listdir(obj_folder) if
+                 isfile(join(obj_folder, f)) and "signal_data" not in f
+                 and "1_5" not in f]
+     font = {'family' : 'normal',
+        'weight' : 'normal',
+        'size'   : 14}
+     matplotlib.rc('font', **font)
+     fig = plt.figure(figsize=[15,14])
+     plt.title("Echo Intensity vs Incident Angle")
+     plt.xlabel('incident angle (degrees)')
+     plt.ylabel('relative peak echo voltages')
+     colors = cm.tab20(np.linspace(0, 1, len(obj_list[0].deg)))
+     for i in range(len(obj_list)):
+          obj = obj_list[i]
+          x = obj.peak_totals
+          rescaled = x / max(x) ##(x-min(x))/(max(x)-min(x))
+          c = 2 ## this changes the colors used, [1,3]
+          plt.scatter(obj.deg, rescaled, color = colors[c*i], alpha=.6, label = obj.name)
+          plt.plot(obj.deg, rescaled, color=colors[c*i], ls=":", alpha=.6)
+
+     plt.legend()
+     if SAVE==True:
+          plt.savefig(join(tot_folder, title+".png"), dpi=200)
+     if DISPLAY==False:
+          plt.close(fig)
+     elif DISPLAY==True:
+          plt.show(fig)
+
+
 if __name__ == '__main__':
-    pass
+#    init()
+    graph_totals()
 
 
 #######################################################################################
@@ -149,26 +183,3 @@ if __name__ == '__main__':
 #     BSCAN(load_obj("FLAT_15cm.pkl").signal_data, title="Flat 15 cm depth", domain=(24550, 25125), SAVE=True, DISPLAY=False)
 #
 #
-#def graph_totals(title="Angle Dependence", SAVE=False, DISPLAY=True):
-#     ## Plot graph of peak values vs angle
-#     obj_list = [load_obj(f) for f in listdir(obj_folder) if isfile(join(obj_folder, f)) and "signal_data.pkl" in f]
-#     fig = plt.figure(figsize=[15,14])
-#     plt.title(title)
-#     plt.xlabel('angle (degrees)')
-#     plt.ylabel('relative peak voltages')
-#     colors = cm.tab20(np.linspace(0, 1, len(obj_list[0].deg)))
-#     for i in range(len(obj_list)):
-#          obj = obj_list[i]
-#          x = obj.peak_totals
-#          rescaled = x / max(x) ##(x-min(x))/(max(x)-min(x))
-#          c = 2 ## this changes the colors used, [1,3]
-#          plt.scatter(obj.deg, rescaled, color = colors[c*i], alpha=.6, label = obj.name)
-#          plt.plot(obj.deg, rescaled, color=colors[c*i], ls=":", alpha=.6)
-#
-#     plt.legend()
-#     if SAVE==True:
-#          plt.savefig(join(tot_folder, title+".png"), dpi=200)
-#     if DISPLAY==False:
-#          plt.close(fig)
-#     elif DISPLAY==True:
-#          plt.show(fig)

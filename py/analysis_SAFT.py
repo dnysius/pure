@@ -91,6 +91,7 @@ def bscan(figsize=[10, 10], start=0, end=-1, y1=0, y2=-1, sa=True):
     plt.axhline(y=y1)
     plt.axhline(y=y2)
     dt = np.mean(tarr[y2+start, 0, :]) - np.mean(tarr[y1+start, 0, :])
+    print(dt)
     v_w = 1498
     v_m = 6420
     dw = v_w*dt/2
@@ -101,11 +102,11 @@ def bscan(figsize=[10, 10], start=0, end=-1, y1=0, y2=-1, sa=True):
         plt.title("{0} {1}".format(FOLDER_NAME, "SAFT"))
     elif not sa:
         plt.title("{0} {1}".format(FOLDER_NAME, "BSCAN"))
-    plt.legend()
+#    plt.legend()
     plt.xlabel("lateral")
     plt.ylabel("axial")
     plt.show(fig)
 
 
 if __name__ == '__main__':
-    ibscan()
+    bscan()
