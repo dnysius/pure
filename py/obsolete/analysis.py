@@ -18,25 +18,25 @@ import re
 _nsre = re.compile('([0-9]+)')
 def natural_sort_key(s):
     return [int(text) if text.isdigit() else text.lower()
-            for text in re.split(_nsre, s)]  
+            for text in re.split(_nsre, s)]
 
 class Micrometer:
-     '''
-     Calibrates angle versus micrometer reading
-     Methods list:
-     self.fit
-     self.calibration_curve
-     self.dtheta
-     self.d
-     self.a
-     self.graph_vals
-     '''
-     
-     def __init__(self, zero, deg):
-          '''
+    '''
+    Calibrates angle versus micrometer reading
+    Methods list:
+    self.fit
+    self.calibration_curve
+    self.dtheta
+    self.d
+    self.a
+    self.graph_vals
+    '''
+
+    def __init__(self, zero, deg):
+        '''
           zero: the micrometer reading corresponding to 0 degree angle
           step_size: increments of the angle used in the experiment (e.g every 2 degree)
-          
+
           self.mic: micrometer readings
           self.angle: angle readings
           self.popt, self.popt1: parameter matrices for original and new data, respectively
@@ -61,8 +61,8 @@ class Micrometer:
           return: float
           '''
           return a*x+ b
-     
-     
+
+
      def fit(self, mic, ang):
           '''
           Overwrites curve fit parameters found with new data
@@ -71,7 +71,7 @@ class Micrometer:
           '''
           self.popt, self.pcov = sc.curve_fit(self.__d, mic, ang, (1,1))
 
-     
+
      def __calibration_curve(self):
           '''
           Displays the original calibration data points and curve fit
@@ -84,8 +84,8 @@ class Micrometer:
           plt.ylabel('angle (degree)')
           plt.title('micrometer calibration curve')
           plt.show()
-          
-          
+
+
      def calibration_curve(self):
           '''
           Displays the calibration data points and curve fit for the new range of angles
@@ -98,8 +98,8 @@ class Micrometer:
           plt.xlabel('angle (degree)')
           plt.title('micrometer calibration curve')
           plt.show()
-     
-          
+
+
      def dtheta(self, x1, x2):
           '''
           Outputs the change in angle between two micrometer readings
@@ -107,8 +107,8 @@ class Micrometer:
           return: float
           '''
           return self.popt[0]*(x2-x1)
-     
-     
+
+
      def d(self, x):
           '''
           Outputs angle values corresponding to micrometer readings
@@ -116,8 +116,8 @@ class Micrometer:
           return: numpy array
           '''
           return self.popt[0]*x + self.popt[1]
-     
-     
+
+
      def a(self, zero, deg):
           '''
           Outputs micrometer readings for the desired angle values
@@ -127,8 +127,8 @@ class Micrometer:
           '''
           a = (np.transpose(np.array([deg])), np.transpose(np.array([self.popt1[0]*deg + zero])))
           return np.hstack(a)
-     
-     
+
+
      def graph_vals(self):
           '''
           Displays new calibration curve
@@ -141,8 +141,8 @@ class Micrometer:
           plt.xlabel('angle (degree)')
           plt.title('new micrometer readings')
           plt.show()
-          
-          
+
+
 class Signal:
      '''
      Object for individual waveforms for a given transducer
@@ -151,13 +151,13 @@ class Signal:
      self.display
      self.fft
      '''
-     
+
      def __init__(self, xy, threshold, width, START=0, END=-1):
           '''
           xy: numpy array
           threshold: minimum voltage for a peak to be identified
           width: range of x-values around a peak for checking for higher points in vicinity
-          
+
           self.xy: signal as numpy array
           self.name: name of current signal waveform
           self.peak_ind: array indices of peak points
@@ -166,18 +166,18 @@ class Signal:
           self.xy = np.copy(xy)  # will be changed by class methods
           self.name = ''
           self.peak_ind, self.peak_val = self.peaks_list(threshold, width, START=START, END=END)
-         
-          
+
+
      def graph_pk(self, domain=0):
           ## param[threshold, width, start index, end index]
           if domain==0:
                ## default from 50% to 75%
-               START = len(self.xy[:,0])//2 
+               START = len(self.xy[:,0])//2
                END = 3*len(self.xy[:,0])//4
           else:
                START = domain[0]
                END = domain[1]
-          
+
           T = self.xy[START:END, 0]
           V = self.xy[START:END, 1]
           fig = plt.figure()
@@ -200,7 +200,7 @@ class Signal:
           else:
                m = END
           while count <= m:
-               if V[count] >= threshold: ## and (count-(width+width//2)) >= 0:     
+               if V[count] >= threshold: ## and (count-(width+width//2)) >= 0:
                     if V[count] == max(V[(count-width): (count+width)]):
                          self.peak_ind.append(count)
                          self.peak_val.append(V[count])
@@ -211,8 +211,8 @@ class Signal:
                else:
                     count += 1
           return self.peak_ind, self.peak_val
-     
-     
+
+
      def display(self):
           '''
           Display the current signal
@@ -224,8 +224,8 @@ class Signal:
           plt.ylabel('voltage (V)')
           plt.title(self.name)
           plt.show()
-     
-     
+
+
      def fft(self):
           '''
           Compute the FFT of the signal
@@ -233,9 +233,9 @@ class Signal:
           '''
           y = self.xy[:, 1]
           return np.fft.fft(y)
-          
-     
-     
+
+
+
 class Transducer:
      '''
      Creates object that contains signal data and methods to analyze it.
@@ -251,7 +251,7 @@ class Transducer:
           '''
           mypath: path leading to \\clean directory
           name: name of this setup
-          
+
           self.mypath: path leading to \\clean directory
           self.name: name of this setup
           self.fnames: name(s) of .csv file(s) in self.mypath directory
@@ -259,7 +259,7 @@ class Transducer:
           self.deg: list of angle values measured during the experiment
           self.threshold: minimum voltage to detect
           self.width: domain over which to take the max voltage value
-          self.peak_totals: total peak voltage of first reflected wave for each angle  
+          self.peak_totals: total peak voltage of first reflected wave for each angle
           '''
           self.GLOBAL_DPI = 100
           self.name = name
@@ -284,32 +284,32 @@ class Transducer:
                sig = Signal(xy, self.threshold, self.width, START=self.START, END=self.END)
                sig.name = "{0}_Transducer_{1}_degrees".format(self.name, self.deg[i])
                self.signal_data.append(sig)
-               
+
           self.peak_totals = []
           self.graph_total(SAVE=False, DISPLAY=False)
-          
-          
+
+
      def write_all(self):
           '''
           Saves all figures
           '''
-#          self.graph_fft(SAVE=True, DISPLAY=False)      
+#          self.graph_fft(SAVE=True, DISPLAY=False)
           self.graph_signal(SAVE=True, DISPLAY=False)
 #          self.graph_h(SAVE=True, DISPLAY=False)
 #          self.graph_total(SAVE=True, DISPLAY=False)
-              
-          
+
+
      def display_all(self):
           '''
           Displays all figures
           '''
-#          self.graph_fft(SAVE=False, DISPLAY=True)        
+#          self.graph_fft(SAVE=False, DISPLAY=True)
           self.graph_signal(SAVE=False, DISPLAY=True)
 #          self.graph_h(SAVE=False, DISPLAY=True)
 #          self.graph_total(SAVE=False, DISPLAY=True)
-          
-     
-          
+
+
+
      def graph_h(self,i='all', SAVE=False, DISPLAY=True):
           '''
           Creates graph for hilbert envelope for first reflected wave in selected signal(s)
@@ -337,14 +337,14 @@ class Transducer:
                     plt.legend()
                     if SAVE is True:
                          plt.savefig(join(folder, "HIL_" +sig.name+".png"), dpi=self.GLOBAL_DPI)
-                         
+
                     if DISPLAY is True:
                          plt.show(fig)
-                         
+
                     elif DISPLAY is False:
                          plt.close(fig)
-                         
-                        
+
+
           elif isinstance(i, int) and (0 <= i < len(self.signal_data)):
                sig = self.signal_data[i]
                ind = sig.peak_ind[1]
@@ -357,7 +357,7 @@ class Transducer:
                plt.ylabel('voltage (V)')
                plt.title(sig.name)
                plt.legend()
-               
+
           elif isinstance(i, list):
                try:
                     for k in i:
@@ -372,11 +372,11 @@ class Transducer:
                          plt.ylabel('voltage (V)')
                          plt.title(sig.name)
                          plt.legend()
-                         
+
                except TypeError:
                    print('graph_h: index list may be out of bounds')
-                    
-     
+
+
      def graph_signal(self,i='all', SAVE=False, DISPLAY=True):
           '''
           Creates graph for selected signal(s)
@@ -388,7 +388,7 @@ class Transducer:
           folder = join(self.mypath,"signals")
           if not isdir(folder):
                mkdir(folder)
-          
+
           if i=='all':
                for sig in self.signal_data:
                     fig = plt.figure(figsize=[10,8])
@@ -403,8 +403,8 @@ class Transducer:
                          plt.show(fig)
                     elif DISPLAY is False:
                          plt.close(fig)
-                         
-                         
+
+
           elif isinstance(i, int) and (0 <= i < len(self.signal_data)):
                sig = self.signal_data[i]
                fig = plt.figure(figsize=[10,8])
@@ -414,7 +414,7 @@ class Transducer:
                plt.ylabel('voltage (V)')
                plt.title(sig.name)
                plt.show(fig)
-               
+
           elif isinstance(i, list):
                try:
                     for k in i:
@@ -426,11 +426,11 @@ class Transducer:
                          plt.ylabel('voltage (V)')
                          plt.title(sig.name)
                          plt.show(fig)
-                         
+
                except TypeError:
                    print('graph_signal: index list may be out of bounds')
-                                  
-               
+
+
      def graph_fft(self,i='all', SAVE=False, DISPLAY=True):
           '''
           Creates graph for FFT of each selected signal(s)
@@ -450,14 +450,14 @@ class Transducer:
                     plt.title(self.name)
                     if SAVE is True:
                          plt.savefig(join(folder, "FFT_" +sig.name+".png"), dpi=self.GLOBAL_DPI)
-                         
+
                     if DISPLAY is True:
                          plt.show(fig)
-                         
+
                     elif DISPLAY is False:
                          plt.close(fig)
-                         
-                         
+
+
           elif isinstance(i,int) and (0 <= i < len(self.signal_data)):
                sig = self.signal_data[i]
                c = sig.fft()
@@ -465,7 +465,7 @@ class Transducer:
                plt.plot(abs(c))
                plt.title(self.name)
                plt.show(fig)
-               
+
           elif isinstance(i, list):
                try:
                     for k in i:
@@ -475,11 +475,11 @@ class Transducer:
                          plt.plot(abs(c))
                          plt.title(self.name)
                          plt.show(fig)
-                         
+
                except TypeError:
                    print('graph_fft: index list may be out of bounds')
-                    
-          
+
+
      def graph_total(self, SAVE=False, DISPLAY=True):
           '''
           Creates graph for peak voltage of first reflected wave vs angle of each signal
@@ -502,16 +502,16 @@ class Transducer:
           plt.ylabel('peak voltage (V)')
           if SAVE is True:
                plt.savefig(join(folder, "TOT_" +self.name+".png"), dpi=self.GLOBAL_DPI)
-               
+
           if DISPLAY is True:
                plt.show(fig)
-               
+
           elif DISPLAY is False:
                plt.close(fig)
-         
-          
+
+
 
 if __name__ == "__main__":
      fpath = 'C:\\Users\\dionysius\\Desktop\\PURE\\pure\\3FOC9cm'
      foc3 = Transducer(fpath,"3FOC9cm", param=(4,200))
-     
+
