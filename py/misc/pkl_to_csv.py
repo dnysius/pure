@@ -16,5 +16,5 @@ def pkl_to_csv(mypath):
     
 
 if __name__ == '__main__':
-    path = join(dirname(getcwd()), "data", "1D-")
+    path = join(dirname(getcwd()), "data", "1D-3FOC3in")
     pkl_to_csv(path)
