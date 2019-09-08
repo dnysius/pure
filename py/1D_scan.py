@@ -106,4 +106,4 @@ def ibscan(folder=SCAN_FOLDER, figsize=[14, 10], start=0, end=-1, y1=0, y2=-1):
 
 
 if __name__ == '__main__':
-    bscan()
+    ibscan()
