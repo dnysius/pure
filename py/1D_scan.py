@@ -8,8 +8,8 @@ from os.path import join, dirname
 from matplotlib.ticker import FixedFormatter
 global min_step, FILENAME
 min_step = 4e-4
-FOLDER_NAME = "1D-3FOC5in-80um"  # edit this
-FILENAME = "SAFT-1D-3FOC5in-80um.pkl"  # and this
+FOLDER_NAME = "1D-3FOC5in"  # edit this
+FILENAME = "SAFT-1D-3FOC5in.pkl"  # and this
 if FOLDER_NAME[:2] == "2D":
     par = "2D SCANS"
 elif FOLDER_NAME[:2] == "1D":
@@ -43,22 +43,22 @@ def bscan(tarr, varr, start=0, end=-1, y1=0, y2=-1):
     b = np.abs(hilbert(varr, axis=0))  # b = varr[:, 0, :]
     b = 20*np.log10(b/np.max(b.flatten()))
     b = b[start:end, :]
-    im0 = plt.imshow(b, aspect='auto', cmap='gray', vmin=-60, vmax=0, interpolation='none', alpha=0)
+    im0 = plt.imshow(b, aspect='auto', cmap='gray', vmin=-60, vmax=0, interpolation='none', alpha=1)
     ax1.set_xticklabels(np.round(ax1.get_xticks()*100*min_step, 4))
     ax1.set_yticklabels((ax1.get_yticks()).astype(int))
     plt.title("{0}".format(FOLDER_NAME))
-    ax2 = ax1.twinx()  # second scale on same axes
-    im1 = ax2.imshow(b, aspect='auto', cmap='gray', vmin=-60, vmax=0, interpolation='none', alpha=1)
-    fig.colorbar(im1, orientation='vertical', pad=0.08)
+#    ax2 = ax1.twinx()  # second scale on same axes
+#    im1 = ax2.imshow(b, aspect='auto', cmap='gray', vmin=-60, vmax=0, interpolation='none', alpha=1)
+    fig.colorbar(im0, orientation='vertical', pad=0.08)
     plt.axhline(y=y1, label='{}'.format(y1+start))
     plt.axhline(y=y2, label='{}'.format(y2+start))
     plt.axhline(y=0, label='water: {} m'.format(np.round(dw, 5)), alpha=0)
     plt.axhline(y=0, label='aluminum: {} m'.format(np.round(dm, 5)), alpha=0)
-    y_formatter = FixedFormatter(np.round((ax2.get_yticks()+start)*100*timestep*1498/2, 2))
-    ax2.yaxis.set_major_formatter(y_formatter)
+#    y_formatter = FixedFormatter(np.round((ax2.get_yticks()+start)*100*timestep*1498/2, 2))
+#    ax2.yaxis.set_major_formatter(y_formatter)
     ax1.set_xlabel("lateral distance (cm)")
     ax1.set_ylabel("index")
-    ax2.set_ylabel("axial distance (cm)")
+#    ax2.set_ylabel("axial distance (cm)")
     plt.legend()
     plt.show(fig)
 
