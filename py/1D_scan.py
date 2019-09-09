@@ -8,8 +8,8 @@ from os.path import join, dirname
 from matplotlib.ticker import FixedFormatter
 global min_step, FILENAME
 min_step = 4e-4
-FOLDER_NAME = "1D-3FOC7in"  # edit this
-FILENAME = "SAFT-1D-3FOC7in.pkl"  # and this
+FOLDER_NAME = "1D-3FOC5in-80um"  # edit this
+FILENAME = "SAFT-1D-3FOC5in-80um.pkl"  # and this
 BSCAN_FOLDER = join(dirname(getcwd()), "scans", "BSCAN")
 if FOLDER_NAME[:2] == "2D":
     par = "2D SCANS"
@@ -31,10 +31,10 @@ def load_arr(output_folder=SCAN_FOLDER):
 
 
 def bscan(folder=SCAN_FOLDER, figsize=[0, 0], start=0, end=-1, y1=0, y2=-1):
-    global ax1, ax2, timestep
+    #global ax1, ax2, timestep
     v_w = 1498
     v_m = 6420
-    tarr, varr = load_arr(folder)
+    #tarr, varr = load_arr(folder)
     timestep = np.mean(tarr[1:, :, :] - tarr[:-1, :, :])  # get avg timestep
     fig, ax1 = plt.subplots(1, 1, figsize=(14, 10))
     if y2 == -1:
@@ -42,25 +42,25 @@ def bscan(folder=SCAN_FOLDER, figsize=[0, 0], start=0, end=-1, y1=0, y2=-1):
     b = np.abs(hilbert(varr, axis=0))  # b = varr[:, 0, :]
     b = 20*np.log10(b/np.max(b.flatten()))
     b = b[start:end, :]
-    plt.imshow(b, aspect='auto', cmap='gray', vmin=-60, vmax=0, interpolation='none', alpha=0)
+    im = plt.imshow(b, aspect='auto', cmap='gray', vmin=-60, vmax=0, interpolation='none', alpha=1)
     ax1.set_xticklabels(np.round(ax1.get_xticks()*100*min_step, 4))
     ax1.set_yticklabels((ax1.get_yticks()).astype(int))
     dt = np.mean(tarr[y2+start, :, :]) - np.mean(tarr[y1+start, :, :])
     dw = v_w*dt/2
     dm = v_m*dt/2
     plt.title("{0}".format(FOLDER_NAME))
-    ax2 = ax1.twinx()  # second scale on same axes
-    im = ax2.imshow(b, aspect='auto', cmap='gray', vmin=-60, vmax=0, interpolation='none')
+    #ax2 = ax1.twinx()  # second scale on same axes
+    #im = ax2.imshow(b, aspect='auto', cmap='gray', vmin=-60, vmax=0, interpolation='none')
     fig.colorbar(im, orientation='vertical', pad=0.08)
     plt.axhline(y=y1, label='{}'.format(y1+start))
     plt.axhline(y=y2, label='{}'.format(y2+start))
     plt.axhline(y=0, label='water: {} m'.format(np.round(dw, 5)), alpha=0)
     plt.axhline(y=0, label='aluminum: {} m'.format(np.round(dm, 5)), alpha=0)
-    y_formatter = FixedFormatter(np.round((ax2.get_yticks()+start)*100*timestep*1498/2, 2))
-    ax2.yaxis.set_major_formatter(y_formatter)
-    ax2.set_xlabel("lateral distance (cm)")
-    ax2.set_ylabel("index")
-    ax2.set_ylabel("axial distance (cm)")
+    #y_formatter = FixedFormatter(np.round((ax2.get_yticks()+start)*100*timestep*1498/2, 2))
+    #ax2.yaxis.set_major_formatter(y_formatter)
+    ax1.set_xlabel("lateral distance (cm)")
+    ax1.set_ylabel("index")
+    #ax1.set_ylabel("axial distance (cm)")
     plt.legend()
     plt.show(fig)
 
@@ -106,4 +106,5 @@ def ibscan(folder=SCAN_FOLDER, figsize=[14, 10], start=0, end=-1, y1=0, y2=-1):
 
 
 if __name__ == '__main__':
-    ibscan()
+    tarr, varr = load_arr(SCAN_FOLDER)
+    ibscan(tarr, varr)
