@@ -18,7 +18,7 @@ else:
     par = "2D SCANS"
 DEFAULT_ARR_FOLDER = join(dirname(getcwd()), "data", par, FOLDER_NAME)
 FOCAL_DEPTH = 0.0381*2  # 1.5 inch in metres
-min_step = 4e-4
+min_step = 6e-4
 c_0 = 1498  # water
 
 
@@ -45,7 +45,7 @@ T = tarr[ZERO:, 0]  # 1D, time columns all the same
 V = varr[ZERO:, :]  # 2D
 FD = find_nearest(T, 2*FOCAL_DEPTH/c_0)  # focal depth
 # SD = find_nearest(T, 2*SAMPLE_DEPTH/c_0) + 1  # sample depth
-SD = len(T)-1
+SD = len(T)
 OFFSET = T[FD]
 L = np.shape(V)[1]
 PRE = np.flip(V[:FD, :], axis=0)
