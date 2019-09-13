@@ -8,7 +8,7 @@ from os.path import join, dirname
 from matplotlib.ticker import FixedFormatter
 global min_step, FILENAME
 min_step = 4e-4
-FOLDER_NAME = "1D-3FOC5in"  # edit this
+FOLDER_NAME = "1D-3FOC50cm"  # edit this
 FILENAME = "SAFT-1D-3FOC5in.pkl"  # and this
 if FOLDER_NAME[:2] == "2D":
     par = "2D SCANS"
