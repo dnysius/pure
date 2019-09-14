@@ -7,8 +7,8 @@ from os import getcwd
 from os.path import join, dirname
 from matplotlib.ticker import FixedFormatter
 global min_step, FILENAME
-FOLDER_NAME = "1D-3FOC5in"  # edit this
-FILENAME = "SAFT-1D-3FOC5in.pkl"  # and this
+FOLDER_NAME = "1D-3FOC5in-80um"  # edit this
+FILENAME = "SAFT-1D-3FOC5in-80um.pkl"  # and this
 min_step = 4e-4  # and this
 if FOLDER_NAME[:2] == "2D":
     par = "2D SCANS"
@@ -28,6 +28,17 @@ def load_arr(output_folder=SCAN_FOLDER):
     with open(fvarr, 'rb') as rd:
         varr = pickle.load(rd)
     return tarr, varr
+
+
+def reg_plot(varr):
+    fig = plt.figure(figsize=[10, 10])
+    if FILENAME == "varr.pkl":
+        b = varr[:, 0, :]
+    else:
+        b = varr
+    plt.imshow(b, aspect='auto', cmap='gray')
+    plt.colorbar()
+    plt.show(fig)
 
 
 def bscan(tarr, varr, start=0, end=-1, y1=0, y2=-1):
@@ -108,4 +119,5 @@ def ibscan(tarr, varr, start=0, end=-1, y1=0, y2=-1):
 
 if __name__ == '__main__':
     tarr, varr = load_arr(SCAN_FOLDER)
-    ibscan(tarr, varr)
+    reg_plot(varr)
+#    ibscan(tarr, varr[12000:, :])
