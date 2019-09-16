@@ -7,6 +7,7 @@ from numpy import \
     sum as np_sum
 from os import getcwd
 from os.path import join, dirname
+from scipy.signal import hilbert
 import pickle
 import matplotlib.pyplot as plt
 global min_step, c_0, DEFAULT_ARR_FOLDER
@@ -90,7 +91,9 @@ if __name__ == '__main__':
         job.join()
     print("Stitching")
     PRE_OUT = np.flip(PRE_OUT, axis=0)
-    STITCHED = np.vstack((PRE_OUT, POST_OUT))
+    b = np.abs(hilbert(POST_OUT[:, 0, :], axis=0))
+    b = 20*np.log10(b/np.max(b.flatten()))
+    STITCHED = np.vstack((PRE_OUT, b))
     pickle.dump(STITCHED, open(join(DEFAULT_ARR_FOLDER,
                                     "SAFT-{}.pkl"
                                     .format(FOLDER_NAME)), "wb"))

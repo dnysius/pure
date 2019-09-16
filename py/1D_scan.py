@@ -1,14 +1,14 @@
 # -*- coding: utf-8 -*-
 import numpy as np
-import pickle
 from scipy.signal import hilbert
 import matplotlib.pyplot as plt
+import pickle
 from os import getcwd
 from os.path import join, dirname
 from matplotlib.ticker import FixedFormatter
 global min_step, FILENAME
 
-FOLDER_NAME = "1D-FLAT50CM-PURE-60um"  # edit this
+FOLDER_NAME = "1D-FLAT50CM"  # edit this
 FILENAME = "varr.pkl"  # and this
 min_step = 4e-4  # and this
 
@@ -32,7 +32,7 @@ def load_arr(output_folder=SCAN_FOLDER):
     return tarr, varr
 
 
-def bscan(tarr, varr, start=0, end=-1, y1=0, y2=-1):
+def bscan(tarr, varr, start=0, end=-1, y1=0, y2=-1, absmax=0):
     v_w = 1498
     v_m = 6420
     dt = np.mean(tarr[y2+start, :, :]) - np.mean(tarr[y1+start, :, :])
@@ -46,7 +46,10 @@ def bscan(tarr, varr, start=0, end=-1, y1=0, y2=-1):
         b = np.abs(hilbert(varr[:, 0, :], axis=0))  # b = varr[:, 0, :]
     else:
         b = np.abs(hilbert(varr, axis=0))  # b = varr[:, 0, :]
-    b = 20*np.log10(b/np.max(b.flatten()))
+    if absmax==0:
+        b = 20*np.log10(b/np.max(b.flatten()))
+    else:
+        b = 20*np.log10(b/absmax)
     b = b[start:end, :]
     im0 = plt.imshow(b, aspect='auto', cmap='gray', vmin=-60, vmax=0, interpolation='none', alpha=0)
     ax1.set_xticklabels(np.round(ax1.get_xticks()*100*min_step, 4))
@@ -68,8 +71,8 @@ def bscan(tarr, varr, start=0, end=-1, y1=0, y2=-1):
     plt.show(fig)
 
 
-def ibscan(tarr, varr, start=0, end=-1, y1=0, y2=-1):
-    bscan(tarr, varr, start=start, end=end, y1=y1, y2=y2)
+def ibscan(tarr, varr, start=0, end=-1, y1=0, y2=-1, absmax=0):
+    bscan(tarr, varr, start=start, end=end, y1=y1, y2=y2, absmax=absmax)
     cmd = input('//\t')
     if cmd == 'x':
         print('Exit')
@@ -86,7 +89,7 @@ def ibscan(tarr, varr, start=0, end=-1, y1=0, y2=-1):
                 a2 = y2
             else:
                 a2 = int(a2)
-            ibscan(tarr, varr, start=start, end=end, y1=a1, y2=a2)
+            ibscan(tarr, varr, start=start, end=end, y1=a1, y2=a2, absmax=absmax)
         except ValueError:
             print("Invalid input")
     elif cmd == 'z':
@@ -101,13 +104,21 @@ def ibscan(tarr, varr, start=0, end=-1, y1=0, y2=-1):
                 a2 = end
             else:
                 a2 = int(a2)
-            ibscan(tarr, varr, start=a1, end=a2, y1=y1, y2=y2)
+            ibscan(tarr, varr, start=a1, end=a2, y1=y1, y2=y2, absmax=absmax)
         except ValueError:
             print('invalid input')
     else:
-        ibscan(tarr, varr, start=start, end=end, y1=y1, y2=y2)
+        ibscan(tarr, varr, start=start, end=end, y1=y1, y2=y2, absmax=absmax)
 
+
+def reg_plot(b):
+    plt.figure(figsize=[14, 10])
+    plt.imshow(b, aspect='auto', cmap='gray')
+    plt.colorbar()
+    plt.show()
 
 if __name__ == '__main__':
     tarr, varr = load_arr(SCAN_FOLDER)
-    ibscan(tarr, varr)
+    abs_max = np.max(np.abs(varr.flatten()))
+    ibscan(tarr, varr, start=27000, end=33000)
+#    reg_plot(varr[27000:,0,:])
