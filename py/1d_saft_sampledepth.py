@@ -4,7 +4,8 @@ import threading
 from numpy import \
     power as np_power, \
     sqrt as np_sqrt, \
-    sum as np_sum
+    sum as np_sum, \
+    round as np_round
 from os import getcwd
 from os.path import join, dirname
 from scipy.signal import hilbert
@@ -41,21 +42,13 @@ def find_nearest(array, value):
 
 
 tarr, varr = load_arr()
-tarr = tarr[:, 0, :]
-varr = varr[:, 0, :]
-ZERO = find_nearest(tarr[:, 0], 0)
-T = tarr[ZERO:, 0]  # 1D, time columns all the same
-V = varr[ZERO:, :]  # 2D
-FD = find_nearest(T, 2*FOCAL_DEPTH/c_0)  # focal depth
+T = tarr[:, 0, 0]  # 1D, time columns all the same
+V = varr[:, 0, :]  # 2D
 SD = len(T)
-OFFSET = T[FD]
 L = np.shape(V)[1]
-PRE = np.flip(V[:FD, :], axis=0)
-PRE_T = np.flip(T[:FD], axis=0)
-PRE_OUT = np.empty(np.shape(PRE))
-POST = V[FD:SD, :]
-POST_T = T[FD:SD]
-POST_OUT = np.empty(np.shape(POST))
+V = V[:, :]
+T = T[:]
+OUT = np.empty(np.shape(V))
 xarr = np.linspace(-L/2, L/2, L)*min_step
 xni = np.arange(0, L, 1)
 tstep = np.mean(T[1:]-T[:-1])
@@ -69,11 +62,8 @@ def main(xi):  # xi is imaging index/position
         z2 = np_power(z, 2)  # distance, squared
         ind = (2/c_0)*np_sqrt(np_power(x-xarr[xni], 2)
                               + z2)
-        zi = (ind/tstep).astype(int)
-        if ti < FD:  # PRE
-            PRE_OUT[ti, xi] = np_sum(V[zi[zi < FD], xni[zi < FD]])
-        if ti >= FD:  # POST
-            POST_OUT[ti-FD, xi] = np_sum(V[zi[zi < SD], xni[zi < SD]])
+        zi = np_round(ind/tstep).astype(int)
+        OUT[ti, xi] = np_sum(V[zi[zi < SD], xni[zi < SD]])
         ti += 1
 
 
@@ -89,17 +79,15 @@ if __name__ == '__main__':
     print("Joining")
     for job in jobs:
         job.join()
-    print("Stitching")
-    PRE_OUT = np.flip(PRE_OUT, axis=0)
-    b = np.abs(hilbert(POST_OUT[:, :], axis=0))
+    print("Applying envelope")
+    b = np.abs(hilbert(OUT[:, :], axis=0))
     b = 20*np.log10(b/np.max(b.flatten()))
-    STITCHED = np.vstack((PRE_OUT, b))
-    pickle.dump(STITCHED, open(join(DEFAULT_ARR_FOLDER,
-                                    "SAFT-{}.pkl"
-                                    .format(FOLDER_NAME)), "wb"))
+    print("Saving to file")
+    pickle.dump(b, open(join(DEFAULT_ARR_FOLDER, "SAFT-{}.pkl"
+                             .format(FOLDER_NAME)), "wb"))
 
 
 fig = plt.figure(figsize=[10, 10])
-plt.imshow(STITCHED[:, :], aspect='auto', cmap='hot')
+plt.imshow(b, aspect='auto', cmap='gray', vmin=-60, vmax=0)
 plt.colorbar()
 plt.show()
