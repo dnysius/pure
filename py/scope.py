@@ -7,11 +7,10 @@ import visa  # PyVisa info @ http://PyVisa.readthedocs.io/en/stable/
 import numpy as np
 from os import makedirs, getcwd
 from os.path import join, exists, dirname
-
 global VISA_ADDRESS, VISA_PATH, FILENAME
-VISA_ADDRESS = 'USB0::0x0957::0x1799::MY52102738::INSTR'
-VISA_PATH = 'C:\\Windows\\System32\\visa32.dll'
-FILENAME = "scope"
+VISA_ADDRESS = 'USB0::0x0957::0x1799::MY52102738::INSTR'  # edit this
+VISA_PATH = 'C:\\Windows\\System32\\visa32.dll'  # and this
+FILENAME = "scope"  # and this
 
 
 class Scope:
@@ -179,6 +178,6 @@ class Scope:
 
 
 if __name__ == '__main__':
-    d = join(dirname(getcwd()), "data", "Dena")
+    d = join(dirname(getcwd()), "data")
     s = Scope(d)
-    s.grab("22-27")  #  mm
+    s.grab("test")  #  mm

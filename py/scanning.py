@@ -3,16 +3,14 @@ import numpy as np
 from scope import Scope
 from os import listdir, getcwd, remove
 from os.path import join, isfile, dirname
-import matplotlib.pyplot as plt
 import pickle
-from scipy.signal import hilbert
 import serial
 from time import sleep
 import serial.tools.list_ports
 global TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT
 global BSCAN_FOLDER, FILENAME, SCAN_FOLDER, min_step, arduino
-min_step = 4e-4
-FOLDER_NAME = "2D-3FOC5in-pipe"
+min_step = 6e-4
+FOLDER_NAME = "1D-FLAT50CM-PURE-60um"
 FILENAME = "scope"
 BSCAN_FOLDER = join(dirname(getcwd()), "scans", "BSCAN")
 if FOLDER_NAME[:2] == "2D":
@@ -217,7 +215,7 @@ class Scan:
     def sig2arr(self, out_arr):
         with open(join(SCAN_FOLDER, "{}_0.npy".format(FILENAME)), "rb") as f:
             SIGNAL_LENGTH = len(np.load(f)[:, 0])
-            START = SIGNAL_LENGTH//2
+            START = 0
             END = SIGNAL_LENGTH
             tarr = np.empty((END - START, self.SAMPLE_DIMENSIONS[0],
                              self.SAMPLE_DIMENSIONS[1]), dtype=float)
@@ -244,7 +242,7 @@ class Scan:
 
 if __name__ == '__main__':
     #    pass
-    foc = Scan(DIMENSIONS=(0.05, 0.02), START_POS="bottom right")
+    foc = Scan(DIMENSIONS=(0, 0.2), START_POS="bottom right")
 
 
 arduino.close()

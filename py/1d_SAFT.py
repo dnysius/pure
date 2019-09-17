@@ -7,19 +7,22 @@ from numpy import \
     sum as np_sum
 from os import getcwd
 from os.path import join, dirname
+from scipy.signal import hilbert
 import pickle
 import matplotlib.pyplot as plt
 global min_step, c_0, DEFAULT_ARR_FOLDER
 global xarr, FD, SD, pbar, T, V, L, T_COMPARE, PRE_OUT, POST_OUT, xni
-FOLDER_NAME = "1D-3FOC50cm-60um"
+
+FOLDER_NAME = "1D-3FOC50cm"  # edit this
+min_step = 4e-4  # and this
+FOCAL_DEPTH = 0.0381*2  # and this
+c_0 = 1498  # speed of sound in water
+
 if FOLDER_NAME[:2] == "1D":
     par = "1D SCANS"
 else:
     par = "2D SCANS"
 DEFAULT_ARR_FOLDER = join(dirname(getcwd()), "data", par, FOLDER_NAME)
-FOCAL_DEPTH = 0.0381*2  # 1.5 inch in metres
-min_step = 6e-4
-c_0 = 1498  # water
 
 
 def load_arr(output_folder=DEFAULT_ARR_FOLDER):
@@ -44,7 +47,6 @@ ZERO = find_nearest(tarr[:, 0], 0)
 T = tarr[ZERO:, 0]  # 1D, time columns all the same
 V = varr[ZERO:, :]  # 2D
 FD = find_nearest(T, 2*FOCAL_DEPTH/c_0)  # focal depth
-# SD = find_nearest(T, 2*SAMPLE_DEPTH/c_0) + 1  # sample depth
 SD = len(T)
 OFFSET = T[FD]
 L = np.shape(V)[1]
@@ -89,7 +91,9 @@ if __name__ == '__main__':
         job.join()
     print("Stitching")
     PRE_OUT = np.flip(PRE_OUT, axis=0)
-    STITCHED = np.vstack((PRE_OUT, POST_OUT))
+    b = np.abs(hilbert(POST_OUT[:, 0, :], axis=0))
+    b = 20*np.log10(b/np.max(b.flatten()))
+    STITCHED = np.vstack((PRE_OUT, b))
     pickle.dump(STITCHED, open(join(DEFAULT_ARR_FOLDER,
                                     "SAFT-{}.pkl"
                                     .format(FOLDER_NAME)), "wb"))
