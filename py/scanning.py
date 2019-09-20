@@ -10,7 +10,7 @@ import serial.tools.list_ports
 global TOP_LEFT, TOP_RIGHT, BOTTOM_LEFT, BOTTOM_RIGHT
 global BSCAN_FOLDER, FILENAME, SCAN_FOLDER, min_step, arduino
 min_step = 4e-4
-FOLDER_NAME = "1D-3FOC3in-PURE"
+FOLDER_NAME = "1D-FLAT3in-PURE"
 FILENAME = "scope"
 BSCAN_FOLDER = join(dirname(getcwd()), "scans", "BSCAN")
 if FOLDER_NAME[:2] == "2D":
@@ -242,7 +242,7 @@ class Scan:
 
 if __name__ == '__main__':
     #    pass
-    foc = Scan(DIMENSIONS=(0, 0.08), START_POS="bottom left")
+    foc = Scan(DIMENSIONS=(0, 0.1), START_POS="bottom left")
 
 
 arduino.close()

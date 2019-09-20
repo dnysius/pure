@@ -7,8 +7,8 @@ from os import getcwd
 from os.path import join, dirname
 from matplotlib.ticker import FixedFormatter
 global min_step, FILENAME
-FOLDER_NAME = "1D-3FOC3in-PURE"  # edit this
-FILENAME = "SAFT-1D-3FOC3in-PURE.pkl"  # and this
+FOLDER_NAME = "1D-FLAT3in-PURE"  # edit this
+FILENAME = "varr.pkl"  # and this
 min_step = 4e-4  # and this
 
 if FOLDER_NAME[:2] == "2D":
