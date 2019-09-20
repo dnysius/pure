@@ -7,8 +7,8 @@ from os import getcwd
 from os.path import join, dirname
 from matplotlib.ticker import FixedFormatter
 global min_step, FILENAME
-FOLDER_NAME = "1D-FLAT50CM"  # edit this
-FILENAME = "varr.pkl"  # and this
+FOLDER_NAME = "1D-3FOC3in-PURE"  # edit this
+FILENAME = "SAFT-1D-3FOC3in-PURE.pkl"  # and this
 min_step = 4e-4  # and this
 
 if FOLDER_NAME[:2] == "2D":
@@ -118,8 +118,10 @@ def reg_plot(b):
 
 if __name__ == '__main__':
     tarr, varr = load_arr(SCAN_FOLDER)
+    if FILENAME == 'varr.pkl':
+        varr = varr[:, 0, :]
     reg_plot(varr)
-#    ibscan(tarr, varr[12000:, :])
+#        ibscan(tarr, varr[12000:, :])
     abs_max = np.max(np.abs(varr.flatten()))
-    ibscan(tarr, varr, start=27000, end=33000)
+    ibscan(tarr, varr, start=0, end=-1)
 #    reg_plot(varr[27000:,0,:])
