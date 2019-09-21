@@ -118,6 +118,8 @@ def reg_plot(b):
 
 if __name__ == '__main__':
     tarr, varr = load_arr(SCAN_FOLDER)
+    if FILENAME == 'varr.pkl':
+        varr = varr[:, 0, :]
     reg_plot(varr)
 #    ibscan(tarr, varr[12000:, :])
     abs_max = np.max(np.abs(varr.flatten()))
