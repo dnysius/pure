@@ -13,7 +13,7 @@ import matplotlib.pyplot as plt
 global min_step, c_0, DEFAULT_ARR_FOLDER
 global xarr, FD, SD, pbar, T, V, L, T_COMPARE, PRE_OUT, POST_OUT, xni
 
-FOLDER_NAME = "1D-3FOC50cm"  # edit this
+FOLDER_NAME = "1D-3FOC3in-PURE2"  # edit this
 min_step = 4e-4  # and this
 FOCAL_DEPTH = 0.0381*2  # and this
 c_0 = 1498  # speed of sound in water
