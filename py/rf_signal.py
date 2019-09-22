@@ -5,7 +5,7 @@ from scipy.signal import hilbert
 from os import getcwd
 from os.path import join, dirname
 global graph_title
-FOLDER_NAME = "1D-FLAT3in-PURE-testtransducer-lowergain"  # edit this
+FOLDER_NAME = "1D-FLAT5in"  # edit this
 FILENAME = "varr.pkl"  # and this
 graph_title = "FLAT3in"  # and this
 if "1D" in FOLDER_NAME:
@@ -25,6 +25,9 @@ with open(path_tarr, "rb") as rd:
     tarr = np.load(rd, allow_pickle=True)
     tarr = tarr[:, 0, :]
 
+vmax = np.max(varr.flatten())
+vmin = np.min(varr.flatten())
+
 
 def image(varr):
     fig, ax = plt.subplots(figsize=[14, 10])
@@ -39,6 +42,7 @@ def rf_time(t, v):
     plt.ylabel("voltage (V)")
     plt.xlabel("time (s)")
     plt.title(graph_title)
+    plt.ylim(vmin-1, vmax+1)
     plt.show(fig)
 
 
@@ -48,6 +52,7 @@ def rf_ind(v):
     plt.ylabel("voltage (V)")
     plt.xlabel("index")
     plt.title(graph_title)
+    plt.ylim(vmin-1, vmax+1)
     plt.show(fig)
 
 
@@ -59,13 +64,17 @@ def rf_ind_hil(v):
     plt.xlabel("index")
     plt.title(graph_title)
     plt.legend()
+    plt.ylim(vmin-1, vmax+1)
     plt.show(fig)
 
 
 if __name__ == '__main__':
-    start = 30000
-    end = 35000
-    transducer_pos = 80
-    rf_ind(varr[start:end, transducer_pos])
+    start = 0
+    end = -1
+#    start = 14500
+#    end = 17500
+    transducer_pos = 150
+    image(varr)
+#    rf_ind(varr[start:end, transducer_pos])
 #    rf_ind_hil(varr[start:end, transducer_pos])
 #    rf_time(tarr[start:end, transducer_pos], varr[start:end, transducer_pos])
