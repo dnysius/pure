@@ -7,7 +7,7 @@ from os import getcwd
 from os.path import join, dirname
 from matplotlib.ticker import FixedFormatter
 global min_step, FILENAME
-FOLDER_NAME = "1D-FLAT3in-PURE"  # edit this
+FOLDER_NAME = "1D-FLAT3in-PURE-back"  # edit this
 FILENAME = "varr.pkl"  # and this
 min_step = 4e-4  # and this
 
