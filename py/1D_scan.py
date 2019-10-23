@@ -7,8 +7,8 @@ from os import getcwd
 from os.path import join, dirname
 from matplotlib.ticker import FixedFormatter
 global min_step, FILENAME
-FOLDER_NAME = "1D-3FOC3in-back-1in"  # edit this
-FILENAME = "varr.pkl"  # and this
+FOLDER_NAME = "1D-3FOC50cm-1indent"  # edit this
+FILENAME = "SAFT-1D-3FOC50cm-1indent.pkl"  # and this
 min_step = 4e-4  # and this
 
 if FOLDER_NAME[:2] == "2D":
@@ -47,15 +47,17 @@ def bscan(tarr, varr, start=0, end=-1, y1=0, y2=-1, absmax=0):
         b = np.abs(hilbert(varr, axis=0))  # b = varr[:, 0, :]
     if absmax==0:
         b = 20*np.log10(b/np.max(b.flatten()))
+#        b =(b/np.max(b.flatten()))
     else:
         b = 20*np.log10(b/absmax)
+#        b =(b/absmax)
     b = b[start:end, :]
-    im0 = plt.imshow(b, aspect='auto', cmap='gray', vmin=-60, vmax=0, interpolation='none', alpha=0)
+    im0 = plt.imshow(b, aspect='auto', cmap='gray', interpolation='none', alpha=0)
     ax1.set_xticklabels(np.round(ax1.get_xticks()*100*min_step, 4))
     ax1.set_yticklabels((ax1.get_yticks()).astype(int))
     plt.title("{0}".format(FOLDER_NAME))
     ax2 = ax1.twinx()  # second scale on same axes
-    im1 = ax2.imshow(b, aspect='auto', cmap='gray', vmin=-60, vmax=0, interpolation='none', alpha=1)
+    im1 = ax2.imshow(b, aspect='auto', cmap='gray', vmin=-30, vmax=0, interpolation='none', alpha=1)
     fig.colorbar(im1, orientation='vertical', pad=0.08)
     plt.axhline(y=y1, label='{}'.format(y1+start))
     plt.axhline(y=y2, label='{}'.format(y2+start))
